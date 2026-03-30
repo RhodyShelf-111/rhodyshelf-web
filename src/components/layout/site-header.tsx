@@ -9,10 +9,8 @@ import { SearchBar } from "./search-bar"
 import { useState } from "react"
 
 const NAV_LINKS = [
-  { href: "/menu", label: "Menu" },
-  { href: "/deals", label: "Deals" },
+  { href: "/search", label: "Search" },
   { href: "/drops", label: "Drops" },
-  { href: "/dispensary", label: "Dispensaries" },
 ]
 
 export function SiteHeader() {
@@ -21,7 +19,7 @@ export function SiteHeader() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border h-16">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border h-16">
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="shrink-0">
@@ -56,7 +54,7 @@ export function SiteHeader() {
         {/* Mobile controls */}
         <div className="flex items-center gap-1 md:hidden">
           {mobileSearchOpen ? (
-            <div className="absolute inset-x-0 top-0 h-16 bg-white px-4 flex items-center gap-2 z-10">
+            <div className="absolute inset-x-0 top-0 h-16 bg-background px-4 flex items-center gap-2 z-10">
               <SearchBar autoFocus onBlur={() => setMobileSearchOpen(false)} />
               <button
                 onClick={() => setMobileSearchOpen(false)}

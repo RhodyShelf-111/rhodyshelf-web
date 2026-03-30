@@ -27,19 +27,19 @@ export function getFreshnessBadge(droppedAt: string): {
   if (days <= 3) {
     return {
       label: "Just Dropped",
-      className: "bg-green-100 text-green-800 border-green-200",
+      className: "bg-[var(--color-new-drop-bg)] text-[var(--color-new-drop)] border-[var(--color-new-drop)]",
     }
   }
   if (days <= 7) {
     return {
       label: "Fresh",
-      className: "bg-green-50 text-green-700 border-green-200",
+      className: "bg-[var(--color-new-drop-bg)] text-[var(--color-new-drop)] border-[var(--color-new-drop)]",
     }
   }
   if (days <= 14) {
     return {
       label: "This Week",
-      className: "bg-gray-100 text-gray-600 border-gray-200",
+      className: "bg-muted text-muted-foreground border-border",
     }
   }
   return null
@@ -60,13 +60,24 @@ export function slugify(name: string): string {
  */
 export function getCategoryIcon(category: string): string {
   const icons: Record<string, string> = {
+    // DB values (singular)
     flower: "🌿",
+    concentrate: "💧",
+    edible: "🍪",
+    "pre-roll": "🚬",
+    vape: "💨",
+    tincture: "💊",
+    topical: "🧴",
+    accessory: "🛒",
+    other: "🌱",
+    // Plural aliases (for display names / filter UI)
     concentrates: "💧",
     edibles: "🍪",
     "pre-rolls": "🚬",
     vapes: "💨",
     tinctures: "💊",
     topicals: "🧴",
+    accessories: "🛒",
   }
   return icons[category?.toLowerCase()] ?? "🌿"
 }

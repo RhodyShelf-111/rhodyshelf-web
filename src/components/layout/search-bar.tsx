@@ -25,7 +25,7 @@ export function SearchBar({ autoFocus, onBlur }: SearchBarProps) {
     (e: React.FormEvent) => {
       e.preventDefault()
       if (value.trim()) {
-        router.push(`/menu?search=${encodeURIComponent(value.trim())}`)
+        router.push(`/search?q=${encodeURIComponent(value.trim())}`)
         setValue("")
       }
     },
@@ -42,7 +42,7 @@ export function SearchBar({ autoFocus, onBlur }: SearchBarProps) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={onBlur}
-        className="pl-9 h-9 text-sm bg-muted/50 border-transparent focus:border-border focus:bg-white"
+        className="pl-9 h-9 text-sm bg-muted/50 border-transparent focus:border-border focus:bg-card"
       />
     </form>
   )

@@ -47,7 +47,7 @@ function ProductDetailContent({
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-card/80 backdrop-blur-sm hover:bg-card transition-colors"
         aria-label="Close"
       >
         <X className="w-5 h-5" />
@@ -62,12 +62,20 @@ function ProductDetailContent({
             fill
             className="object-cover"
             sizes="420px"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement
+              target.style.display = "none"
+              const fallback = target.nextElementSibling as HTMLElement | null
+              if (fallback) fallback.style.display = "flex"
+            }}
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-6xl">
-            {getCategoryIcon(product.category)}
-          </div>
-        )}
+        ) : null}
+        <div
+          className="absolute inset-0 items-center justify-center text-6xl"
+          style={{ display: product.image_url ? "none" : "flex" }}
+        >
+          {getCategoryIcon(product.category)}
+        </div>
         {isOnSale && (
           <div className="absolute top-3 left-3">
             <DealBadge />

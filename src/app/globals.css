@@ -35,14 +35,19 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* RhodyShelf custom tokens */
-  --color-sale: #dc2626;
-  --color-sale-bg: #fef2f2;
-  --color-new-drop: #2563eb;
-  --color-new-drop-bg: #eff6ff;
-  --color-surface: #f8faf8;
+  --color-sale: var(--rs-sale);
+  --color-sale-bg: var(--rs-sale-bg);
+  --color-new-drop: var(--rs-new-drop);
+  --color-new-drop-bg: var(--rs-new-drop-bg);
+  --color-surface: var(--rs-surface);
 }
 
 :root {
+  --rs-sale: #dc2626;
+  --rs-sale-bg: #fef2f2;
+  --rs-new-drop: #2563eb;
+  --rs-new-drop-bg: #eff6ff;
+  --rs-surface: #f8faf8;
   --background: #ffffff;
   --foreground: #111827;
   --card: #ffffff;
@@ -62,6 +67,32 @@
   --input: #e5e7eb;
   --ring: #16a34a;
   --radius: 0.75rem;
+}
+
+.dark {
+  --rs-sale: #ef4444;
+  --rs-sale-bg: #7f1d1d;
+  --rs-new-drop: #3b82f6;
+  --rs-new-drop-bg: #1e3a5f;
+  --rs-surface: #0f150f;
+  --background: #0a0f0a;
+  --foreground: #f9fafb;
+  --card: #141a14;
+  --card-foreground: #f9fafb;
+  --popover: #1a221a;
+  --popover-foreground: #f9fafb;
+  --primary: #22c55e;
+  --primary-foreground: #052e16;
+  --secondary: #1a221a;
+  --secondary-foreground: #d1d5db;
+  --muted: #1a221a;
+  --muted-foreground: #9ca3af;
+  --accent: #14532d;
+  --accent-foreground: #bbf7d0;
+  --destructive: #dc2626;
+  --border: #2d3d2d;
+  --input: #2d3d2d;
+  --ring: #22c55e;
 }
 
 @layer base {

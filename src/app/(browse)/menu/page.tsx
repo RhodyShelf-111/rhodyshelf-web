@@ -1,31 +1,27 @@
-import { getInventory } from "@/lib/queries/products"
-import { MenuClient } from "./menu-client"
-import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 
-export const revalidate = 1800 // 30 minutes
+export default function MenuPage({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>
+}) {
+  // Redirect /menu -> /search, mapping old param names to new ones
+  const params = new URLSearchParams()
+  const get = (key: string) =>
+    typeof searchParams[key] === "string" ? searchParams[key] : undefined
 
-export const metadata: Metadata = {
-  title: "Browse Menu",
-  description:
-    "Browse cannabis products across 8 Rhode Island dispensaries. Filter by category, brand, strain, price, and THC.",
-}
+  const category = get("category")
+  const brand = get("brand")
+  const dispensary = get("dispensary")
+  const search = get("search")
+  const sale = get("sale")
 
-export default async function MenuPage() {
-  const listings = await getInventory()
+  if (category) params.set("category", category)
+  if (brand) params.set("brand", brand)
+  if (dispensary) params.set("dispensary", dispensary)
+  if (search) params.set("q", search)
+  if (sale) params.set("sale", sale)
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          Browse Menu
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {listings.length.toLocaleString()} products across 8 Rhode Island
-          dispensaries
-        </p>
-      </div>
-
-      <MenuClient listings={listings} />
-    </div>
-  )
+  const qs = params.toString()
+  redirect(`/search${qs ? `?${qs}` : ""}`)
 }

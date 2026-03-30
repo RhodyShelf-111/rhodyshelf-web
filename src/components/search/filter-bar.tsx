@@ -1,0 +1,438 @@
+"use client"
+
+import { useState } from "react"
+import { SlidersHorizontal, ChevronDown, X } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { cn, getCategoryIcon } from "@/lib/utils"
+import type { ProductFilters, Dispensary } from "@/lib/types"
+
+const SORT_OPTIONS: { value: NonNullable<ProductFilters["sort"]>; label: string }[] = [
+  { value: "brand-asc", label: "Brand A–Z" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "thc-desc", label: "THC: Highest" },
+  { value: "newest", label: "Newest" },
+]
+
+type OpenDropdown = "brand" | "dispensary" | "sort" | null
+
+interface FilterBarProps {
+  filters: ProductFilters
+  categories: string[]
+  brands: string[]
+  dispensaries: Dispensary[]
+  onFilterChange: (key: keyof ProductFilters, value: ProductFilters[keyof ProductFilters]) => void
+  onClear: () => void
+  resultCount: number
+}
+
+export function FilterBar({
+  filters,
+  categories,
+  brands,
+  dispensaries,
+  onFilterChange,
+  onClear,
+  resultCount,
+}: FilterBarProps) {
+  const [brandSearch, setBrandSearch] = useState("")
+  const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null)
+
+  const toggle = (name: OpenDropdown) =>
+    setOpenDropdown((prev) => (prev === name ? null : name))
+
+  const filteredBrands = brandSearch
+    ? brands.filter((b) => b.toLowerCase().includes(brandSearch.toLowerCase()))
+    : brands
+
+  const activeCount = Object.values(filters).filter(
+    (v) => v != null && v !== "" && v !== false
+  ).length
+  const currentSort = SORT_OPTIONS.find((o) => o.value === filters.sort) ?? SORT_OPTIONS[0]
+
+  const mobileFilters = (
+    <div className="space-y-6">
+      {/* Category */}
+      <FilterSection title="Category">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => (
+            <CategoryChip
+              key={cat}
+              category={cat}
+              active={filters.category === cat}
+              onToggle={() => onFilterChange("category", filters.category === cat ? undefined : cat)}
+            />
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Brand */}
+      <FilterSection title="Brand">
+        <input
+          type="text"
+          placeholder="Search brands..."
+          value={brandSearch}
+          onChange={(e) => setBrandSearch(e.target.value)}
+          className="w-full h-8 px-3 text-sm rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+        />
+        <div className="max-h-48 overflow-y-auto space-y-1.5 mt-2">
+          {filteredBrands.slice(0, 20).map((brand) => (
+            <label key={brand} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="brand-mobile"
+                checked={filters.brand === brand}
+                onChange={() =>
+                  onFilterChange("brand", filters.brand === brand ? undefined : brand)
+                }
+                className="w-4 h-4 accent-primary"
+              />
+              <span className="text-sm truncate">{brand}</span>
+            </label>
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Dispensary */}
+      <FilterSection title="Dispensary">
+        {dispensaries.map((d) => (
+          <label key={d.slug} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="disp-mobile"
+              checked={filters.dispensary === d.slug}
+              onChange={() =>
+                onFilterChange(
+                  "dispensary",
+                  filters.dispensary === d.slug ? undefined : d.slug
+                )
+              }
+              className="w-4 h-4 accent-primary"
+            />
+            <span className="text-sm">{d.name}</span>
+          </label>
+        ))}
+      </FilterSection>
+
+      {/* Sort */}
+      <FilterSection title="Sort">
+        {SORT_OPTIONS.map((opt) => (
+          <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="sort-mobile"
+              checked={(filters.sort ?? "brand-asc") === opt.value}
+              onChange={() => onFilterChange("sort", opt.value)}
+              className="w-4 h-4 accent-primary"
+            />
+            <span className="text-sm">{opt.label}</span>
+          </label>
+        ))}
+      </FilterSection>
+
+      {/* On Sale */}
+      <label className="flex items-center gap-3 cursor-pointer">
+        <div
+          role="switch"
+          aria-checked={!!filters.onSale}
+          tabIndex={0}
+          onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              onFilterChange("onSale", !filters.onSale || undefined)
+            }
+          }}
+          className={cn(
+            "relative w-10 h-6 rounded-full transition-colors cursor-pointer",
+            filters.onSale ? "bg-primary" : "bg-muted"
+          )}
+        >
+          <div
+            className={cn(
+              "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow-sm",
+              filters.onSale ? "translate-x-4" : ""
+            )}
+          />
+        </div>
+        <span className="text-sm font-medium">On Sale Only</span>
+      </label>
+
+      {activeCount > 0 && (
+        <button onClick={onClear} className="text-sm text-primary hover:underline">
+          Clear all filters
+        </button>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="space-y-3 mb-4">
+      {/* Backdrop to close dropdowns */}
+      {openDropdown && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setOpenDropdown(null)}
+        />
+      )}
+
+      {/* Row 1: result count + dropdowns */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <p className="text-sm text-muted-foreground mr-auto">
+          <span className="font-medium text-foreground">
+            {resultCount.toLocaleString()}
+          </span>{" "}
+          products
+        </p>
+
+        {/* Brand dropdown */}
+        <div className="relative z-50 hidden md:block">
+          <button
+            onClick={() => toggle("brand")}
+            className={cn(
+              "inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border transition-colors",
+              filters.brand
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border text-foreground hover:bg-muted"
+            )}
+          >
+            {filters.brand ? filters.brand : `All Brands (${brands.length})`}
+            {filters.brand ? (
+              <X
+                className="w-3 h-3"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onFilterChange("brand", undefined)
+                  setOpenDropdown(null)
+                }}
+              />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+          {openDropdown === "brand" && (
+            <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-popover border border-border rounded-xl shadow-lg p-2">
+              <input
+                type="text"
+                placeholder="Search brands..."
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
+                className="w-full h-8 px-3 text-sm rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-2"
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="max-h-48 overflow-y-auto space-y-0.5">
+                {filteredBrands.slice(0, 30).map((brand) => (
+                  <button
+                    key={brand}
+                    onClick={() => {
+                      onFilterChange(
+                        "brand",
+                        filters.brand === brand ? undefined : brand
+                      )
+                      setOpenDropdown(null)
+                    }}
+                    className={cn(
+                      "w-full text-left px-2 py-1.5 text-sm rounded transition-colors truncate",
+                      filters.brand === brand
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    )}
+                  >
+                    {brand}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Dispensary dropdown */}
+        <div className="relative z-50 hidden md:block">
+          <button
+            onClick={() => toggle("dispensary")}
+            className={cn(
+              "inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border transition-colors",
+              filters.dispensary
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border text-foreground hover:bg-muted"
+            )}
+          >
+            {filters.dispensary
+              ? (dispensaries.find((d) => d.slug === filters.dispensary)?.name ??
+                  filters.dispensary)
+              : `All Dispensaries (${dispensaries.length})`}
+            {filters.dispensary ? (
+              <X
+                className="w-3 h-3"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onFilterChange("dispensary", undefined)
+                  setOpenDropdown(null)
+                }}
+              />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+          {openDropdown === "dispensary" && (
+            <div className="absolute top-full left-0 mt-1 z-50 w-52 bg-popover border border-border rounded-xl shadow-lg p-2">
+              {dispensaries.map((d) => (
+                <button
+                  key={d.slug}
+                  onClick={() => {
+                    onFilterChange(
+                      "dispensary",
+                      filters.dispensary === d.slug ? undefined : d.slug
+                    )
+                    setOpenDropdown(null)
+                  }}
+                  className={cn(
+                    "w-full text-left px-2 py-1.5 text-sm rounded transition-colors",
+                    filters.dispensary === d.slug
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  )}
+                >
+                  {d.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sort dropdown */}
+        <div className="relative z-50 hidden md:block">
+          <button
+            onClick={() => toggle("sort")}
+            className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+          >
+            {currentSort.label}
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+          {openDropdown === "sort" && (
+            <div className="absolute top-full right-0 mt-1 z-50 w-44 bg-popover border border-border rounded-xl shadow-lg p-2">
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    onFilterChange("sort", opt.value)
+                    setOpenDropdown(null)
+                  }}
+                  className={cn(
+                    "w-full text-left px-2 py-1.5 text-sm rounded transition-colors",
+                    (filters.sort ?? "brand-asc") === opt.value
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* On Sale — desktop */}
+        <button
+          aria-pressed={!!filters.onSale}
+          onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
+          className={cn(
+            "hidden md:inline-flex items-center h-8 px-3 text-sm rounded-lg border transition-colors",
+            filters.onSale
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card border-border text-foreground hover:bg-muted"
+          )}
+        >
+          On Sale
+        </button>
+
+        {/* Mobile filter sheet */}
+        <Sheet>
+          <SheetTrigger className="md:hidden inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors">
+            <SlidersHorizontal className="w-4 h-4" />
+            Filters
+            {activeCount > 0 && (
+              <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
+                {activeCount}
+              </span>
+            )}
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh] overflow-y-auto px-4 pb-8">
+            <h3 className="font-heading text-lg font-bold mb-4">Filters</h3>
+            {mobileFilters}
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Row 2: Category chips + on sale chip */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-4 px-4 pb-1">
+        {categories.map((cat) => (
+          <CategoryChip
+            key={cat}
+            category={cat}
+            active={filters.category === cat}
+            onToggle={() =>
+              onFilterChange("category", filters.category === cat ? undefined : cat)
+            }
+          />
+        ))}
+        <button
+          aria-pressed={!!filters.onSale}
+          onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
+          className={cn(
+            "md:hidden shrink-0 inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-full border transition-colors",
+            filters.onSale
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border text-foreground hover:bg-muted"
+          )}
+        >
+          🏷️ On Sale
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function CategoryChip({
+  category,
+  active,
+  onToggle,
+}: {
+  category: string
+  active: boolean
+  onToggle: () => void
+}) {
+  const label = category.charAt(0).toUpperCase() + category.slice(1)
+  return (
+    <button
+      aria-pressed={active}
+      onClick={onToggle}
+      className={cn(
+        "shrink-0 inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-full border transition-colors",
+        active
+          ? "bg-primary text-primary-foreground border-primary"
+          : "border-border text-foreground hover:bg-muted"
+      )}
+    >
+      {getCategoryIcon(category)} {label}
+    </button>
+  )
+}
+
+function FilterSection({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <h4 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+        {title}
+      </h4>
+      <div className="space-y-2">{children}</div>
+    </div>
+  )
+}

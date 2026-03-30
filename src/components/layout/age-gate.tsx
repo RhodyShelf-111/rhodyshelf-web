@@ -67,7 +67,7 @@ export function AgeGate() {
       aria-modal="true"
       aria-labelledby="age-gate-title"
       className={cn(
-        "fixed inset-0 z-[60] bg-white/95 backdrop-blur-md flex items-center justify-center px-6",
+        "fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center px-6",
         "transition-opacity duration-[400ms]",
         visible ? "opacity-100" : "opacity-0"
       )}

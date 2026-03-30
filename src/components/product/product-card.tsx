@@ -37,12 +37,20 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
             fill
             className="object-cover"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement
+              target.style.display = "none"
+              const fallback = target.nextElementSibling as HTMLElement | null
+              if (fallback) fallback.style.display = "flex"
+            }}
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-4xl">
-            {getCategoryIcon(product.category)}
-          </div>
-        )}
+        ) : null}
+        <div
+          className="absolute inset-0 items-center justify-center text-4xl"
+          style={{ display: product.image_url ? "none" : "flex" }}
+        >
+          {getCategoryIcon(product.category)}
+        </div>
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
