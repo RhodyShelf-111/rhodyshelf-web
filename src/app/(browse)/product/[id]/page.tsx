@@ -79,7 +79,7 @@ export default async function ProductPage({
               {product.strain_type ? ` · ${product.strain_type}` : ""}
               {product.weight_display ? ` · ${product.weight_display}` : ""}
             </p>
-            <h1 className="font-heading text-2xl font-bold text-foreground mt-1">
+            <h1 className="text-2xl font-bold text-foreground mt-1">
               {product.name}
             </h1>
             <p className="text-muted-foreground mt-0.5">

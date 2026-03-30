@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center">
         <span className="text-5xl opacity-30 block mb-4">🌿</span>
-        <h1 className="font-heading text-3xl font-bold text-foreground mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Page not found
         </h1>
         <p className="text-muted-foreground mb-6">

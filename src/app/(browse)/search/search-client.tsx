@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import type { InventoryListing, ProductFilters, Dispensary } from "@/lib/types"
 import { applyFilters } from "@/lib/filter-utils"
 import { FilterBar } from "@/components/search/filter-bar"
@@ -8,6 +8,7 @@ import { BrandGroup } from "@/components/search/brand-group"
 import { HeroSearch } from "@/components/search/hero-search"
 import { ProductDetailDrawer } from "@/components/product/product-detail"
 import { resolveAlias } from "@/lib/brand-aliases"
+import { cn } from "@/lib/utils"
 
 const BRAND_GROUP_PAGE_SIZE = 30
 
@@ -25,6 +26,23 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
   const [visibleBrandCount, setVisibleBrandCount] = useState(BRAND_GROUP_PAGE_SIZE)
   const [selectedListing, setSelectedListing] = useState<InventoryListing | null>(null)
   const [searchValue, setSearchValue] = useState(initialFilters.search ?? "")
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const initialFiltersKey = JSON.stringify(initialFilters)
+  const prevFiltersKey = useRef(initialFiltersKey)
+
+  // Sync filters when URL search params change (client-side navigation)
+  useEffect(() => {
+    if (prevFiltersKey.current !== initialFiltersKey) {
+      setIsTransitioning(true)
+      setFilters({ sort: "brand-asc", ...initialFilters })
+      setSearchValue(initialFilters.search ?? "")
+      setVisibleBrandCount(BRAND_GROUP_PAGE_SIZE)
+      prevFiltersKey.current = initialFiltersKey
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setIsTransitioning(false))
+      })
+    }
+  }, [initialFiltersKey, initialFilters])
 
   const filtered = useMemo(() => applyFilters(listings, filters), [listings, filters])
 
@@ -115,30 +133,32 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
       )}
 
       {/* Results */}
-      {brandGroups.length === 0 ? (
-        <EmptyState query={filters.search} onClear={clearFilters} categories={categories} onCategory={(cat) => { clearFilters(); updateFilter("category", cat) }} />
-      ) : (
-        <>
-          {visibleGroups.map(({ brand, items }) => (
-            <BrandGroup
-              key={brand}
-              brandName={brand}
-              listings={items}
-              onCardClick={handleCardClick}
-            />
-          ))}
-          {hasMoreBrands && (
-            <div className="flex justify-center py-6">
-              <button
-                onClick={() => setVisibleBrandCount((n) => n + BRAND_GROUP_PAGE_SIZE)}
-                className="px-6 py-2 text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors"
-              >
-                Show more brands ({brandGroups.length - visibleBrandCount} remaining)
-              </button>
-            </div>
-          )}
-        </>
-      )}
+      <div className={cn("transition-opacity duration-150", isTransitioning && "opacity-0")}>
+        {brandGroups.length === 0 ? (
+          <EmptyState query={filters.search} onClear={clearFilters} categories={categories} onCategory={(cat) => { clearFilters(); updateFilter("category", cat) }} />
+        ) : (
+          <>
+            {visibleGroups.map(({ brand, items }) => (
+              <BrandGroup
+                key={brand}
+                brandName={brand}
+                listings={items}
+                onCardClick={handleCardClick}
+              />
+            ))}
+            {hasMoreBrands && (
+              <div className="flex justify-center py-6">
+                <button
+                  onClick={() => setVisibleBrandCount((n) => n + BRAND_GROUP_PAGE_SIZE)}
+                  className="px-6 py-2 text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors"
+                >
+                  Show more brands ({brandGroups.length - visibleBrandCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <ProductDetailDrawer
         listing={selectedListing}
@@ -161,7 +181,7 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <p className="font-heading text-xl font-bold text-foreground mb-2">
+      <p className="text-xl font-bold text-foreground mb-2">
         {query ? `No products match "${query}"` : "No products match your filters"}
       </p>
       <p className="text-sm text-muted-foreground mb-6">

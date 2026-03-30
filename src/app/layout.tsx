@@ -1,15 +1,9 @@
 import type { Metadata } from "next"
-import { DM_Sans, Fraunces } from "next/font/google"
+import { DM_Sans } from "next/font/google"
 import "./globals.css"
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
-  subsets: ["latin"],
-  display: "swap",
-})
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
 })
@@ -34,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${fraunces.variable} dark h-full antialiased`}
+      className={`${dmSans.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>

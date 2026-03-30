@@ -79,13 +79,13 @@ export function AgeGate() {
               <span className="text-5xl">🌿</span>
             </div>
 
-            <p className="font-heading text-xl font-semibold text-foreground mb-8">
+            <p className="text-xl font-semibold text-foreground mb-8">
               RhodyShelf
             </p>
 
             <h1
               id="age-gate-title"
-              className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-3"
+              className="text-2xl sm:text-3xl font-bold text-foreground mb-3"
             >
               Are you 21 or older?
             </h1>
@@ -127,7 +127,7 @@ export function AgeGate() {
 
             <h1
               id="age-gate-title"
-              className="font-heading text-2xl font-bold text-foreground mb-3"
+              className="text-2xl font-bold text-foreground mb-3"
             >
               You must be 21 or older to access this site.
             </h1>

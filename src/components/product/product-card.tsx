@@ -24,7 +24,8 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
         "group relative rounded-xl border border-border bg-card overflow-hidden",
         "shadow-[0_1px_3px_rgba(0,0,0,0.04)]",
         "hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-0.5",
-        "transition-all duration-150 ease-out cursor-pointer"
+        "transition-all duration-150 ease-out cursor-pointer",
+        "flex flex-col h-full"
       )}
       onClick={onClick}
     >
@@ -62,7 +63,7 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
       </div>
 
       {/* Content */}
-      <div className="px-3 py-2.5 space-y-1">
+      <div className="px-3 py-2.5 space-y-1 flex flex-col flex-1">
         {/* Category + Strain */}
         <p className="text-[12px] text-muted-foreground truncate">
           {product.category}
@@ -101,7 +102,7 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
         )}
 
         {/* Dispensary + Upvote */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-1 mt-auto">
           <div className="flex items-center gap-1 text-[12px] text-muted-foreground truncate">
             <MapPin className="w-3 h-3 shrink-0" />
             <span className="truncate">{dispensary.name}</span>
@@ -111,7 +112,7 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
               e.stopPropagation()
               toggle()
             }}
-            className="p-1 -mr-1 rounded-full hover:bg-muted transition-colors"
+            className="p-2.5 -mr-2 rounded-full hover:bg-muted transition-colors"
             aria-label={isUpvoted ? "Remove upvote" : "Upvote"}
           >
             <Heart

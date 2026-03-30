@@ -91,7 +91,7 @@ function ProductDetailContent({
             {product.strain_type ? ` · ${product.strain_type}` : ""}
             {product.weight_display ? ` · ${product.weight_display}` : ""}
           </p>
-          <h2 className="font-heading text-xl font-bold text-foreground mt-1">
+          <h2 className="text-xl font-bold text-foreground mt-1">
             {product.name}
           </h2>
           <p className="text-muted-foreground mt-0.5">{product.brand_name}</p>

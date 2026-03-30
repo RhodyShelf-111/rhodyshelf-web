@@ -7,7 +7,7 @@ export function SiteFooter() {
         <div className="flex flex-col sm:flex-row justify-between gap-6">
           {/* Brand */}
           <div>
-            <span className="font-heading text-xl font-bold text-foreground">
+            <span className="text-xl font-bold text-foreground">
               RhodyShelf
             </span>
             <p className="text-sm text-muted-foreground mt-1">
