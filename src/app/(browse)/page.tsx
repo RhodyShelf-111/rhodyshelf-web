@@ -48,7 +48,7 @@ export default async function HomePage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Hero */}
       <div className="mb-8">
-        <h1 className="font-heading text-3xl font-bold text-foreground mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Search RI dispensary menus,
           <br className="hidden sm:block" /> all in one place.
         </h1>

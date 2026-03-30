@@ -23,7 +23,7 @@ export function SiteHeader() {
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="shrink-0">
-          <span className="font-heading text-2xl font-bold text-foreground">
+          <span className="text-2xl font-bold text-foreground">
             RhodyShelf
           </span>
         </Link>

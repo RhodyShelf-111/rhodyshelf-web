@@ -54,7 +54,7 @@ export function HomepageClient({ sections }: HomepageClientProps) {
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{getCategoryIcon(section.key)}</span>
-                  <h2 className="font-heading text-[17px] font-bold text-foreground">
+                  <h2 className="text-[17px] font-bold text-foreground">
                     {section.label}
                   </h2>
                   <span className="text-[13px] text-muted-foreground">
@@ -70,7 +70,7 @@ export function HomepageClient({ sections }: HomepageClientProps) {
               </div>
 
               {/* Product cards row — hidden on mobile */}
-              <div className="hidden sm:flex gap-3 p-4 overflow-x-auto scrollbar-none">
+              <div className="hidden sm:flex items-stretch gap-3 p-4 overflow-x-auto scrollbar-none">
                 {cards.map((listing) => (
                   <div key={listing.id} className="w-40 shrink-0">
                     <ProductCard

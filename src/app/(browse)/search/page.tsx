@@ -40,7 +40,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl font-bold text-foreground">
+        <h1 className="text-2xl font-bold text-foreground">
           {params.q ? `Results for "${params.q}"` : params.brand ? params.brand : "Browse Menu"}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">

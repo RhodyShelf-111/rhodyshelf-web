@@ -359,7 +359,7 @@ export function FilterBar({
             )}
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[85vh] overflow-y-auto px-4 pb-8">
-            <h3 className="font-heading text-lg font-bold mb-4">Filters</h3>
+            <h3 className="text-lg font-bold mb-4">Filters</h3>
             {mobileFilters}
           </SheetContent>
         </Sheet>
