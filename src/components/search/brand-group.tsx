@@ -34,9 +34,9 @@ export function BrandGroup({ brandName, listings, onCardClick }: BrandGroupProps
       </div>
 
       {/* Horizontal scroll row */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-none -mx-4 px-4 pb-2">
+      <div className="flex gap-4 overflow-x-auto scrollbar-subtle -mx-4 px-4 pb-2 items-stretch">
         {listings.slice(0, 10).map((listing) => (
-          <div key={listing.id} className="w-36 shrink-0">
+          <div key={listing.id} className="w-52 shrink-0">
             <ProductCard
               listing={listing}
               onClick={() => onCardClick(listing)}

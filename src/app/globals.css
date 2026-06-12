@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-fraunces), Georgia, serif;
-  --font-mono: ui-monospace, monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -33,55 +34,16 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-
-  /* RhodyShelf custom tokens */
-  --color-sale: var(--rs-sale);
-  --color-sale-bg: var(--rs-sale-bg);
-  --color-new-drop: var(--rs-new-drop);
-  --color-new-drop-bg: var(--rs-new-drop-bg);
-  --color-surface: var(--rs-surface);
 }
 
 :root {
-  --rs-sale: #dc2626;
-  --rs-sale-bg: #fef2f2;
-  --rs-new-drop: #2563eb;
-  --rs-new-drop-bg: #eff6ff;
-  --rs-surface: #f8faf8;
-  --background: #ffffff;
-  --foreground: #111827;
-  --card: #ffffff;
-  --card-foreground: #111827;
-  --popover: #ffffff;
-  --popover-foreground: #111827;
-  --primary: #16a34a;
-  --primary-foreground: #ffffff;
-  --secondary: #f3f4f6;
-  --secondary-foreground: #374151;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --accent: #dcfce7;
-  --accent-foreground: #166534;
-  --destructive: #dc2626;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #16a34a;
-  --radius: 0.75rem;
-}
-
-.dark {
-  --rs-sale: #ef4444;
-  --rs-sale-bg: #7f1d1d;
-  --rs-new-drop: #3b82f6;
-  --rs-new-drop-bg: #1e3a5f;
-  --rs-surface: #0f150f;
   --background: #0a0f0a;
   --foreground: #f9fafb;
   --card: #141a14;
   --card-foreground: #f9fafb;
   --popover: #1a221a;
   --popover-foreground: #f9fafb;
-  --primary: #22c55e;
+  --primary: oklch(0.792 0.209 151.711);
   --primary-foreground: #052e16;
   --secondary: #1a221a;
   --secondary-foreground: #d1d5db;
@@ -89,10 +51,11 @@
   --muted-foreground: #9ca3af;
   --accent: #14532d;
   --accent-foreground: #bbf7d0;
-  --destructive: #dc2626;
+  --destructive: #ef4444;
   --border: #2d3d2d;
   --input: #2d3d2d;
-  --ring: #22c55e;
+  --ring: oklch(0.792 0.209 151.711);
+  --radius: 0.625rem;
 }
 
 @layer base {
@@ -105,9 +68,43 @@
   html {
     @apply font-sans;
   }
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-heading);
+}
+
+@layer utilities {
+  /* Truly hide native scrollbar (no chrome at all) */
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Thin, subtle themed scrollbar — used on horizontal card rows */
+  .scrollbar-subtle {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent) transparent;
+  }
+  .scrollbar-subtle::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  .scrollbar-subtle::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 0 8px;
+  }
+  .scrollbar-subtle::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+    border-radius: 999px;
+    transition: background 150ms ease;
+  }
+  .scrollbar-subtle:hover::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+  }
+  .scrollbar-subtle::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+  .scrollbar-subtle::-webkit-scrollbar-thumb:active {
+    background: var(--primary);
   }
 }

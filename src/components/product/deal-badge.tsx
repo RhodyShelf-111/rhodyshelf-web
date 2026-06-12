@@ -9,7 +9,7 @@ export function DealBadge({ className }: DealBadgeProps) {
     <span
       className={cn(
         "inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-md",
-        "bg-[var(--color-sale-bg)] text-[var(--color-sale)] border border-red-200",
+        "bg-red-950/70 text-red-300 border border-red-900/60",
         className
       )}
     >

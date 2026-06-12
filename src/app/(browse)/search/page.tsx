@@ -49,6 +49,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </div>
 
       <SearchClient
+        key={JSON.stringify(initialFilters)}
         listings={listings}
         initialFilters={initialFilters}
         brands={brands}

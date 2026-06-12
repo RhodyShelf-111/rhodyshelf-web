@@ -14,12 +14,12 @@ export const metadata: Metadata = {
 // Category display config — maps DB category value to label
 const CATEGORIES = [
   { key: "flower", label: "Flower" },
+  { key: "concentrate", label: "Concentrates" },
   { key: "pre-roll", label: "Pre-Rolls" },
   { key: "vape", label: "Vapes" },
   { key: "edible", label: "Edibles" },
-  { key: "concentrate", label: "Concentrates" },
-  { key: "accessory", label: "Accessories" },
   { key: "topical", label: "Topicals" },
+  { key: "accessory", label: "Accessories" },
 ]
 
 export default async function HomePage() {
@@ -45,19 +45,18 @@ export default async function HomePage() {
     .filter((s) => s.listings.length > 0)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       {/* Hero */}
       <div className="mb-8">
-        <h1 className="font-heading text-3xl font-bold text-foreground mb-2">
-          Search RI dispensary menus,
-          <br className="hidden sm:block" /> all in one place.
+        <h1 className="font-heading text-[clamp(1.625rem,3.2vw,2.5rem)] font-bold tracking-tight leading-[1.1] text-foreground mb-2">
+          Search RI dispensary menus, all in one place.
         </h1>
-        <p className="text-muted-foreground text-base mb-5 max-w-lg">
+        <p className="text-muted-foreground text-base md:text-lg mb-5 max-w-2xl lg:max-w-none lg:whitespace-nowrap">
           Browse every Rhode Island dispensary menu, compare prices, and find what you&apos;re looking for.
         </p>
         <HeroSearch
           brands={brands}
-          className="max-w-md"
+          className="max-w-xl"
         />
       </div>
 

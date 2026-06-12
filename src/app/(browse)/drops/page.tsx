@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 }
 
 export default async function DropsPage() {
-  const drops = await getDrops(14)
+  // 14-day window is now enforced in RhodyShelf DB via RLS on product_drops.
+  const drops = await getDrops()
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">

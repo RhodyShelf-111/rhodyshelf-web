@@ -11,6 +11,7 @@ import { useState } from "react"
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
   { href: "/drops", label: "Drops" },
+  { href: "/deals", label: "Deals" },
 ]
 
 export function SiteHeader() {
@@ -20,10 +21,10 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border h-16">
-      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-4">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="shrink-0">
-          <span className="font-heading text-2xl font-bold text-foreground">
+          <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
             RhodyShelf
           </span>
         </Link>
@@ -35,7 +36,7 @@ export function SiteHeader() {
               key={link.href}
               href={link.href}
               className={cn(
-                "px-3 py-2 text-[15px] font-medium rounded-lg transition-colors",
+                "px-3 py-2 text-[15px] font-medium rounded-lg transition-colors whitespace-nowrap",
                 pathname?.startsWith(link.href)
                   ? "text-primary bg-accent"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -47,7 +48,7 @@ export function SiteHeader() {
         </nav>
 
         {/* Desktop search */}
-        <div className="hidden md:block w-64">
+        <div className="hidden md:block w-64 lg:w-72">
           <SearchBar />
         </div>
 

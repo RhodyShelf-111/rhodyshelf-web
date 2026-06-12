@@ -70,9 +70,9 @@ export function HomepageClient({ sections }: HomepageClientProps) {
               </div>
 
               {/* Product cards row — hidden on mobile */}
-              <div className="hidden sm:flex gap-3 p-4 overflow-x-auto scrollbar-none">
+              <div className="hidden sm:flex gap-4 p-4 overflow-x-auto scrollbar-subtle items-stretch">
                 {cards.map((listing) => (
-                  <div key={listing.id} className="w-40 shrink-0">
+                  <div key={listing.id} className="w-56 shrink-0">
                     <ProductCard
                       listing={listing}
                       onClick={() => handleCardClick(listing)}

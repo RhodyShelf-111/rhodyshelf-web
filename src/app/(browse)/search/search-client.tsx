@@ -6,10 +6,12 @@ import { applyFilters } from "@/lib/filter-utils"
 import { FilterBar } from "@/components/search/filter-bar"
 import { BrandGroup } from "@/components/search/brand-group"
 import { HeroSearch } from "@/components/search/hero-search"
+import { ProductCard } from "@/components/product/product-card"
 import { ProductDetailDrawer } from "@/components/product/product-detail"
 import { resolveAlias } from "@/lib/brand-aliases"
 
 const BRAND_GROUP_PAGE_SIZE = 30
+const FLAT_GRID_PAGE_SIZE = 60
 
 interface SearchClientProps {
   listings: InventoryListing[]
@@ -23,8 +25,12 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
     ...initialFilters,
   })
   const [visibleBrandCount, setVisibleBrandCount] = useState(BRAND_GROUP_PAGE_SIZE)
+  const [flatDisplayCount, setFlatDisplayCount] = useState(FLAT_GRID_PAGE_SIZE)
   const [selectedListing, setSelectedListing] = useState<InventoryListing | null>(null)
   const [searchValue, setSearchValue] = useState(initialFilters.search ?? "")
+
+  // Single-brand view: skip brand grouping entirely, render a flat grid.
+  const isSingleBrandView = Boolean(filters.brand)
 
   const filtered = useMemo(() => applyFilters(listings, filters), [listings, filters])
 
@@ -62,6 +68,7 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
     (key: keyof ProductFilters, value: ProductFilters[keyof ProductFilters]) => {
       setFilters((prev) => ({ ...prev, [key]: value || undefined }))
       setVisibleBrandCount(BRAND_GROUP_PAGE_SIZE)
+      setFlatDisplayCount(FLAT_GRID_PAGE_SIZE)
     },
     []
   )
@@ -70,6 +77,7 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
     setFilters({ sort: "brand-asc" })
     setSearchValue("")
     setVisibleBrandCount(BRAND_GROUP_PAGE_SIZE)
+    setFlatDisplayCount(FLAT_GRID_PAGE_SIZE)
   }, [])
 
   const handleCardClick = useCallback((listing: InventoryListing) => {
@@ -115,8 +123,31 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
       )}
 
       {/* Results */}
-      {brandGroups.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState query={filters.search} onClear={clearFilters} categories={categories} onCategory={(cat) => { clearFilters(); updateFilter("category", cat) }} />
+      ) : isSingleBrandView ? (
+        // Flat grid: user has filtered to a brand, show every product
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+            {filtered.slice(0, flatDisplayCount).map((listing) => (
+              <ProductCard
+                key={listing.id}
+                listing={listing}
+                onClick={() => handleCardClick(listing)}
+              />
+            ))}
+          </div>
+          {flatDisplayCount < filtered.length && (
+            <div className="flex justify-center py-6">
+              <button
+                onClick={() => setFlatDisplayCount((n) => n + FLAT_GRID_PAGE_SIZE)}
+                className="px-6 py-2 text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors"
+              >
+                Load more ({filtered.length - flatDisplayCount} remaining)
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <>
           {visibleGroups.map(({ brand, items }) => (

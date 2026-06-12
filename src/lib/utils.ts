@@ -27,13 +27,13 @@ export function getFreshnessBadge(droppedAt: string): {
   if (days <= 3) {
     return {
       label: "Just Dropped",
-      className: "bg-[var(--color-new-drop-bg)] text-[var(--color-new-drop)] border-[var(--color-new-drop)]",
+      className: "bg-emerald-950/70 text-emerald-300 border border-emerald-900/60",
     }
   }
   if (days <= 7) {
     return {
       label: "Fresh",
-      className: "bg-[var(--color-new-drop-bg)] text-[var(--color-new-drop)] border-[var(--color-new-drop)]",
+      className: "bg-emerald-950/50 text-emerald-400 border border-emerald-900/50",
     }
   }
   if (days <= 14) {

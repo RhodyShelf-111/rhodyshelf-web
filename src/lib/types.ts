@@ -2,11 +2,16 @@
 export interface Product {
   id: string
   name: string
+  brand_id: string | null
   brand_name: string
   category: string
   subcategory: string | null
+  weight_grams: number | null
   weight_display: string | null
   strain_type: string | null
+  strain_name: string | null
+  // Product-level fallback image (most recent ci.image_url across dispensaries,
+  // populated by the D4 sync). Per-dispensary image lives on InventoryListing.image_url.
   image_url: string | null
 }
 
@@ -24,9 +29,15 @@ export interface Dispensary {
 export interface InventoryListing {
   id: string
   price: number | null
+  original_price: number | null
   discount_amount: number | null
+  discount_percent: number | null
   thc_percent: number | null
   cbd_percent: number | null
+  // Per-dispensary image URL (preferred over product.image_url for card display)
+  image_url: string | null
+  // Direct deep-link to the product on the dispensary's menu page (primary CTA target)
+  product_url: string | null
   last_seen_at: string
   product: Product
   dispensary: Dispensary
@@ -73,5 +84,4 @@ export interface Brand {
   canonical_name: string
   slug: string
   category: string | null
-  is_active: boolean
 }

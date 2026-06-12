@@ -35,6 +35,7 @@ export default async function ProductPage({
 
   const { product, dispensary, price, discount_amount, thc_percent, cbd_percent } =
     listing
+  const imageUrl = listing.image_url ?? product.image_url
   const isOnSale = (discount_amount ?? 0) > 0
 
   return (
@@ -50,9 +51,9 @@ export default async function ProductPage({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Image */}
         <div className="relative aspect-square bg-muted rounded-xl overflow-hidden">
-          {product.image_url ? (
+          {imageUrl ? (
             <Image
-              src={product.image_url}
+              src={imageUrl}
               alt={product.name}
               fill
               className="object-cover"
@@ -116,7 +117,7 @@ export default async function ProductPage({
             </div>
           )}
 
-          <div className="bg-surface rounded-xl p-4 border border-border">
+          <div className="bg-muted rounded-xl p-4 border border-border">
             <p className="text-sm text-muted-foreground">Available at</p>
             <p className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
               <MapPin className="w-4 h-4 text-primary" />

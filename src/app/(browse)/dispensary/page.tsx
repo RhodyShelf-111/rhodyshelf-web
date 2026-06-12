@@ -54,7 +54,7 @@ export default async function DispensaryListPage() {
                 {d.product_count} products
               </span>
               {d.deal_count > 0 && (
-                <span className="flex items-center gap-1 text-[var(--color-sale)]">
+                <span className="flex items-center gap-1 text-red-400">
                   <Tag className="w-3.5 h-3.5" />
                   {d.deal_count} deals
                 </span>

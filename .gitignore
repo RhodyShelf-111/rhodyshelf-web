@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.gstack/
+
+# local-only reference library (old/live-site components for inspiration)
+/reference-components/
+.env*.local
+
+# secrets — local MCP config (contains access tokens, never commit)
+.mcp.json
+
+# claude code local planning artifacts
+.claude/plans/

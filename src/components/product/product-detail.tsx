@@ -2,7 +2,8 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { ExternalLink, Heart, X } from "lucide-react"
+import { ExternalLink, ChevronUp, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import type { InventoryListing } from "@/lib/types"
@@ -39,8 +40,9 @@ function ProductDetailContent({
 }) {
   const { product, dispensary, price, discount_amount, thc_percent, cbd_percent } =
     listing
+  const imageUrl = listing.image_url ?? product.image_url
   const isOnSale = (discount_amount ?? 0) > 0
-  const { isUpvoted, toggle } = useUpvotes(listing.id)
+  const { isUpvoted, toggle } = useUpvotes(product.id)
 
   return (
     <div>
@@ -55,9 +57,9 @@ function ProductDetailContent({
 
       {/* Image */}
       <div className="relative aspect-square bg-muted">
-        {product.image_url ? (
+        {imageUrl ? (
           <Image
-            src={product.image_url}
+            src={imageUrl}
             alt={product.name}
             fill
             className="object-cover"
@@ -72,7 +74,7 @@ function ProductDetailContent({
         ) : null}
         <div
           className="absolute inset-0 items-center justify-center text-6xl"
-          style={{ display: product.image_url ? "none" : "flex" }}
+          style={{ display: imageUrl ? "none" : "flex" }}
         >
           {getCategoryIcon(product.category)}
         </div>
@@ -125,7 +127,7 @@ function ProductDetailContent({
         )}
 
         {/* Dispensary */}
-        <div className="bg-surface rounded-lg p-4 border border-border">
+        <div className="bg-muted rounded-lg p-4 border border-border">
           <p className="text-sm text-muted-foreground">Available at</p>
           <p className="font-semibold text-foreground">{dispensary.name}</p>
           {dispensary.city && (
@@ -147,17 +149,14 @@ function ProductDetailContent({
             </a>
           )}
           <Button
-            variant="outline"
+            variant={isUpvoted ? "default" : "outline"}
             size="icon"
             onClick={toggle}
             aria-label={isUpvoted ? "Remove upvote" : "Upvote"}
+            aria-pressed={isUpvoted}
           >
-            <Heart
-              className={
-                isUpvoted
-                  ? "w-5 h-5 fill-red-500 text-red-500"
-                  : "w-5 h-5 text-muted-foreground"
-              }
+            <ChevronUp
+              className={cn("w-5 h-5", isUpvoted && "stroke-[3]")}
             />
           </Button>
         </div>
