@@ -25,8 +25,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 })
   }
 
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
   const { product_id, action } = body
-  if (!product_id || (action !== "add" && action !== "remove")) {
+  if (
+    !product_id ||
+    !UUID_RE.test(product_id) ||
+    (action !== "add" && action !== "remove")
+  ) {
     return NextResponse.json({ ok: false, error: "bad_request" }, { status: 400 })
   }
 

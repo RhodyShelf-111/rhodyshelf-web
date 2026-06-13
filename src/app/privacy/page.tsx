@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         Privacy Policy
       </h1>
       <div className="prose prose-gray max-w-none space-y-4 text-muted-foreground">
-        <p>Last updated: March 2026</p>
+        <p>Last updated: June 2026</p>
         <p>
           RhodyShelf displays publicly available cannabis menu information from
           Rhode Island dispensaries. We do not collect personal information, require
@@ -23,9 +23,14 @@ export default function PrivacyPage() {
         </h2>
         <p>
           We store a single cookie (<code>rhodyshelf_age_verified</code>) to
-          remember your age verification. We store product upvotes in your
-          browser&apos;s local storage. Neither of these are transmitted to our
-          servers.
+          remember your age verification; it contains no personal information.
+        </p>
+        <p>
+          Product upvotes are saved in your browser&apos;s local storage and
+          also counted on our servers so totals can be shared across visitors.
+          To prevent duplicate votes, each vote is stored with a one-way salted
+          hash of your IP address. We never store your raw IP address, and
+          votes are not linked to any account, name, or profile.
         </p>
         <h2 className="text-foreground font-semibold text-lg mt-6">
           Third-Party Services
