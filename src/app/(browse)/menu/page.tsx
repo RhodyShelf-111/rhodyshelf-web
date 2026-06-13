@@ -1,14 +1,17 @@
 import { redirect } from "next/navigation"
 
-export default function MenuPage({
+export default async function MenuPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   // Redirect /menu -> /search, mapping old param names to new ones
+  const resolved = await searchParams
   const params = new URLSearchParams()
-  const get = (key: string) =>
-    typeof searchParams[key] === "string" ? searchParams[key] : undefined
+  const get = (key: string) => {
+    const value = resolved[key]
+    return typeof value === "string" ? value : undefined
+  }
 
   const category = get("category")
   const brand = get("brand")

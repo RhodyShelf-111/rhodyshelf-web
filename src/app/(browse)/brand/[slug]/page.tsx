@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation"
-import { getBrandBySlug, getBrands, getInventory } from "@/lib/queries/products"
+import {
+  getBrandBySlug,
+  getBrands,
+  getInventoryByBrand,
+} from "@/lib/queries/products"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -36,11 +40,7 @@ export default async function BrandPage({
   const brand = await getBrandBySlug(slug)
   if (!brand) notFound()
 
-  const allListings = await getInventory()
-  const brandListings = allListings.filter(
-    (l) =>
-      l.product.brand_name.toLowerCase() === brand.canonical_name.toLowerCase()
-  )
+  const brandListings = await getInventoryByBrand(brand.canonical_name)
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">

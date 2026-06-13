@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { MapPin, ExternalLink } from "lucide-react"
 import { getDispensaryBySlug, getDispensaries } from "@/lib/queries/dispensaries"
-import { getInventory } from "@/lib/queries/products"
+import { getInventoryByDispensary } from "@/lib/queries/products"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -38,10 +38,7 @@ export default async function DispensaryDetailPage({
   const dispensary = await getDispensaryBySlug(slug)
   if (!dispensary) notFound()
 
-  const allListings = await getInventory()
-  const dispensaryListings = allListings.filter(
-    (l) => l.dispensary.slug === slug
-  )
+  const dispensaryListings = await getInventoryByDispensary(dispensary.id)
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
