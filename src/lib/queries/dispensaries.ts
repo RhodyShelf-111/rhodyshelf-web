@@ -20,11 +20,16 @@ export const getDispensaries = unstable_cache(
   async (): Promise<DispensaryWithCounts[]> => {
     const client = createServiceClient()
 
-    const { data: dispensaries } = await client
+    const { data: dispensaries, error: dispensariesError } = await client
       .from("dispensaries")
       .select(DISPENSARY_COLUMNS)
       .eq("is_active", true)
       .order("name")
+    // Throw on errors so unstable_cache/ISR keep serving the last good
+    // value instead of caching a degraded result for the whole window.
+    if (dispensariesError) {
+      throw new Error(`getDispensaries: ${dispensariesError.message}`)
+    }
     if (!dispensaries?.length) return []
 
     const productCounts = new Map<string, number>()
@@ -38,7 +43,8 @@ export const getDispensaries = unstable_cache(
         .gt("last_seen_at", freshnessCutoff())
         .order("id")
         .range(from, from + PAGE_SIZE - 1)
-      if (error || !data || data.length === 0) break
+      if (error) throw new Error(`getDispensaries counts: ${error.message}`)
+      if (!data || data.length === 0) break
       for (const row of data) {
         const did = row.dispensary_id as string
         productCounts.set(did, (productCounts.get(did) ?? 0) + 1)

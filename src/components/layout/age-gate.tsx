@@ -65,11 +65,12 @@ export function AgeGate() {
   function handleAccept() {
     document.cookie =
       "rhodyshelf_age_verified=true; path=/; max-age=2592000; SameSite=Lax"
+    // fade out, then unmount through React so the document-level key
+    // listener is detached (raw el.remove() would leak it and keep
+    // hijacking Tab/Escape sitewide)
     const el = document.getElementById("age-gate")
-    if (el) {
-      el.style.opacity = "0"
-      setTimeout(() => el.remove(), 300)
-    }
+    if (el) el.style.opacity = "0"
+    setTimeout(() => setStatus("hidden"), 300)
   }
 
   return (
@@ -81,7 +82,9 @@ export function AgeGate() {
       className={cn(
         "fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center px-6",
         "transition-opacity duration-[400ms]",
-        status === "show" ? "opacity-100" : "opacity-0"
+        // pending state must not swallow clicks: verified visitors get this
+        // overlay in the static HTML until hydration removes it
+        status === "show" ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
     >
       <div className="max-w-sm w-full text-center">

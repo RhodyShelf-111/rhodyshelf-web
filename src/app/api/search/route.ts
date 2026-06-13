@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { searchListings } from "@/lib/queries/products"
+import { searchListings, SEARCH_PAGE_SIZE } from "@/lib/queries/products"
 import { parseSearchQuery } from "@/lib/search-params"
 
 /**
@@ -13,12 +13,22 @@ export async function GET(request: NextRequest) {
     raw[key] = sp.get(key) ?? undefined
   }
   const query = parseSearchQuery(raw)
-  const page = Math.min(200, Math.max(1, Number(sp.get("page")) || 1))
+  const page = Math.min(50, Math.max(1, Number(sp.get("page")) || 1))
 
-  const result = await searchListings(query, page)
-  return NextResponse.json(result, {
-    headers: {
-      "Cache-Control": "public, max-age=0, s-maxage=600, stale-while-revalidate=1800",
-    },
-  })
+  try {
+    const result = await searchListings(query, page)
+    return NextResponse.json(result, {
+      headers: {
+        "Cache-Control":
+          "public, max-age=0, s-maxage=600, stale-while-revalidate=1800",
+      },
+    })
+  } catch (e) {
+    console.error(e)
+    // degrade this one response only — never CDN-cache the error path
+    return NextResponse.json(
+      { listings: [], total: 0, pageSize: SEARCH_PAGE_SIZE },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    )
+  }
 }

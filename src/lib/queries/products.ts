@@ -49,13 +49,23 @@ function escapeLike(term: string): string {
 }
 
 /**
- * Sanitize a user search term for use inside a PostgREST .or() expression,
- * where `,`, `(`, `)`, `"` and `\` are syntax characters and `%`/`_` are
- * LIKE wildcards. Stripping them (vs escaping) loses nothing meaningful
- * for product/brand searches.
+ * Build a double-quoted `%term%` ilike pattern for use inside a PostgREST
+ * .or() expression. Quoting (vs stripping) keeps punctuation like ( ) , "
+ * matchable — these appear in ~6% of product names. Escaping happens in two
+ * layers: LIKE wildcards first, then the PostgREST quoted-literal syntax
+ * (backslashes doubled, double quotes backslash-escaped).
  */
-function sanitizeOrTerm(term: string): string {
-  return term.replace(/[%_(),"\\]/g, " ").replace(/\s+/g, " ").trim()
+function orIlikePattern(term: string): string {
+  const like = term.replace(/[\\%_]/g, (c) => `\\${c}`)
+  const quoted = like.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+  return `"%${quoted}%"`
+}
+
+/** Throw on PostgREST errors inside cached functions: a throw makes
+ * unstable_cache / ISR keep serving the last good value, while returning
+ * a degraded result would get cached for the whole revalidate window. */
+function assertNoError(error: { message: string } | null, context: string) {
+  if (error) throw new Error(`${context}: ${error.message}`)
 }
 
 /**
@@ -81,7 +91,8 @@ const getCatalogIndex = unstable_cache(
         .eq("dispensary.is_active", true)
         .order("id")
         .range(from, from + PAGE_SIZE - 1)
-      if (error || !data || data.length === 0) break
+      assertNoError(error, "getCatalogIndex")
+      if (!data || data.length === 0) break
       for (const row of data) {
         const product = row.product as unknown as {
           category: string
@@ -157,10 +168,11 @@ export const getHomepageSections = unstable_cache(
     const client = createServiceClient()
     const listingById = new Map<string, InventoryListing>()
     for (let i = 0; i < sampledIds.length; i += 100) {
-      const { data } = await freshListings(client).in(
+      const { data, error } = await freshListings(client).in(
         "id",
         sampledIds.slice(i, i + 100)
       )
+      assertNoError(error, "getHomepageSections")
       for (const row of (data ?? []) as unknown as InventoryListing[]) {
         listingById.set(row.id, row)
       }
@@ -208,19 +220,18 @@ export const searchListings = unstable_cache(
       q = q.gt("discount_amount", 0)
     }
     if (query.q) {
-      const term = sanitizeOrTerm(query.q)
+      const term = query.q.trim()
       const alias = resolveAlias(query.q)
       if (alias) {
-        const brandTerm = sanitizeOrTerm(alias)
-        q = term
-          ? q.or(`brand_name.ilike.%${brandTerm}%,name.ilike.%${term}%`, {
-              referencedTable: "product",
-            })
-          : q.ilike("product.brand_name", `%${escapeLike(alias)}%`)
+        q = q.or(
+          `brand_name.ilike.${orIlikePattern(alias)},name.ilike.${orIlikePattern(term)}`,
+          { referencedTable: "product" }
+        )
       } else if (term) {
-        q = q.or(`name.ilike.%${term}%,brand_name.ilike.%${term}%`, {
-          referencedTable: "product",
-        })
+        q = q.or(
+          `name.ilike.${orIlikePattern(term)},brand_name.ilike.${orIlikePattern(term)}`,
+          { referencedTable: "product" }
+        )
       }
     }
 
@@ -254,9 +265,12 @@ export const searchListings = unstable_cache(
       from + SEARCH_PAGE_SIZE - 1
     )
     if (error) {
-      // out-of-range page or transient error — empty page beats a 500
-      console.error("searchListings error:", error.message)
-      return { listings: [], total: count ?? 0, pageSize: SEARCH_PAGE_SIZE }
+      // PGRST103 = requested range past the end: a genuinely empty page.
+      // Anything else throws so the error is not cached (callers catch).
+      if (error.code === "PGRST103") {
+        return { listings: [], total: count ?? 0, pageSize: SEARCH_PAGE_SIZE }
+      }
+      throw new Error(`searchListings: ${error.message}`)
     }
     return {
       listings: (data ?? []) as unknown as InventoryListing[],
@@ -276,11 +290,12 @@ const DEALS_CAP = 400
 export const getDeals = unstable_cache(
   async (): Promise<{ listings: InventoryListing[]; total: number }> => {
     const client = createServiceClient()
-    const { data, count } = await freshListings(client, true)
+    const { data, count, error } = await freshListings(client, true)
       .gt("discount_amount", 0)
       .order("discount_percent", { ascending: false, nullsFirst: false })
       .order("id", { ascending: true })
       .limit(DEALS_CAP)
+    assertNoError(error, "getDeals")
     return {
       listings: (data ?? []) as unknown as InventoryListing[],
       total: count ?? 0,
@@ -301,21 +316,23 @@ export const getDrops = unstable_cache(
       Date.now() - 14 * 24 * 60 * 60 * 1000
     ).toISOString()
 
-    const { data: drops } = await client
+    const { data: drops, error: dropsError } = await client
       .from("product_drops")
       .select("product_id, dispensary_id, dropped_at")
       .gt("dropped_at", since)
       .order("dropped_at", { ascending: false })
       .limit(500)
+    assertNoError(dropsError, "getDrops")
     if (!drops?.length) return []
 
     const ids = [...new Set(drops.map((d) => d.product_id))]
     const invMap = new Map<string, InventoryListing>()
-    for (let i = 0; i < ids.length; i += 100) {
-      const { data } = await freshListings(client).in(
+    for (let i = 0; i < ids.length; i += 50) {
+      const { data, error } = await freshListings(client).in(
         "product_id",
-        ids.slice(i, i + 100)
+        ids.slice(i, i + 50)
       )
+      assertNoError(error, "getDrops inventory")
       for (const row of (data ?? []) as unknown as (InventoryListing & {
         product: { id: string }
         dispensary: { id: string }
@@ -348,30 +365,58 @@ export const getListingById = cache(
   }
 )
 
-/** All fresh listings for one brand (bounded: a brand is tens-to-hundreds of rows). */
+/**
+ * Range-paginated fetch: PostgREST caps every response at max_rows=1000
+ * regardless of requested range, so any potentially-large fetch must loop.
+ * Builders are mutable, so a fresh query is built per page.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchAllListings(
+  buildQuery: () => any,
+  context: string
+): Promise<InventoryListing[]> {
+  const PAGE_SIZE = 1000
+  const rows: InventoryListing[] = []
+  let from = 0
+  while (true) {
+    const { data, error } = await buildQuery()
+      .order("id")
+      .range(from, from + PAGE_SIZE - 1)
+    assertNoError(error, context)
+    if (!data || data.length === 0) break
+    rows.push(...(data as unknown as InventoryListing[]))
+    if (data.length < PAGE_SIZE) break
+    from += PAGE_SIZE
+  }
+  return rows
+}
+
+/** All fresh listings for one brand. */
 export const getInventoryByBrand = unstable_cache(
   async (canonicalName: string): Promise<InventoryListing[]> => {
     const client = createServiceClient()
-    const { data } = await freshListings(client).ilike(
-      "product.brand_name",
-      escapeLike(canonicalName)
+    const listings = await fetchAllListings(
+      () =>
+        freshListings(client).ilike(
+          "product.brand_name",
+          escapeLike(canonicalName)
+        ),
+      "getInventoryByBrand"
     )
-    const listings = (data ?? []) as unknown as InventoryListing[]
     return listings.sort((a, b) => a.product.name.localeCompare(b.product.name))
   },
   ["brand-inventory-v1"],
   { revalidate: 1800, tags: ["inventory"] }
 )
 
-/** All fresh listings at one dispensary (bounded: ~1k rows max). */
+/** All fresh listings at one dispensary (the largest store is ~925 rows and growing). */
 export const getInventoryByDispensary = unstable_cache(
   async (dispensaryId: string): Promise<InventoryListing[]> => {
     const client = createServiceClient()
-    const { data } = await freshListings(client).eq(
-      "dispensary_id",
-      dispensaryId
+    const listings = await fetchAllListings(
+      () => freshListings(client).eq("dispensary_id", dispensaryId),
+      "getInventoryByDispensary"
     )
-    const listings = (data ?? []) as unknown as InventoryListing[]
     return listings.sort((a, b) =>
       a.product.brand_name.localeCompare(b.product.brand_name)
     )
@@ -386,10 +431,11 @@ export const getInventoryByDispensary = unstable_cache(
 export const getBrands = unstable_cache(
   async (): Promise<Brand[]> => {
     const client = createServiceClient()
-    const { data } = await client
+    const { data, error } = await client
       .from("brands")
       .select("id, canonical_name, slug, category")
       .order("canonical_name")
+    assertNoError(error, "getBrands")
     return (data ?? []) as Brand[]
   },
   ["brands-v1"],

@@ -45,14 +45,34 @@ export function SearchClient({
   const [isPending, startTransition] = useTransition()
   const [extraListings, setExtraListings] = useState<InventoryListing[]>([])
   const [nextPage, setNextPage] = useState(2)
+  const [exhausted, setExhausted] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [selectedListing, setSelectedListing] = useState<InventoryListing | null>(null)
 
-  const listings = useMemo(
-    () => [...initialListings, ...extraListings],
-    [initialListings, extraListings]
-  )
-  const hasMore = listings.length < total
+  // Render-time reset when the server delivers a new query (no remount, so
+  // FilterBar's sheet/dropdown state survives filter changes).
+  const queryKey = JSON.stringify(query)
+  const [prevQueryKey, setPrevQueryKey] = useState(queryKey)
+  if (prevQueryKey !== queryKey) {
+    setPrevQueryKey(queryKey)
+    setExtraListings([])
+    setNextPage(2)
+    setExhausted(false)
+  }
+
+  const listings = useMemo(() => {
+    // dedupe across page boundaries: cached pages can drift as inventory
+    // changes between fills
+    const seen = new Set<string>()
+    const merged: InventoryListing[] = []
+    for (const l of [...initialListings, ...extraListings]) {
+      if (seen.has(l.id)) continue
+      seen.add(l.id)
+      merged.push(l)
+    }
+    return merged
+  }, [initialListings, extraListings])
+  const hasMore = !exhausted && listings.length < total
 
   // FilterBar still works through the ProductFilters shape
   const filters: ProductFilters = useMemo(
@@ -71,7 +91,9 @@ export function SearchClient({
     (next: SearchQuery) => {
       const qs = buildSearchParams(next).toString()
       startTransition(() => {
-        router.push(`/search${qs ? `?${qs}` : ""}`)
+        // scroll: false — keep the user's place (and the mobile filter
+        // sheet's viewport) while results swap underneath
+        router.push(`/search${qs ? `?${qs}` : ""}`, { scroll: false })
       })
     },
     [router]
@@ -119,10 +141,13 @@ export function SearchClient({
       const data: SearchPage = await res.json()
       setExtraListings((prev) => [...prev, ...data.listings])
       setNextPage((p) => p + 1)
+      // a short page means the result set shrank since page 1 was cached —
+      // stop offering more rather than looping on empty fetches
+      if (data.listings.length < pageSize) setExhausted(true)
     } finally {
       setLoadingMore(false)
     }
-  }, [query, nextPage])
+  }, [query, nextPage, pageSize])
 
   const handleCardClick = useCallback((listing: InventoryListing) => {
     setSelectedListing(listing)
@@ -156,9 +181,11 @@ export function SearchClient({
 
   return (
     <div>
-      {/* Search bar */}
+      {/* Search bar — keyed on q so the input resets when the query is
+          cleared or replaced via navigation */}
       <div className="mb-4">
         <HeroSearch
+          key={query.q ?? ""}
           brands={brands}
           initialValue={query.q ?? ""}
           placeholder="Search products, brands, strains..."

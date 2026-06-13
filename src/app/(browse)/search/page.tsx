@@ -31,12 +31,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Filtering, sorting, and pagination happen in Postgres — only the first
   // page of results is rendered and serialized. Load-more goes through
-  // /api/search with the same query shape.
+  // /api/search with the same query shape. Each fetch degrades softly for
+  // this one request on transient errors (the caches throw rather than
+  // store degraded values).
   const [page, brands, categories, dispensaries] = await Promise.all([
-    searchListings(query, 1),
-    getBrandNames(),
-    getCategories(),
-    getDispensaries(),
+    searchListings(query, 1).catch((e) => {
+      console.error(e)
+      return { listings: [], total: 0, pageSize: 96 }
+    }),
+    getBrandNames().catch(() => [] as string[]),
+    getCategories().catch(() => [] as string[]),
+    getDispensaries().catch(() => []),
   ])
 
   return (
@@ -50,8 +55,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </p>
       </div>
 
+      {/* No remount key: FilterBar UI state (mobile sheet open, brand search
+          text) must survive filter navigations. SearchClient resets its own
+          pagination state when the query changes. */}
       <SearchClient
-        key={JSON.stringify(query)}
         query={query}
         initialListings={page.listings}
         total={page.total}
