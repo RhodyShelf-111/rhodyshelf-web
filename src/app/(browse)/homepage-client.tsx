@@ -2,16 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import type { InventoryListing } from "@/lib/types"
+import type { CategorySection, InventoryListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
 import { ProductDetailDrawer } from "@/components/product/product-detail"
 import { getCategoryIcon } from "@/lib/utils"
-
-interface CategorySection {
-  key: string
-  label: string
-  listings: InventoryListing[]
-}
 
 interface HomepageClientProps {
   sections: CategorySection[]
@@ -58,7 +52,7 @@ export function HomepageClient({ sections }: HomepageClientProps) {
                     {section.label}
                   </h2>
                   <span className="text-[13px] text-muted-foreground">
-                    {section.listings.length.toLocaleString()} products
+                    {section.count.toLocaleString()} products
                   </span>
                 </div>
                 <Link

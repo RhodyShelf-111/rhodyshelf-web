@@ -1,9 +1,12 @@
-import { getInventory } from "@/lib/queries/products"
+import {
+  searchListings,
+  getBrandNames,
+  getCategories,
+} from "@/lib/queries/products"
+import { getDispensaries } from "@/lib/queries/dispensaries"
+import { parseSearchQuery } from "@/lib/search-params"
 import { SearchClient } from "./search-client"
 import type { Metadata } from "next"
-import type { ProductFilters } from "@/lib/types"
-
-export const revalidate = 1800 // 30 minutes
 
 export const metadata: Metadata = {
   title: "Search",
@@ -24,35 +27,45 @@ interface SearchPageProps {
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams
-  const listings = await getInventory()
+  const query = parseSearchQuery(params)
 
-  const brands = [...new Set(listings.map((l) => l.product.brand_name))].sort()
-
-  const initialFilters: ProductFilters = {
-    search: params.q || undefined,
-    category: params.category || undefined,
-    brand: params.brand || undefined,
-    dispensary: params.dispensary || undefined,
-    onSale: params.sale === "true" || undefined,
-    sort: (params.sort as ProductFilters["sort"]) || "brand-asc",
-  }
+  // Filtering, sorting, and pagination happen in Postgres — only the first
+  // page of results is rendered and serialized. Load-more goes through
+  // /api/search with the same query shape. Each fetch degrades softly for
+  // this one request on transient errors (the caches throw rather than
+  // store degraded values).
+  const [page, brands, categories, dispensaries] = await Promise.all([
+    searchListings(query, 1).catch((e) => {
+      console.error(e)
+      return { listings: [], total: 0, pageSize: 96 }
+    }),
+    getBrandNames().catch(() => [] as string[]),
+    getCategories().catch(() => [] as string[]),
+    getDispensaries().catch(() => []),
+  ])
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">
-          {params.q ? `Results for "${params.q}"` : params.brand ? params.brand : "Browse Menu"}
+          {query.q ? `Results for "${query.q}"` : query.brand ? query.brand : "Browse Menu"}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {listings.length.toLocaleString()} products across Rhode Island dispensaries
+          {page.total.toLocaleString()} products across Rhode Island dispensaries
         </p>
       </div>
 
+      {/* No remount key: FilterBar UI state (mobile sheet open, brand search
+          text) must survive filter navigations. SearchClient resets its own
+          pagination state when the query changes. */}
       <SearchClient
-        key={JSON.stringify(initialFilters)}
-        listings={listings}
-        initialFilters={initialFilters}
+        query={query}
+        initialListings={page.listings}
+        total={page.total}
+        pageSize={page.pageSize}
         brands={brands}
+        categories={categories}
+        dispensaries={dispensaries}
       />
     </div>
   )

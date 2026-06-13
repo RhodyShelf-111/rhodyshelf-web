@@ -57,11 +57,33 @@ export interface DropListing extends InventoryListing {
 
 // Dispensary with product count for the dispensary list page
 export interface DispensaryWithCounts extends Dispensary {
-  address: string | null
-  latitude: number | null
-  longitude: number | null
   product_count: number
   deal_count: number
+}
+
+// One homepage category rail: a small sample of listings + the true count
+export interface CategorySection {
+  key: string
+  label: string
+  count: number
+  listings: InventoryListing[]
+}
+
+// Normalized server-side search input, derived from /search URL params
+export interface SearchQuery {
+  q?: string
+  category?: string
+  brand?: string
+  dispensary?: string
+  onSale?: boolean
+  sort: NonNullable<ProductFilters["sort"]>
+}
+
+// One page of server-side search results
+export interface SearchPage {
+  listings: InventoryListing[]
+  total: number
+  pageSize: number
 }
 
 // Filter state for the menu page

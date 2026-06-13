@@ -1,8 +1,15 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
-import type { InventoryListing, ProductFilters, Dispensary } from "@/lib/types"
-import { applyFilters } from "@/lib/filter-utils"
+import { useState, useMemo, useCallback, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import type {
+  InventoryListing,
+  ProductFilters,
+  Dispensary,
+  SearchQuery,
+  SearchPage,
+} from "@/lib/types"
+import { buildSearchParams } from "@/lib/search-params"
 import { FilterBar } from "@/components/search/filter-bar"
 import { BrandGroup } from "@/components/search/brand-group"
 import { HeroSearch } from "@/components/search/hero-search"
@@ -10,97 +17,177 @@ import { ProductCard } from "@/components/product/product-card"
 import { ProductDetailDrawer } from "@/components/product/product-detail"
 import { resolveAlias } from "@/lib/brand-aliases"
 
-const BRAND_GROUP_PAGE_SIZE = 30
-const FLAT_GRID_PAGE_SIZE = 60
-
 interface SearchClientProps {
-  listings: InventoryListing[]
-  initialFilters: ProductFilters
+  query: SearchQuery
+  initialListings: InventoryListing[]
+  total: number
+  pageSize: number
   brands: string[]
+  categories: string[]
+  dispensaries: Dispensary[]
 }
 
-export function SearchClient({ listings, initialFilters, brands }: SearchClientProps) {
-  const [filters, setFilters] = useState<ProductFilters>({
-    sort: "brand-asc",
-    ...initialFilters,
-  })
-  const [visibleBrandCount, setVisibleBrandCount] = useState(BRAND_GROUP_PAGE_SIZE)
-  const [flatDisplayCount, setFlatDisplayCount] = useState(FLAT_GRID_PAGE_SIZE)
+/**
+ * Filters live in the URL: every FilterBar change navigates to a new
+ * /search?... and the server returns one page of matching results.
+ * "Load more" appends further pages from /api/search client-side.
+ */
+export function SearchClient({
+  query,
+  initialListings,
+  total,
+  pageSize,
+  brands,
+  categories,
+  dispensaries,
+}: SearchClientProps) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [extraListings, setExtraListings] = useState<InventoryListing[]>([])
+  const [nextPage, setNextPage] = useState(2)
+  const [exhausted, setExhausted] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [selectedListing, setSelectedListing] = useState<InventoryListing | null>(null)
-  const [searchValue, setSearchValue] = useState(initialFilters.search ?? "")
 
-  // Single-brand view: skip brand grouping entirely, render a flat grid.
-  const isSingleBrandView = Boolean(filters.brand)
+  // Render-time reset when the server delivers a new query (no remount, so
+  // FilterBar's sheet/dropdown state survives filter changes).
+  const queryKey = JSON.stringify(query)
+  const [prevQueryKey, setPrevQueryKey] = useState(queryKey)
+  if (prevQueryKey !== queryKey) {
+    setPrevQueryKey(queryKey)
+    setExtraListings([])
+    setNextPage(2)
+    setExhausted(false)
+  }
 
-  const filtered = useMemo(() => applyFilters(listings, filters), [listings, filters])
-
-  // Group filtered results by brand, preserving sort order
-  const brandGroups = useMemo(() => {
-    const groups = new Map<string, InventoryListing[]>()
-    for (const listing of filtered) {
-      const brand = listing.product.brand_name
-      if (!groups.has(brand)) groups.set(brand, [])
-      groups.get(brand)!.push(listing)
+  const listings = useMemo(() => {
+    // dedupe across page boundaries: cached pages can drift as inventory
+    // changes between fills
+    const seen = new Set<string>()
+    const merged: InventoryListing[] = []
+    for (const l of [...initialListings, ...extraListings]) {
+      if (seen.has(l.id)) continue
+      seen.add(l.id)
+      merged.push(l)
     }
-    // Return as array; order matches the filtered/sorted order
-    return [...groups.entries()].map(([brand, items]) => ({ brand, items }))
-  }, [filtered])
+    return merged
+  }, [initialListings, extraListings])
+  const hasMore = !exhausted && listings.length < total
 
-  const visibleGroups = brandGroups.slice(0, visibleBrandCount)
-  const hasMoreBrands = visibleBrandCount < brandGroups.length
-
-  // Extract filter options from listings
-  const categories = useMemo(
-    () => [...new Set(listings.map((l) => l.product.category))].sort(),
-    [listings]
+  // FilterBar still works through the ProductFilters shape
+  const filters: ProductFilters = useMemo(
+    () => ({
+      search: query.q,
+      category: query.category,
+      brand: query.brand,
+      dispensary: query.dispensary,
+      onSale: query.onSale,
+      sort: query.sort,
+    }),
+    [query]
   )
-  const dispensaries = useMemo(
-    () =>
-      [
-        ...new Map(
-          listings.map((l) => [l.dispensary.slug, l.dispensary])
-        ).values(),
-      ].sort((a, b) => a.name.localeCompare(b.name)) as Dispensary[],
-    [listings]
+
+  const navigate = useCallback(
+    (next: SearchQuery) => {
+      const qs = buildSearchParams(next).toString()
+      startTransition(() => {
+        // scroll: false — keep the user's place (and the mobile filter
+        // sheet's viewport) while results swap underneath
+        router.push(`/search${qs ? `?${qs}` : ""}`, { scroll: false })
+      })
+    },
+    [router]
   )
 
   const updateFilter = useCallback(
     (key: keyof ProductFilters, value: ProductFilters[keyof ProductFilters]) => {
-      setFilters((prev) => ({ ...prev, [key]: value || undefined }))
-      setVisibleBrandCount(BRAND_GROUP_PAGE_SIZE)
-      setFlatDisplayCount(FLAT_GRID_PAGE_SIZE)
+      const next: SearchQuery = { ...query }
+      switch (key) {
+        case "search":
+          next.q = (value as string) || undefined
+          break
+        case "category":
+          next.category = (value as string) || undefined
+          break
+        case "brand":
+          next.brand = (value as string) || undefined
+          break
+        case "dispensary":
+          next.dispensary = (value as string) || undefined
+          break
+        case "onSale":
+          next.onSale = (value as boolean) || undefined
+          break
+        case "sort":
+          next.sort = (value as SearchQuery["sort"]) || "brand-asc"
+          break
+      }
+      navigate(next)
     },
-    []
+    [query, navigate]
   )
 
   const clearFilters = useCallback(() => {
-    setFilters({ sort: "brand-asc" })
-    setSearchValue("")
-    setVisibleBrandCount(BRAND_GROUP_PAGE_SIZE)
-    setFlatDisplayCount(FLAT_GRID_PAGE_SIZE)
-  }, [])
+    navigate({ sort: "brand-asc" })
+  }, [navigate])
+
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true)
+    try {
+      const params = buildSearchParams(query)
+      params.set("page", String(nextPage))
+      const res = await fetch(`/api/search?${params.toString()}`)
+      if (!res.ok) return
+      const data: SearchPage = await res.json()
+      setExtraListings((prev) => [...prev, ...data.listings])
+      setNextPage((p) => p + 1)
+      // a short page means the result set shrank since page 1 was cached —
+      // stop offering more rather than looping on empty fetches
+      if (data.listings.length < pageSize) setExhausted(true)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [query, nextPage, pageSize])
 
   const handleCardClick = useCallback((listing: InventoryListing) => {
     setSelectedListing(listing)
   }, [])
 
+  // Single-brand view: skip brand grouping entirely, render a flat grid.
+  const isSingleBrandView = Boolean(query.brand)
+
+  // Group loaded results by brand, preserving server sort order
+  const brandGroups = useMemo(() => {
+    const groups = new Map<string, InventoryListing[]>()
+    for (const listing of listings) {
+      const brand = listing.product.brand_name
+      if (!groups.has(brand)) groups.set(brand, [])
+      groups.get(brand)!.push(listing)
+    }
+    return [...groups.entries()].map(([brand, items]) => ({ brand, items }))
+  }, [listings])
+
   // Alias match notice
   const aliasNotice = useMemo(() => {
-    if (!filters.search) return null
-    const resolved = resolveAlias(filters.search)
-    if (resolved && resolved.toLowerCase() !== filters.search.toLowerCase()) {
+    if (!query.q) return null
+    const resolved = resolveAlias(query.q)
+    if (resolved && resolved.toLowerCase() !== query.q.toLowerCase()) {
       return `Showing results for "${resolved}" (matched alias)`
     }
     return null
-  }, [filters.search])
+  }, [query.q])
+
+  const remaining = total - listings.length
 
   return (
     <div>
-      {/* Search bar */}
+      {/* Search bar — keyed on q so the input resets when the query is
+          cleared or replaced via navigation */}
       <div className="mb-4">
         <HeroSearch
+          key={query.q ?? ""}
           brands={brands}
-          initialValue={searchValue}
+          initialValue={query.q ?? ""}
           placeholder="Search products, brands, strains..."
           className="max-w-lg"
         />
@@ -114,7 +201,7 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
         dispensaries={dispensaries}
         onFilterChange={updateFilter}
         onClear={clearFilters}
-        resultCount={filtered.length}
+        resultCount={total}
       />
 
       {/* Alias notice */}
@@ -123,13 +210,18 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
       )}
 
       {/* Results */}
-      {filtered.length === 0 ? (
-        <EmptyState query={filters.search} onClear={clearFilters} categories={categories} onCategory={(cat) => { clearFilters(); updateFilter("category", cat) }} />
-      ) : isSingleBrandView ? (
-        // Flat grid: user has filtered to a brand, show every product
-        <>
+      <div className={isPending ? "opacity-50 transition-opacity" : undefined}>
+        {listings.length === 0 ? (
+          <EmptyState
+            query={query.q}
+            onClear={clearFilters}
+            categories={categories}
+            onCategory={(cat) => navigate({ category: cat, sort: "brand-asc" })}
+          />
+        ) : isSingleBrandView ? (
+          // Flat grid: user has filtered to a brand, show every product
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {filtered.slice(0, flatDisplayCount).map((listing) => (
+            {listings.map((listing) => (
               <ProductCard
                 key={listing.id}
                 listing={listing}
@@ -137,39 +229,31 @@ export function SearchClient({ listings, initialFilters, brands }: SearchClientP
               />
             ))}
           </div>
-          {flatDisplayCount < filtered.length && (
-            <div className="flex justify-center py-6">
-              <button
-                onClick={() => setFlatDisplayCount((n) => n + FLAT_GRID_PAGE_SIZE)}
-                className="px-6 py-2 text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors"
-              >
-                Load more ({filtered.length - flatDisplayCount} remaining)
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          {visibleGroups.map(({ brand, items }) => (
+        ) : (
+          brandGroups.map(({ brand, items }) => (
             <BrandGroup
               key={brand}
               brandName={brand}
               listings={items}
               onCardClick={handleCardClick}
             />
-          ))}
-          {hasMoreBrands && (
-            <div className="flex justify-center py-6">
-              <button
-                onClick={() => setVisibleBrandCount((n) => n + BRAND_GROUP_PAGE_SIZE)}
-                className="px-6 py-2 text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors"
-              >
-                Show more brands ({brandGroups.length - visibleBrandCount} remaining)
-              </button>
-            </div>
-          )}
-        </>
-      )}
+          ))
+        )}
+
+        {hasMore && listings.length > 0 && (
+          <div className="flex justify-center py-6">
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="px-6 py-2 text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              {loadingMore
+                ? "Loading..."
+                : `Load more (${remaining.toLocaleString()} remaining)`}
+            </button>
+          </div>
+        )}
+      </div>
 
       <ProductDetailDrawer
         listing={selectedListing}

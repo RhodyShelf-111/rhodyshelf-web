@@ -5,23 +5,32 @@ import { cn } from "@/lib/utils"
 
 export function AgeGate() {
   const [rejected, setRejected] = useState(false)
-  const [visible, setVisible] = useState(false)
+  // "pending" until the verification cookie is checked on mount, so the
+  // server-rendered markup stays hidden (opacity-0) and verified visitors
+  // never see a flash. The cookie is read client-side (not in the layout)
+  // to keep browse routes static/ISR-cacheable.
+  const [status, setStatus] = useState<"pending" | "show" | "hidden">("pending")
   const yesRef = useRef<HTMLButtonElement>(null)
   const noRef = useRef<HTMLButtonElement>(null)
   const leaveRef = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setVisible(true))
+    if (document.cookie.split("; ").includes("rhodyshelf_age_verified=true")) {
+      setStatus("hidden")
+      return
+    }
+    const frame = requestAnimationFrame(() => setStatus("show"))
     return () => cancelAnimationFrame(frame)
   }, [])
 
   useEffect(() => {
+    if (status !== "show") return
     if (!rejected) {
       yesRef.current?.focus()
     } else {
       leaveRef.current?.focus()
     }
-  }, [rejected])
+  }, [rejected, status])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -46,18 +55,22 @@ export function AgeGate() {
   )
 
   useEffect(() => {
+    if (status !== "show") return
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [handleKeyDown])
+  }, [handleKeyDown, status])
+
+  if (status === "hidden") return null
 
   function handleAccept() {
     document.cookie =
       "rhodyshelf_age_verified=true; path=/; max-age=2592000; SameSite=Lax"
+    // fade out, then unmount through React so the document-level key
+    // listener is detached (raw el.remove() would leak it and keep
+    // hijacking Tab/Escape sitewide)
     const el = document.getElementById("age-gate")
-    if (el) {
-      el.style.opacity = "0"
-      setTimeout(() => el.remove(), 300)
-    }
+    if (el) el.style.opacity = "0"
+    setTimeout(() => setStatus("hidden"), 300)
   }
 
   return (
@@ -69,7 +82,9 @@ export function AgeGate() {
       className={cn(
         "fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center px-6",
         "transition-opacity duration-[400ms]",
-        visible ? "opacity-100" : "opacity-0"
+        // pending state must not swallow clicks: verified visitors get this
+        // overlay in the static HTML until hydration removes it
+        status === "show" ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
     >
       <div className="max-w-sm w-full text-center">

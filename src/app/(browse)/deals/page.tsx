@@ -1,8 +1,8 @@
-import { getInventory } from "@/lib/queries/products"
+import { getDeals } from "@/lib/queries/products"
 import { MenuClient } from "../menu/menu-client"
 import type { Metadata } from "next"
 
-export const revalidate = 1800
+export const revalidate = 900
 
 export const metadata: Metadata = {
   title: "Deals",
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 }
 
 export default async function DealsPage() {
-  const allListings = await getInventory()
-  const deals = allListings.filter((l) => (l.discount_amount ?? 0) > 0)
+  // Top deals by discount percent, capped server-side; total is uncapped.
+  const { listings: deals, total } = await getDeals()
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -21,7 +21,10 @@ export default async function DealsPage() {
           Deals
         </h1>
         <p className="text-muted-foreground mt-1">
-          {deals.length} products on sale right now
+          {total.toLocaleString()} products on sale right now
+          {total > deals.length
+            ? ` — showing the top ${deals.length} by discount`
+            : ""}
         </p>
       </div>
 
