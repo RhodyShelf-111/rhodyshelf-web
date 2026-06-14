@@ -1,0 +1,15 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RhodyShelf">
+  <defs>
+    <linearGradient id="rs-g" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3ddc84"/>
+      <stop offset="1" stop-color="#12a150"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#rs-g)"/>
+  <path d="M32 51 L32 27" fill="none" stroke="#06140c" stroke-width="5" stroke-linecap="round"/>
+  <g fill="#06140c">
+    <path d="M32 32 C23.5 32.5 17 27.5 15 18 C24.5 17.5 31 23 32 32 Z"/>
+    <path d="M32 32 C40.5 32.5 47 27.5 49 18 C39.5 17.5 33 23 32 32 Z"/>
+    <path d="M32 28 C28.5 21.5 29 14.5 32 10 C35 14.5 35.5 21.5 32 28 Z"/>
+  </g>
+</svg>

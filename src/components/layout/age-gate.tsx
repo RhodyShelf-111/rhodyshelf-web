@@ -3,6 +3,39 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { cn } from "@/lib/utils"
 
+function BrandMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient
+          id="age-rs-g"
+          x1="6"
+          y1="4"
+          x2="58"
+          y2="60"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#3ddc84" />
+          <stop offset="1" stopColor="#12a150" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="15" fill="url(#age-rs-g)" />
+      <path
+        d="M32 51 L32 27"
+        fill="none"
+        stroke="#06140c"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      <g fill="#06140c">
+        <path d="M32 32 C23.5 32.5 17 27.5 15 18 C24.5 17.5 31 23 32 32 Z" />
+        <path d="M32 32 C40.5 32.5 47 27.5 49 18 C39.5 17.5 33 23 32 32 Z" />
+        <path d="M32 28 C28.5 21.5 29 14.5 32 10 C35 14.5 35.5 21.5 32 28 Z" />
+      </g>
+    </svg>
+  )
+}
+
 export function AgeGate() {
   const [rejected, setRejected] = useState(false)
   // "pending" until the verification cookie is checked on mount, so the
@@ -16,6 +49,9 @@ export function AgeGate() {
 
   useEffect(() => {
     if (document.cookie.split("; ").includes("rhodyshelf_age_verified=true")) {
+      // Cookie can only be read on the client; hiding here (post-mount) is what
+      // keeps verified visitors from seeing a flash. Not a render loop.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus("hidden")
       return
     }
@@ -91,11 +127,11 @@ export function AgeGate() {
         {!rejected ? (
           <>
             <div className="flex justify-center mb-6">
-              <span className="text-5xl">🌿</span>
+              <BrandMark className="w-16 h-16 rounded-2xl shadow-[0_0_40px_-10px_rgba(34,197,94,0.45)]" />
             </div>
 
-            <p className="font-heading text-xl font-semibold text-foreground mb-8">
-              RhodyShelf
+            <p className="font-heading text-xl font-bold text-foreground mb-8">
+              Rhody<span className="text-primary">Shelf</span>
             </p>
 
             <h1
@@ -137,22 +173,22 @@ export function AgeGate() {
         ) : (
           <>
             <div className="flex justify-center mb-6">
-              <span className="text-4xl opacity-40">🌿</span>
+              <BrandMark className="w-14 h-14 rounded-2xl opacity-40" />
             </div>
 
             <h1
               id="age-gate-title"
               className="font-heading text-2xl font-bold text-foreground mb-3"
             >
-              You must be 21 or older to access this site.
+              Come back when you&apos;re 21.
             </h1>
             <p className="text-sm text-muted-foreground mb-8">
-              We&apos;re unable to grant access at this time.
+              RhodyShelf is only available to adults 21 and older.
             </p>
 
             <a
               ref={leaveRef}
-              href="https://google.com"
+              href="https://www.google.com"
               className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 rounded"
             >
               Leave this site &rarr;

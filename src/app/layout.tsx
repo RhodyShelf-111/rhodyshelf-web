@@ -1,16 +1,50 @@
 import type { Metadata } from "next"
+import { Space_Grotesk } from "next/font/google"
 import "./globals.css"
+
+// Display/heading face. Exposed as --font-display and mapped onto the
+// `font-heading` Tailwind token in globals.css.
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+})
+
+const SITE_NAME = "RhodyShelf"
+const SITE_DESCRIPTION =
+  "Browse cannabis menus across 9 Rhode Island dispensaries in one place. Search products, compare prices, find deals, and buy direct."
 
 export const metadata: Metadata = {
   title: {
     default: "RhodyShelf — Rhode Island Cannabis Menus & Deals",
     template: "%s | RhodyShelf",
   },
-  description:
-    "Browse cannabis menus across 8 Rhode Island dispensaries. Find deals, discover new drops, compare prices.",
+  description: SITE_DESCRIPTION,
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://rhodyshelf.com"
   ),
+  applicationName: SITE_NAME,
+  keywords: [
+    "Rhode Island cannabis",
+    "RI dispensary menus",
+    "cannabis deals Rhode Island",
+    "weed menu RI",
+    "dispensary near me",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: "RhodyShelf — Rhode Island Cannabis Menus & Deals",
+    description: SITE_DESCRIPTION,
+    url: "/",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RhodyShelf — Rhode Island Cannabis Menus & Deals",
+    description: SITE_DESCRIPTION,
+  },
 }
 
 export default function RootLayout({
@@ -19,7 +53,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark h-full antialiased">
+    <html
+      lang="en"
+      className={`dark h-full antialiased ${display.variable}`}
+    >
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground">
         {children}
       </body>

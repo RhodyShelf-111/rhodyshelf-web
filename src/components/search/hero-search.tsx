@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { Search, X } from "lucide-react"
-import { useState, useCallback, useRef, useEffect } from "react"
+import { useState, useCallback, useRef, useEffect, useMemo, useId } from "react"
 import { cn } from "@/lib/utils"
 
 interface HeroSearchProps {
@@ -19,10 +19,17 @@ export function HeroSearch({ brands, initialValue = "", placeholder = "Search pr
   const [activeIndex, setActiveIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const listboxId = useId()
 
-  const matchedBrands = value.trim().length > 0
-    ? brands.filter((b) => b.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
-    : []
+  const matchedBrands = useMemo(
+    () =>
+      value.trim().length > 0
+        ? brands
+            .filter((b) => b.toLowerCase().includes(value.toLowerCase()))
+            .slice(0, 8)
+        : [],
+    [value, brands]
+  )
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent) => {
@@ -92,6 +99,7 @@ export function HeroSearch({ brands, initialValue = "", placeholder = "Search pr
             type="search"
             role="combobox"
             aria-expanded={showDropdown}
+            aria-controls={listboxId}
             aria-haspopup="listbox"
             aria-autocomplete="list"
             placeholder={placeholder}
@@ -104,7 +112,7 @@ export function HeroSearch({ brands, initialValue = "", placeholder = "Search pr
             onFocus={() => setOpen(true)}
             onKeyDown={handleKeyDown}
             className={cn(
-              "w-full h-11 pl-11 pr-10 rounded-xl text-sm",
+              "w-full h-11 pl-11 pr-10 rounded-xl text-base md:text-sm",
               "bg-card border border-border",
               "text-foreground placeholder:text-muted-foreground",
               "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
@@ -127,6 +135,7 @@ export function HeroSearch({ brands, initialValue = "", placeholder = "Search pr
       {showDropdown && (
         <div
           role="listbox"
+          id={listboxId}
           className={cn(
             "absolute z-50 left-0 right-0 mt-1",
             "bg-popover border border-border rounded-xl shadow-lg",

@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { getDeals } from "@/lib/queries/products"
 import { MenuClient } from "../menu/menu-client"
 import type { Metadata } from "next"
@@ -33,11 +34,18 @@ export default async function DealsPage() {
       ) : (
         <div className="text-center py-16">
           <p className="text-lg font-medium text-foreground mb-2">
-            No deals right now
+            No deals listed right now
           </p>
-          <p className="text-sm text-muted-foreground">
-            Check back after 5 PM when menus are updated.
+          <p className="text-sm text-muted-foreground mb-6">
+            Menus refresh throughout the day — check back soon, or browse the
+            full selection.
           </p>
+          <Link
+            href="/search"
+            className="inline-flex items-center justify-center h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Browse all products
+          </Link>
         </div>
       )}
     </div>

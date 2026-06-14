@@ -8,7 +8,7 @@ export const revalidate = 1800 // 30 minutes
 export const metadata: Metadata = {
   title: "RhodyShelf — Rhode Island Cannabis Menus & Deals",
   description:
-    "Browse cannabis products across 8 Rhode Island dispensaries. Search by brand, category, strain, price, and more.",
+    "Browse cannabis products across 9 Rhode Island dispensaries. Search by brand, category, strain, price, and more.",
 }
 
 export default async function HomePage() {

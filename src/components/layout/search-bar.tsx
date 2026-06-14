@@ -42,7 +42,7 @@ export function SearchBar({ autoFocus, onBlur }: SearchBarProps) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={onBlur}
-        className="pl-9 h-9 text-sm bg-muted/50 border-transparent focus:border-border focus:bg-card"
+        className="pl-9 h-9 text-base md:text-sm bg-muted/50 border-transparent focus:border-border focus:bg-card"
       />
     </form>
   )

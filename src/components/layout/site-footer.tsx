@@ -8,7 +8,7 @@ export function SiteFooter() {
           {/* Brand */}
           <div>
             <span className="font-heading text-xl font-bold text-foreground">
-              RhodyShelf
+              Rhody<span className="text-primary">Shelf</span>
             </span>
             <p className="text-sm text-muted-foreground mt-1">
               Rhode Island Cannabis Discovery
@@ -17,8 +17,8 @@ export function SiteFooter() {
 
           {/* Links */}
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <Link href="/menu" className="hover:text-foreground transition-colors">
-              Menu
+            <Link href="/search" className="hover:text-foreground transition-colors">
+              Browse all
             </Link>
             <Link href="/deals" className="hover:text-foreground transition-colors">
               Deals
