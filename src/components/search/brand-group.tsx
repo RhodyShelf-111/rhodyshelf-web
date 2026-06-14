@@ -6,10 +6,9 @@ import { formatPrice } from "@/lib/utils"
 interface BrandGroupProps {
   brandName: string
   listings: InventoryListing[]
-  onCardClick: (listing: InventoryListing) => void
 }
 
-export function BrandGroup({ brandName, listings, onCardClick }: BrandGroupProps) {
+export function BrandGroup({ brandName, listings }: BrandGroupProps) {
   const prices = listings.map((l) => l.price).filter((p): p is number => p != null)
   const minPrice = prices.length > 0 ? Math.min(...prices) : null
   const brandSlug = encodeURIComponent(brandName)
@@ -37,10 +36,7 @@ export function BrandGroup({ brandName, listings, onCardClick }: BrandGroupProps
       <div className="flex gap-4 overflow-x-auto scrollbar-subtle -mx-4 px-4 pb-2 items-stretch">
         {listings.slice(0, 10).map((listing) => (
           <div key={listing.id} className="w-52 shrink-0">
-            <ProductCard
-              listing={listing}
-              onClick={() => onCardClick(listing)}
-            />
+            <ProductCard listing={listing} />
           </div>
         ))}
       </div>

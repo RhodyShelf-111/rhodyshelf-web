@@ -15,7 +15,6 @@ interface ProductGridProps {
   initialFilters?: ProductFilters
   showFilters?: boolean
   pageSize?: number
-  onCardClick?: (listing: InventoryListing) => void
   dropBadges?: Map<string, { label: string; className: string }>
 }
 
@@ -24,7 +23,6 @@ export function ProductGrid({
   initialFilters = {},
   showFilters = true,
   pageSize = 50,
-  onCardClick,
   dropBadges,
 }: ProductGridProps) {
   const [filters, setFilters] = useState<ProductFilters>(initialFilters)
@@ -194,7 +192,6 @@ export function ProductGrid({
                   key={listing.id}
                   listing={listing}
                   dropBadge={dropBadges?.get(listing.id)}
-                  onClick={() => onCardClick?.(listing)}
                 />
               ))}
             </div>

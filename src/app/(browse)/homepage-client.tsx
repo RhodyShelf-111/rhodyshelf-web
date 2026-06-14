@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import type { CategorySection, InventoryListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
-import { ProductDetailDrawer } from "@/components/product/product-detail"
 import { getCategoryIcon } from "@/lib/utils"
 
 interface HomepageClientProps {
@@ -24,7 +23,6 @@ export function HomepageClient({ sections }: HomepageClientProps) {
   const [shuffled, setShuffled] = useState<Map<string, InventoryListing[]>>(
     () => new Map(sections.map((s) => [s.key, s.listings.slice(0, 6)]))
   )
-  const [selectedListing, setSelectedListing] = useState<InventoryListing | null>(null)
 
   // Shuffle on mount so each page load shows different cards. Intentionally a
   // post-mount setState: shuffling during render would cause an SSR/client
@@ -36,13 +34,8 @@ export function HomepageClient({ sections }: HomepageClientProps) {
     )
   }, [sections])
 
-  const handleCardClick = useCallback((listing: InventoryListing) => {
-    setSelectedListing(listing)
-  }, [])
-
   return (
-    <>
-      <div className="space-y-4">
+    <div className="space-y-4">
         {sections.map((section) => {
           const cards = shuffled.get(section.key) ?? section.listings.slice(0, 6)
           return (
@@ -74,10 +67,7 @@ export function HomepageClient({ sections }: HomepageClientProps) {
                     key={listing.id}
                     className="w-[46vw] sm:w-56 max-w-[15rem] shrink-0 snap-start"
                   >
-                    <ProductCard
-                      listing={listing}
-                      onClick={() => handleCardClick(listing)}
-                    />
+                    <ProductCard listing={listing} />
                   </div>
                 ))}
               </div>
@@ -93,12 +83,6 @@ export function HomepageClient({ sections }: HomepageClientProps) {
             </section>
           )
         })}
-      </div>
-
-      <ProductDetailDrawer
-        listing={selectedListing}
-        onClose={() => setSelectedListing(null)}
-      />
-    </>
+    </div>
   )
 }

@@ -14,7 +14,6 @@ import { FilterBar } from "@/components/search/filter-bar"
 import { BrandGroup } from "@/components/search/brand-group"
 import { HeroSearch } from "@/components/search/hero-search"
 import { ProductCard } from "@/components/product/product-card"
-import { ProductDetailDrawer } from "@/components/product/product-detail"
 import { resolveAlias } from "@/lib/brand-aliases"
 
 interface SearchClientProps {
@@ -47,7 +46,6 @@ export function SearchClient({
   const [nextPage, setNextPage] = useState(2)
   const [exhausted, setExhausted] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [selectedListing, setSelectedListing] = useState<InventoryListing | null>(null)
 
   // Render-time reset when the server delivers a new query (no remount, so
   // FilterBar's sheet/dropdown state survives filter changes).
@@ -149,10 +147,6 @@ export function SearchClient({
     }
   }, [query, nextPage, pageSize])
 
-  const handleCardClick = useCallback((listing: InventoryListing) => {
-    setSelectedListing(listing)
-  }, [])
-
   // Single-brand view: skip brand grouping entirely, render a flat grid.
   const isSingleBrandView = Boolean(query.brand)
 
@@ -222,21 +216,12 @@ export function SearchClient({
           // Flat grid: user has filtered to a brand, show every product
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {listings.map((listing) => (
-              <ProductCard
-                key={listing.id}
-                listing={listing}
-                onClick={() => handleCardClick(listing)}
-              />
+              <ProductCard key={listing.id} listing={listing} />
             ))}
           </div>
         ) : (
           brandGroups.map(({ brand, items }) => (
-            <BrandGroup
-              key={brand}
-              brandName={brand}
-              listings={items}
-              onCardClick={handleCardClick}
-            />
+            <BrandGroup key={brand} brandName={brand} listings={items} />
           ))
         )}
 
@@ -254,11 +239,6 @@ export function SearchClient({
           </div>
         )}
       </div>
-
-      <ProductDetailDrawer
-        listing={selectedListing}
-        onClose={() => setSelectedListing(null)}
-      />
     </div>
   )
 }

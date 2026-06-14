@@ -11,10 +11,9 @@ import { useUpvotes } from "@/hooks/use-upvotes"
 interface ProductCardProps {
   listing: InventoryListing
   dropBadge?: { label: string; className: string } | null
-  onClick?: () => void
 }
 
-export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
+export function ProductCard({ listing, dropBadge }: ProductCardProps) {
   const {
     product,
     dispensary,
@@ -32,16 +31,6 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
   const buyUrl = listing.product_url ?? dispensary.menu_url
   const { isUpvoted, toggle } = useUpvotes(product.id)
 
-  // The whole card is a real link to the full product page (keyboard-focusable,
-  // crawlable, opens-in-new-tab friendly, works without JS). With JS, a plain
-  // left-click intercepts to open the quick-look drawer instead.
-  const handleNavClick = (e: React.MouseEvent) => {
-    if (!onClick) return
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
-    e.preventDefault()
-    onClick()
-  }
-
   return (
     <article
       className={cn(
@@ -50,12 +39,14 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
         "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_30px_-15px_rgba(0,0,0,0.8)]"
       )}
     >
-      {/* Stretched link makes the entire card one accessible, focusable target. */}
+      {/* The whole card is one real link to the full product page: keyboard
+          focusable, crawlable, open-in-new-tab friendly, works without JS.
+          Stretched (inset-0) so the entire card is the target; the inset focus
+          ring stays visible despite the article's overflow-hidden. */}
       <Link
         href={`/product/${listing.id}`}
-        onClick={handleNavClick}
         aria-label={`${product.name} by ${product.brand_name}`}
-        className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       />
 
       {/* Image plate — object-contain + padding so mixed-background packshots
@@ -142,7 +133,7 @@ export function ProductCard({ listing, dropBadge, onClick }: ProductCardProps) {
             <MapPin className="w-3 h-3 shrink-0" />
             <span className="truncate">{dispensary.name}</span>
           </div>
-          <div className="relative z-10 flex items-center gap-1 shrink-0">
+          <div className="relative z-20 flex items-center gap-1 shrink-0">
             {buyUrl && (
               <a
                 href={buyUrl}

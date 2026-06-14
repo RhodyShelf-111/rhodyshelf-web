@@ -61,8 +61,12 @@ export default async function ProductPage({
   // the dispensary-level menu_url when a row has no product_url.
   const buyUrl = listing.product_url ?? dispensary.menu_url
 
-  // "More from this brand" rail (cached per brand). Exclude the current listing.
-  const brandListings = (await getInventoryByBrand(product.brand_name))
+  // "More from this brand" rail (cached per brand). Exclude the current
+  // listing. Secondary content: degrade to no rail rather than 500 the page
+  // if the brand fetch fails.
+  const brandListings = (
+    await getInventoryByBrand(product.brand_name).catch(() => [])
+  )
     .filter((l) => l.id !== listing.id)
     .slice(0, 12)
 
