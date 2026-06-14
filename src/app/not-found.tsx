@@ -12,10 +12,10 @@ export default function NotFound() {
           The page you&apos;re looking for doesn&apos;t exist.
         </p>
         <Link
-          href="/menu"
-          className="inline-flex items-center justify-center h-8 px-4 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          href="/search"
+          className="inline-flex items-center justify-center h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
-          Browse the full menu
+          Browse all products
         </Link>
       </div>
     </div>

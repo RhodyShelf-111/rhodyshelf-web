@@ -26,8 +26,11 @@ export function HomepageClient({ sections }: HomepageClientProps) {
   )
   const [selectedListing, setSelectedListing] = useState<InventoryListing | null>(null)
 
-  // Shuffle on mount so each page load shows different cards
+  // Shuffle on mount so each page load shows different cards. Intentionally a
+  // post-mount setState: shuffling during render would cause an SSR/client
+  // hydration mismatch.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShuffled(
       new Map(sections.map((s) => [s.key, shuffle(s.listings).slice(0, 6)]))
     )
@@ -63,10 +66,14 @@ export function HomepageClient({ sections }: HomepageClientProps) {
                 </Link>
               </div>
 
-              {/* Product cards row — hidden on mobile */}
-              <div className="hidden sm:flex gap-4 p-4 overflow-x-auto scrollbar-subtle items-stretch">
+              {/* Product cards row — horizontal scroll on every breakpoint so
+                  mobile gets real merchandising, not just a list of links. */}
+              <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto scrollbar-subtle items-stretch snap-x snap-mandatory">
                 {cards.map((listing) => (
-                  <div key={listing.id} className="w-56 shrink-0">
+                  <div
+                    key={listing.id}
+                    className="w-[46vw] sm:w-56 max-w-[15rem] shrink-0 snap-start"
+                  >
                     <ProductCard
                       listing={listing}
                       onClick={() => handleCardClick(listing)}
@@ -75,13 +82,13 @@ export function HomepageClient({ sections }: HomepageClientProps) {
                 ))}
               </div>
 
-              {/* Mobile: full-width tap target */}
+              {/* Trailing browse CTA (mobile) */}
               <Link
                 href={`/search?category=${encodeURIComponent(section.key)}`}
-                className="sm:hidden flex items-center justify-between px-4 py-3 text-sm text-muted-foreground hover:bg-muted transition-colors"
+                className="sm:hidden flex items-center justify-between px-4 py-3 text-sm font-medium text-primary border-t border-border hover:bg-muted transition-colors"
               >
-                <span>Browse {section.label}</span>
-                <span className="text-primary">→</span>
+                <span>Browse all {section.count.toLocaleString()} {section.label}</span>
+                <span aria-hidden>→</span>
               </Link>
             </section>
           )

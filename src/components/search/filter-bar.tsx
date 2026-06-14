@@ -73,7 +73,7 @@ export function FilterBar({
           placeholder="Search brands..."
           value={brandSearch}
           onChange={(e) => setBrandSearch(e.target.value)}
-          className="w-full h-8 px-3 text-sm rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+          className="w-full h-10 px-3 text-base rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
         />
         <div className="max-h-48 overflow-y-auto space-y-1.5 mt-2">
           {filteredBrands.slice(0, 20).map((brand) => (

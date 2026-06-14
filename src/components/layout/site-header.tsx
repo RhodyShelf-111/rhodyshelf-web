@@ -10,8 +10,9 @@ import { useState } from "react"
 
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
-  { href: "/drops", label: "Drops" },
+  { href: "/dispensary", label: "Dispensaries" },
   { href: "/deals", label: "Deals" },
+  { href: "/drops", label: "Drops" },
 ]
 
 export function SiteHeader() {
@@ -23,9 +24,9 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border h-16">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="shrink-0" aria-label="RhodyShelf home">
           <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
-            RhodyShelf
+            Rhody<span className="text-primary">Shelf</span>
           </span>
         </Link>
 
@@ -67,7 +68,7 @@ export function SiteHeader() {
           ) : (
             <button
               onClick={() => setMobileSearchOpen(true)}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              className="inline-flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
               aria-label="Search"
             >
               <Search className="w-5 h-5 text-muted-foreground" />
@@ -76,7 +77,7 @@ export function SiteHeader() {
 
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetTrigger
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              className="inline-flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
               aria-label="Menu"
             >
               <Menu className="w-5 h-5 text-muted-foreground" />

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import type { InventoryListing } from "@/lib/types"
-import { formatPrice, getCategoryIcon } from "@/lib/utils"
+import { formatPrice, formatRelativeTime, getCategoryIcon } from "@/lib/utils"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { DealBadge } from "./deal-badge"
 
@@ -38,10 +38,24 @@ function ProductDetailContent({
   listing: InventoryListing
   onClose: () => void
 }) {
-  const { product, dispensary, price, discount_amount, thc_percent, cbd_percent } =
-    listing
+  const {
+    product,
+    dispensary,
+    price,
+    original_price,
+    discount_amount,
+    discount_percent,
+    thc_percent,
+    cbd_percent,
+  } = listing
   const imageUrl = listing.image_url ?? product.image_url
   const isOnSale = (discount_amount ?? 0) > 0
+  const showStrike =
+    isOnSale && original_price != null && price != null && original_price > price
+  // Primary CTA target: the per-product deep-link into the dispensary menu.
+  // Fall back to the dispensary-level menu_url. (menu_url is currently null for
+  // every dispensary, so product_url is what actually makes this button work.)
+  const buyUrl = listing.product_url ?? dispensary.menu_url
   const { isUpvoted, toggle } = useUpvotes(product.id)
 
   return (
@@ -62,7 +76,7 @@ function ProductDetailContent({
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-contain p-6"
             sizes="420px"
             onError={(e) => {
               const target = e.currentTarget as HTMLImageElement
@@ -80,7 +94,7 @@ function ProductDetailContent({
         </div>
         {isOnSale && (
           <div className="absolute top-3 left-3">
-            <DealBadge />
+            <DealBadge percent={discount_percent} />
           </div>
         )}
       </div>
@@ -96,16 +110,39 @@ function ProductDetailContent({
           <h2 className="font-heading text-xl font-bold text-foreground mt-1">
             {product.name}
           </h2>
-          <p className="text-muted-foreground mt-0.5">{product.brand_name}</p>
+          <Link
+            href={`/search?brand=${encodeURIComponent(product.brand_name)}`}
+            className="text-muted-foreground mt-0.5 inline-block hover:text-foreground transition-colors"
+          >
+            {product.brand_name}
+          </Link>
         </div>
 
         {/* Price */}
-        <div className="text-2xl font-bold text-foreground">
-          {formatPrice(price) ?? (
-            <span className="text-base font-normal text-muted-foreground">
-              See dispensary for price
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-foreground">
+              {formatPrice(price) ?? (
+                <span className="text-base font-normal text-muted-foreground">
+                  See dispensary for price
+                </span>
+              )}
             </span>
-          )}
+            {showStrike && (
+              <span className="text-base text-muted-foreground line-through">
+                {formatPrice(original_price)}
+              </span>
+            )}
+            {showStrike && (
+              <span className="text-sm font-semibold text-primary">
+                Save {formatPrice((original_price ?? 0) - (price ?? 0))}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Price updated {formatRelativeTime(listing.last_seen_at)} · confirm at
+            dispensary before you go
+          </p>
         </div>
 
         {/* Cannabinoids */}
@@ -127,24 +164,27 @@ function ProductDetailContent({
         )}
 
         {/* Dispensary */}
-        <div className="bg-muted rounded-lg p-4 border border-border">
+        <Link
+          href={`/dispensary/${dispensary.slug}`}
+          className="block bg-muted rounded-lg p-4 border border-border hover:border-primary/40 transition-colors"
+        >
           <p className="text-sm text-muted-foreground">Available at</p>
           <p className="font-semibold text-foreground">{dispensary.name}</p>
           {dispensary.city && (
             <p className="text-sm text-muted-foreground">{dispensary.city}, RI</p>
           )}
-        </div>
+        </Link>
 
         {/* Actions */}
         <div className="flex gap-3">
-          {dispensary.menu_url && (
+          {buyUrl && (
             <a
-              href={dispensary.menu_url}
+              href={buyUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={buttonVariants({ className: "flex-1" })}
             >
-              View on {dispensary.name}
+              Buy at {dispensary.name}
               <ExternalLink className="w-4 h-4 ml-1.5" />
             </a>
           )}

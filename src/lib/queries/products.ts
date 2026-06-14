@@ -370,8 +370,8 @@ export const getListingById = cache(
  * regardless of requested range, so any potentially-large fetch must loop.
  * Builders are mutable, so a fresh query is built per page.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchAllListings(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   buildQuery: () => any,
   context: string
 ): Promise<InventoryListing[]> {

@@ -27,6 +27,9 @@ export function MenuClient({ listings }: MenuClientProps) {
       onSale: sp.get("sale") === "true" || undefined,
     }
     if (Object.values(next).some(Boolean)) {
+      // Post-mount URL read (kept out of render so host pages stay statically
+      // prerenderable); a one-shot sync, not a render loop.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInitialFilters(next)
       setFiltersKey(JSON.stringify(next))
     }

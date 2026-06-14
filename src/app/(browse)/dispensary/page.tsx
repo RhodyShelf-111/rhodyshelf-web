@@ -8,7 +8,7 @@ export const revalidate = 1800
 export const metadata: Metadata = {
   title: "Dispensaries",
   description:
-    "Browse all 8 Rhode Island cannabis dispensaries. See menus, product counts, and deals at each location.",
+    "Browse every Rhode Island cannabis dispensary. See menus, product counts, and deals at each location.",
 }
 
 export default async function DispensaryListPage() {
