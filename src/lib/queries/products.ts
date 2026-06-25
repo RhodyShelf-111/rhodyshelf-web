@@ -365,6 +365,50 @@ export const getListingById = cache(
   }
 )
 
+/** Hard cap on how many saved products we resolve in one /saved request. */
+export const SAVED_MAX = 200
+
+/**
+ * Resolve a set of saved product ids to one current listing each. Upvotes are
+ * stored client-side by product id, so a product may have several fresh
+ * listings (one per dispensary) — we keep the cheapest in-stock one so the
+ * saved card shows the best available price. Products no longer in the fresh
+ * window are simply dropped. Not cached (input is per-visitor and unbounded).
+ */
+export async function getListingsByProductIds(
+  productIds: string[]
+): Promise<InventoryListing[]> {
+  const ids = [...new Set(productIds)].slice(0, SAVED_MAX)
+  if (ids.length === 0) return []
+
+  const client = createServiceClient()
+  const cheapestByProduct = new Map<string, InventoryListing>()
+  for (let i = 0; i < ids.length; i += 50) {
+    const { data, error } = await freshListings(client).in(
+      "product_id",
+      ids.slice(i, i + 50)
+    )
+    assertNoError(error, "getListingsByProductIds")
+    for (const row of (data ?? []) as unknown as InventoryListing[]) {
+      const pid = row.product.id
+      const current = cheapestByProduct.get(pid)
+      if (!current || rankPrice(row.price) < rankPrice(current.price)) {
+        cheapestByProduct.set(pid, row)
+      }
+    }
+  }
+
+  // Preserve the caller's order (the client sends most-recently-saved first).
+  return ids
+    .map((id) => cheapestByProduct.get(id))
+    .filter((l): l is InventoryListing => !!l)
+}
+
+/** Sort key that pushes null/missing prices to the end. */
+function rankPrice(price: number | null): number {
+  return price == null ? Number.POSITIVE_INFINITY : price
+}
+
 /**
  * Range-paginated fetch: PostgREST caps every response at max_rows=1000
  * regardless of requested range, so any potentially-large fetch must loop.

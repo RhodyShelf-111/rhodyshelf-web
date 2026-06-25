@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Search, Menu } from "lucide-react"
+import { Search, Menu, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { SearchBar } from "./search-bar"
+import { useSavedProductIds } from "@/hooks/use-upvotes"
 import { useState } from "react"
 
 const NAV_LINKS = [
@@ -14,6 +15,44 @@ const NAV_LINKS = [
   { href: "/deals", label: "Deals" },
   { href: "/drops", label: "Drops" },
 ]
+
+/** Nav entry to the personal saved list, with a live count badge. The count is
+ *  0 on the server / first render (matching useSavedProductIds), so the badge
+ *  only appears after hydration — no mismatch. */
+function SavedNavLink({
+  active,
+  mobile,
+  onNavigate,
+}: {
+  active: boolean
+  mobile?: boolean
+  onNavigate?: () => void
+}) {
+  const count = useSavedProductIds().length
+  return (
+    <Link
+      href="/saved"
+      onClick={onNavigate}
+      className={cn(
+        "rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-1.5",
+        mobile ? "px-4 py-3 text-base" : "px-3 py-2 text-[15px]",
+        active
+          ? "text-primary bg-accent"
+          : mobile
+            ? "text-foreground hover:bg-muted"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+      )}
+    >
+      <Bookmark className={cn("w-4 h-4", active && "fill-current")} />
+      Saved
+      {count > 0 && (
+        <span className="ml-0.5 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-semibold">
+          {count}
+        </span>
+      )}
+    </Link>
+  )
+}
 
 export function SiteHeader() {
   const pathname = usePathname()
@@ -46,6 +85,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <SavedNavLink active={pathname?.startsWith("/saved") ?? false} />
         </nav>
 
         {/* Desktop search */}
@@ -99,6 +139,11 @@ export function SiteHeader() {
                     {link.label}
                   </Link>
                 ))}
+                <SavedNavLink
+                  active={pathname?.startsWith("/saved") ?? false}
+                  mobile
+                  onNavigate={() => setMobileNavOpen(false)}
+                />
               </nav>
             </SheetContent>
           </Sheet>
