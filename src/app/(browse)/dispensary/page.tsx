@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { MapPin, Tag, ShoppingBag } from "lucide-react"
 import { getDispensaries } from "@/lib/queries/dispensaries"
+import type { DispensaryWithCounts } from "@/lib/types"
+import { cn } from "@/lib/utils"
 import type { Metadata } from "next"
 
 export const revalidate = 1800
@@ -13,6 +15,12 @@ export const metadata: Metadata = {
 
 export default async function DispensaryListPage() {
   const dispensaries = await getDispensaries()
+  // Biggest live menus first; dispensaries without fresh inventory sink to the
+  // bottom. Stable alphabetical tiebreak.
+  const sorted = [...dispensaries].sort(
+    (a, b) => b.product_count - a.product_count || a.name.localeCompare(b.name)
+  )
+  const liveCount = sorted.filter((d) => d.product_count > 0).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -21,48 +29,96 @@ export default async function DispensaryListPage() {
           Dispensaries
         </h1>
         <p className="text-muted-foreground mt-1">
-          {dispensaries.length} locations across Rhode Island
+          {liveCount === dispensaries.length
+            ? `${dispensaries.length} locations across Rhode Island`
+            : `${liveCount} of ${dispensaries.length} Rhode Island locations with live menus`}
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {dispensaries.map((d) => (
-          <Link
-            key={d.id}
-            href={`/dispensary/${d.slug}`}
-            className="group p-5 rounded-xl border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <MapPin className="w-5 h-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                  {d.name}
-                </h2>
-                {d.city && (
-                  <p className="text-sm text-muted-foreground">
-                    {d.city}, RI
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                {d.product_count} products
-              </span>
-              {d.deal_count > 0 && (
-                <span className="flex items-center gap-1 text-red-400">
-                  <Tag className="w-3.5 h-3.5" />
-                  {d.deal_count} deals
-                </span>
-              )}
-            </div>
-          </Link>
+        {sorted.map((d) => (
+          <DispensaryCard key={d.id} dispensary={d} />
         ))}
       </div>
     </div>
+  )
+}
+
+function DispensaryCard({ dispensary: d }: { dispensary: DispensaryWithCounts }) {
+  const hasMenu = d.product_count > 0
+
+  const inner = (
+    <>
+      <div className="flex items-start gap-3">
+        <div
+          className={cn(
+            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+            hasMenu ? "bg-primary/10" : "bg-muted"
+          )}
+        >
+          <MapPin
+            className={cn(
+              "w-5 h-5",
+              hasMenu ? "text-primary" : "text-muted-foreground"
+            )}
+          />
+        </div>
+        <div className="min-w-0">
+          <h2
+            className={cn(
+              "font-semibold leading-tight line-clamp-2",
+              hasMenu
+                ? "text-foreground group-hover:text-primary transition-colors"
+                : "text-foreground"
+            )}
+          >
+            {d.name}
+          </h2>
+          {d.city && (
+            <p className="text-sm text-muted-foreground mt-0.5">{d.city}, RI</p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+        {hasMenu ? (
+          <>
+            <span className="flex items-center gap-1">
+              <ShoppingBag className="w-3.5 h-3.5" />
+              {d.product_count.toLocaleString()} products
+            </span>
+            {d.deal_count > 0 && (
+              <span className="flex items-center gap-1 text-red-400">
+                <Tag className="w-3.5 h-3.5" />
+                {d.deal_count} deals
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            Menu coming soon
+          </span>
+        )}
+      </div>
+    </>
+  )
+
+  if (!hasMenu) {
+    // No fresh inventory yet — show the location but don't link into an empty
+    // menu page.
+    return (
+      <div className="p-5 rounded-xl border border-border bg-card/60 opacity-75">
+        {inner}
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href={`/dispensary/${d.slug}`}
+      className="group p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all"
+    >
+      {inner}
+    </Link>
   )
 }
