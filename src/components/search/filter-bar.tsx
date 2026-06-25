@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { SlidersHorizontal, ChevronDown, X } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
 import { cn, getCategoryIcon } from "@/lib/utils"
 import type { ProductFilters, Dispensary } from "@/lib/types"
@@ -351,7 +351,7 @@ export function FilterBar({
             )}
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[85vh] overflow-y-auto px-4 pb-8">
-            <h3 className="font-heading text-lg font-bold mb-4">Filters</h3>
+            <SheetTitle className="text-lg font-bold mb-4">Filters</SheetTitle>
             {mobileFilters}
           </SheetContent>
         </Sheet>
