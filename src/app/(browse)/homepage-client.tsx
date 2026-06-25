@@ -43,7 +43,7 @@ export function HomepageClient({ sections }: HomepageClientProps) {
               {/* Section header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{getCategoryIcon(section.key)}</span>
+                  <span className="text-xl" aria-hidden="true">{getCategoryIcon(section.key)}</span>
                   <h2 className="font-heading text-[17px] font-bold text-foreground">
                     {section.label}
                   </h2>

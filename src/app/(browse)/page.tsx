@@ -27,7 +27,7 @@ export default async function HomePage() {
           Search RI dispensary menus, all in one place.
         </h1>
         <p className="text-muted-foreground text-base md:text-lg mb-5 max-w-2xl lg:max-w-none lg:whitespace-nowrap">
-          Browse every Rhode Island dispensary menu, compare prices, and find what you&apos;re looking for.
+          Browse every Rhode Island dispensary menu, compare prices across the state, and find what you&apos;re looking for.
         </p>
         <HeroSearch
           brands={brands}

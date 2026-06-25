@@ -137,7 +137,10 @@ export function ProductGrid({
           <div className="flex flex-wrap gap-2 mb-4">
             {filters.category && (
               <FilterChip
-                label={filters.category}
+                label={
+                  filters.category.charAt(0).toUpperCase() +
+                  filters.category.slice(1)
+                }
                 onRemove={() => updateFilter("category", undefined)}
               />
             )}

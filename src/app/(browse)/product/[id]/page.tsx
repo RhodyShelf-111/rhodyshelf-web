@@ -198,7 +198,11 @@ export default async function ProductPage({
                 <ExternalLink className="w-4 h-4 ml-1.5" />
               </a>
             )}
-            <UpvoteButton productId={product.id} className="h-12 w-12" />
+            <UpvoteButton
+              productId={product.id}
+              withLabel
+              className="h-12 px-4 shrink-0"
+            />
           </div>
         </div>
       </div>
