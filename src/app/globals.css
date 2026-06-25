@@ -109,3 +109,17 @@
     background: var(--primary);
   }
 }
+
+/* Respect the OS "reduce motion" setting: neutralize transitions, animations,
+   and smooth scrolling site-wide (card hover-lifts, fades, snap scrolling).
+   Only affects users who explicitly asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
