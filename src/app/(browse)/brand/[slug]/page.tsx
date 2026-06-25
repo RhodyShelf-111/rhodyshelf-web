@@ -4,6 +4,7 @@ import {
   getBrands,
   getInventoryByBrand,
 } from "@/lib/queries/products"
+import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -44,6 +45,10 @@ export default async function BrandPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <Breadcrumbs
+        items={[{ name: brand.canonical_name, href: `/brand/${slug}` }]}
+      />
+
       <div className="mb-6">
         <h1 className="font-heading text-3xl font-bold text-foreground">
           {brand.canonical_name}

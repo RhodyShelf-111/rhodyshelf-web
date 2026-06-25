@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { MapPin, ExternalLink } from "lucide-react"
 import { getDispensaryBySlug, getDispensaries } from "@/lib/queries/dispensaries"
 import { getInventoryByDispensary } from "@/lib/queries/products"
+import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -42,6 +43,13 @@ export default async function DispensaryDetailPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <Breadcrumbs
+        items={[
+          { name: "Dispensaries", href: "/dispensary" },
+          { name: dispensary.name, href: `/dispensary/${slug}` },
+        ]}
+      />
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-start justify-between gap-4">
