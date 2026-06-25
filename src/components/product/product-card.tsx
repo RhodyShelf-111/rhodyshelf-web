@@ -134,15 +134,19 @@ export function ProductCard({
           </p>
         </div>
 
-        {/* Dispensary + actions (pinned to bottom) */}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+        {/* Dispensary + actions (pinned to bottom).
+            Mobile: name on its own row, then a full-width action row with 44px
+            touch targets (WCAG 2.5.5 / Apple HIG) — this also gives the
+            dispensary name the full card width so it stops truncating.
+            sm+: a single compact inline row where a precise pointer is in use. */}
+        <div className="mt-auto pt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           {showDispensary && (
-            <div className="flex items-center gap-1 text-[12px] text-muted-foreground truncate min-w-0">
+            <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
               <MapPin className="w-3 h-3 shrink-0" />
               <span className="truncate">{dispensary.name}</span>
             </div>
           )}
-          <div className="relative z-20 ml-auto flex items-center gap-1 shrink-0">
+          <div className="relative z-20 flex items-center gap-1.5 sm:gap-1 sm:ml-auto shrink-0">
             {buyUrl && (
               <a
                 href={buyUrl}
@@ -150,10 +154,10 @@ export function ProductCard({
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 aria-label={`Buy ${product.name} at ${dispensary.name} (opens dispensary site)`}
-                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[12px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1 h-11 sm:h-7 px-3 sm:px-2.5 rounded-md text-[13px] sm:text-[12px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               >
                 Buy
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
               </a>
             )}
             <button
@@ -162,7 +166,7 @@ export function ProductCard({
                 toggle()
               }}
               className={cn(
-                "flex items-center justify-center w-7 h-7 rounded-md transition-colors shrink-0 border",
+                "flex items-center justify-center w-11 h-11 sm:w-7 sm:h-7 rounded-md transition-colors shrink-0 border",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
                 isUpvoted
                   ? "bg-primary/15 text-primary border-primary/40"
@@ -171,7 +175,7 @@ export function ProductCard({
               aria-label={isUpvoted ? "Remove upvote" : "Upvote"}
               aria-pressed={isUpvoted}
             >
-              <ChevronUp className={cn("w-4 h-4", isUpvoted && "stroke-[3]")} />
+              <ChevronUp className={cn("w-5 h-5 sm:w-4 sm:h-4", isUpvoted && "stroke-[3]")} />
             </button>
           </div>
         </div>
