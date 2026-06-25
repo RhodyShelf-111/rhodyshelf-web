@@ -1,6 +1,8 @@
+import Link from "next/link"
 import { getHomepageSections, getBrandNames } from "@/lib/queries/products"
 import { HeroSearch } from "@/components/search/hero-search"
 import { HomepageClient } from "./homepage-client"
+import { getCategoryIcon } from "@/lib/utils"
 import type { Metadata } from "next"
 
 export const revalidate = 1800 // 30 minutes
@@ -33,6 +35,28 @@ export default async function HomePage() {
           brands={brands}
           className="max-w-xl"
         />
+
+        {/* Quick-browse category chips — one-tap jump from the hero into the
+            most-searched categories. Server-rendered from the same sections
+            shown below, so the labels and counts always stay in sync.
+            Horizontally scrollable on mobile, wraps on desktop. */}
+        {sections.length > 0 && (
+          <nav
+            aria-label="Browse by category"
+            className="mt-4 flex gap-2 overflow-x-auto scrollbar-hidden md:flex-wrap md:overflow-visible"
+          >
+            {sections.map((section) => (
+              <Link
+                key={section.key}
+                href={`/search?category=${encodeURIComponent(section.key)}`}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span aria-hidden="true">{getCategoryIcon(section.key)}</span>
+                {section.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
 
       {/* Category sections */}
