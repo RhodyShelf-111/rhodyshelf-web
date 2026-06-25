@@ -18,7 +18,7 @@ export function SiteFooter() {
           {/* Links */}
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <Link href="/search" className="hover:text-foreground transition-colors">
-              Browse all
+              Search
             </Link>
             <Link href="/deals" className="hover:text-foreground transition-colors">
               Deals

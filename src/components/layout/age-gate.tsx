@@ -153,7 +153,7 @@ export function AgeGate() {
                   "px-8 py-3.5 text-sm font-semibold rounded-xl min-h-[48px] transition-all",
                   "bg-primary text-primary-foreground hover:bg-primary/90",
                   "shadow-[0_0_20px_-5px_rgba(22,163,74,0.3)]",
-                  "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
                 )}
               >
                 Yes, I&apos;m 21+
@@ -164,7 +164,7 @@ export function AgeGate() {
                 className={cn(
                   "px-8 py-3.5 text-sm font-semibold rounded-xl min-h-[48px] transition-all",
                   "border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20",
-                  "focus:outline-none focus:ring-2 focus:ring-ring/50 focus:ring-offset-2"
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2"
                 )}
               >
                 No
@@ -190,7 +190,7 @@ export function AgeGate() {
             <a
               ref={leaveRef}
               href="https://www.google.com"
-              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 rounded"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded"
             >
               Leave this site &rarr;
             </a>
