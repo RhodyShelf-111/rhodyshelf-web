@@ -10,7 +10,7 @@ export default function TermsPage() {
       <h1 className="font-heading text-3xl font-bold text-foreground mb-6">
         Terms of Use
       </h1>
-      <div className="prose prose-gray max-w-none space-y-4 text-muted-foreground">
+      <div className="space-y-4 text-muted-foreground">
         <p>Last updated: March 2026</p>
         <p>
           By using RhodyShelf, you confirm that you are 21 years of age or older

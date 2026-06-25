@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <h1 className="font-heading text-3xl font-bold text-foreground mb-6">
         Privacy Policy
       </h1>
-      <div className="prose prose-gray max-w-none space-y-4 text-muted-foreground">
+      <div className="space-y-4 text-muted-foreground">
         <p>Last updated: June 2026</p>
         <p>
           RhodyShelf displays publicly available cannabis menu information from

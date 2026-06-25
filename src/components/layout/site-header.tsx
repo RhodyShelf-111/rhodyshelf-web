@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
+import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
 import { Search, Menu, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { SearchBar } from "./search-bar"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
 import { useState } from "react"
@@ -96,15 +97,31 @@ export function SiteHeader() {
         {/* Mobile controls */}
         <div className="flex items-center gap-1 md:hidden">
           {mobileSearchOpen ? (
-            <div className="absolute inset-x-0 top-0 h-16 bg-background px-4 flex items-center gap-2 z-10">
-              <SearchBar autoFocus onBlur={() => setMobileSearchOpen(false)} />
-              <button
-                onClick={() => setMobileSearchOpen(false)}
-                className="text-sm text-muted-foreground shrink-0"
-              >
-                Cancel
-              </button>
-            </div>
+            <>
+              {/* Dimming scrim over the page body so the search reads as a
+                  focused mode; tap it (or Cancel) to close. We intentionally
+                  don't auto-close on input blur — focus loss on mobile is
+                  common and non-deliberate. Portaled to <body> because the
+                  header's backdrop-blur would otherwise trap this fixed
+                  element inside the 64px header. */}
+              {createPortal(
+                <div
+                  className="fixed inset-x-0 top-16 bottom-0 z-40 bg-black/55 md:hidden"
+                  onClick={() => setMobileSearchOpen(false)}
+                  aria-hidden="true"
+                />,
+                document.body
+              )}
+              <div className="absolute inset-x-0 top-0 h-16 bg-background px-4 flex items-center gap-2 z-10">
+                <SearchBar autoFocus />
+                <button
+                  onClick={() => setMobileSearchOpen(false)}
+                  className="px-2 min-h-11 inline-flex items-center text-sm text-muted-foreground shrink-0"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
           ) : (
             <button
               onClick={() => setMobileSearchOpen(true)}
@@ -123,6 +140,7 @@ export function SiteHeader() {
               <Menu className="w-5 h-5 text-muted-foreground" />
             </SheetTrigger>
             <SheetContent side="right" className="w-[260px]">
+              <SheetTitle className="sr-only">Menu</SheetTitle>
               <nav className="flex flex-col gap-1 pt-8">
                 {NAV_LINKS.map((link) => (
                   <Link
