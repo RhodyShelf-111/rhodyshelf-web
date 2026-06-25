@@ -6,7 +6,7 @@ import { ProductCard } from "./product-card"
 import { ProductFiltersPanel } from "./product-filters"
 import { ProductSort } from "./product-sort"
 import { applyFilters } from "@/lib/filter-utils"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { SlidersHorizontal } from "lucide-react"
 
@@ -127,8 +127,17 @@ export function ProductGrid({
                     </span>
                   )}
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[300px] overflow-y-auto">
-                  <div className="pt-6">{filterPanel}</div>
+                {/* Bottom sheet to match the search filter UX (was a left
+                    drawer) — one consistent mobile filter pattern across the
+                    deals/drops grid and search. */}
+                <SheetContent
+                  side="bottom"
+                  className="h-[85vh] overflow-y-auto px-4 pb-8"
+                >
+                  <SheetTitle className="font-heading text-lg font-bold mb-4">
+                    Filters
+                  </SheetTitle>
+                  {filterPanel}
                 </SheetContent>
               </Sheet>
             )}

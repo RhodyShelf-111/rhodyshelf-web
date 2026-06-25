@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
 import type { ProductFilters, Dispensary } from "@/lib/types"
 import { useState } from "react"
 
@@ -39,21 +40,16 @@ export function ProductFiltersPanel({
       {/* Category */}
       <FilterSection title="Category">
         {categories.map((cat) => (
-          <label key={cat} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="category"
-              checked={filters.category === cat}
-              onChange={() =>
-                onFilterChange(
-                  "category",
-                  filters.category === cat ? undefined : cat
-                )
-              }
-              className="w-4 h-4 accent-primary"
-            />
-            <span className="text-sm capitalize">{cat}</span>
-          </label>
+          <FilterRadio
+            key={cat}
+            name="category"
+            checked={filters.category === cat}
+            onChange={() =>
+              onFilterChange("category", filters.category === cat ? undefined : cat)
+            }
+            label={cat}
+            labelClassName="capitalize"
+          />
         ))}
       </FilterSection>
 
@@ -61,35 +57,33 @@ export function ProductFiltersPanel({
           page), where filtering by brand is dead UI. */}
       {brands.length > 1 && (
         <>
-      <Separator />
+          <Separator />
 
-      <FilterSection title="Brand">
-        <Input
-          placeholder="Search brands..."
-          value={brandSearch}
-          onChange={(e) => setBrandSearch(e.target.value)}
-          className="mb-2 h-8 text-sm"
-        />
-        <div className="max-h-48 overflow-y-auto space-y-1.5">
-          {filteredBrands.slice(0, 20).map((brand) => (
-            <label key={brand} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="brand"
-                checked={filters.brand === brand}
-                onChange={() =>
-                  onFilterChange(
-                    "brand",
-                    filters.brand === brand ? undefined : brand
-                  )
-                }
-                className="w-4 h-4 accent-primary"
-              />
-              <span className="text-sm truncate">{brand}</span>
-            </label>
-          ))}
-        </div>
-      </FilterSection>
+          <FilterSection title="Brand">
+            <Input
+              placeholder="Search brands..."
+              value={brandSearch}
+              onChange={(e) => setBrandSearch(e.target.value)}
+              className="mb-2 h-8 text-sm"
+            />
+            <div className="max-h-48 overflow-y-auto space-y-1.5">
+              {filteredBrands.slice(0, 20).map((brand) => (
+                <FilterRadio
+                  key={brand}
+                  name="brand"
+                  checked={filters.brand === brand}
+                  onChange={() =>
+                    onFilterChange(
+                      "brand",
+                      filters.brand === brand ? undefined : brand
+                    )
+                  }
+                  label={brand}
+                  labelClassName="truncate"
+                />
+              ))}
+            </div>
+          </FilterSection>
         </>
       )}
 
@@ -97,27 +91,24 @@ export function ProductFiltersPanel({
           detail page), where it's a one-option, no-op control. */}
       {dispensaries.length > 1 && (
         <>
-      <Separator />
+          <Separator />
 
-      <FilterSection title="Dispensary">
-        {dispensaries.map((d) => (
-          <label key={d.slug} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="dispensary"
-              checked={filters.dispensary === d.slug}
-              onChange={() =>
-                onFilterChange(
-                  "dispensary",
-                  filters.dispensary === d.slug ? undefined : d.slug
-                )
-              }
-              className="w-4 h-4 accent-primary"
-            />
-            <span className="text-sm">{d.name}</span>
-          </label>
-        ))}
-      </FilterSection>
+          <FilterSection title="Dispensary">
+            {dispensaries.map((d) => (
+              <FilterRadio
+                key={d.slug}
+                name="dispensary"
+                checked={filters.dispensary === d.slug}
+                onChange={() =>
+                  onFilterChange(
+                    "dispensary",
+                    filters.dispensary === d.slug ? undefined : d.slug
+                  )
+                }
+                label={d.name}
+              />
+            ))}
+          </FilterSection>
         </>
       )}
 
@@ -126,21 +117,19 @@ export function ProductFiltersPanel({
       {/* Strain Type */}
       <FilterSection title="Strain Type">
         {strainTypes.map((st) => (
-          <label key={st} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="strainType"
-              checked={filters.strainType === st}
-              onChange={() =>
-                onFilterChange(
-                  "strainType",
-                  filters.strainType === st ? undefined : st
-                )
-              }
-              className="w-4 h-4 accent-primary"
-            />
-            <span className="text-sm capitalize">{st}</span>
-          </label>
+          <FilterRadio
+            key={st}
+            name="strainType"
+            checked={filters.strainType === st}
+            onChange={() =>
+              onFilterChange(
+                "strainType",
+                filters.strainType === st ? undefined : st
+              )
+            }
+            label={st}
+            labelClassName="capitalize"
+          />
         ))}
       </FilterSection>
 
@@ -182,30 +171,10 @@ export function ProductFiltersPanel({
       <Separator />
 
       {/* On Sale Toggle */}
-      <label className="flex items-center gap-3 cursor-pointer">
-        <div
-          role="switch"
-          aria-checked={!!filters.onSale}
-          tabIndex={0}
-          onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault()
-              onFilterChange("onSale", !filters.onSale || undefined)
-            }
-          }}
-          className={`relative w-10 h-6 rounded-full transition-colors ${
-            filters.onSale ? "bg-primary" : "bg-muted"
-          }`}
-        >
-          <div
-            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow-sm ${
-              filters.onSale ? "translate-x-4" : ""
-            }`}
-          />
-        </div>
-        <span className="text-sm font-medium">On Sale Only</span>
-      </label>
+      <OnSaleToggle
+        checked={!!filters.onSale}
+        onChange={() => onFilterChange("onSale", !filters.onSale || undefined)}
+      />
     </div>
   )
 }

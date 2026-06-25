@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { SlidersHorizontal, ChevronDown, X } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
 import { cn, getCategoryIcon } from "@/lib/utils"
 import type { ProductFilters, Dispensary } from "@/lib/types"
 
@@ -77,18 +78,16 @@ export function FilterBar({
         />
         <div className="max-h-48 overflow-y-auto space-y-1.5 mt-2">
           {filteredBrands.slice(0, 20).map((brand) => (
-            <label key={brand} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="brand-mobile"
-                checked={filters.brand === brand}
-                onChange={() =>
-                  onFilterChange("brand", filters.brand === brand ? undefined : brand)
-                }
-                className="w-4 h-4 accent-primary"
-              />
-              <span className="text-sm truncate">{brand}</span>
-            </label>
+            <FilterRadio
+              key={brand}
+              name="brand-mobile"
+              checked={filters.brand === brand}
+              onChange={() =>
+                onFilterChange("brand", filters.brand === brand ? undefined : brand)
+              }
+              label={brand}
+              labelClassName="truncate"
+            />
           ))}
         </div>
       </FilterSection>
@@ -96,67 +95,39 @@ export function FilterBar({
       {/* Dispensary */}
       <FilterSection title="Dispensary">
         {dispensaries.map((d) => (
-          <label key={d.slug} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="disp-mobile"
-              checked={filters.dispensary === d.slug}
-              onChange={() =>
-                onFilterChange(
-                  "dispensary",
-                  filters.dispensary === d.slug ? undefined : d.slug
-                )
-              }
-              className="w-4 h-4 accent-primary"
-            />
-            <span className="text-sm">{d.name}</span>
-          </label>
+          <FilterRadio
+            key={d.slug}
+            name="disp-mobile"
+            checked={filters.dispensary === d.slug}
+            onChange={() =>
+              onFilterChange(
+                "dispensary",
+                filters.dispensary === d.slug ? undefined : d.slug
+              )
+            }
+            label={d.name}
+          />
         ))}
       </FilterSection>
 
       {/* Sort */}
       <FilterSection title="Sort">
         {SORT_OPTIONS.map((opt) => (
-          <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="sort-mobile"
-              checked={(filters.sort ?? "brand-asc") === opt.value}
-              onChange={() => onFilterChange("sort", opt.value)}
-              className="w-4 h-4 accent-primary"
-            />
-            <span className="text-sm">{opt.label}</span>
-          </label>
+          <FilterRadio
+            key={opt.value}
+            name="sort-mobile"
+            checked={(filters.sort ?? "brand-asc") === opt.value}
+            onChange={() => onFilterChange("sort", opt.value)}
+            label={opt.label}
+          />
         ))}
       </FilterSection>
 
       {/* On Sale */}
-      <label className="flex items-center gap-3 cursor-pointer">
-        <div
-          role="switch"
-          aria-checked={!!filters.onSale}
-          tabIndex={0}
-          onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault()
-              onFilterChange("onSale", !filters.onSale || undefined)
-            }
-          }}
-          className={cn(
-            "relative w-10 h-6 rounded-full transition-colors cursor-pointer",
-            filters.onSale ? "bg-primary" : "bg-muted"
-          )}
-        >
-          <div
-            className={cn(
-              "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow-sm",
-              filters.onSale ? "translate-x-4" : ""
-            )}
-          />
-        </div>
-        <span className="text-sm font-medium">On Sale Only</span>
-      </label>
+      <OnSaleToggle
+        checked={!!filters.onSale}
+        onChange={() => onFilterChange("onSale", !filters.onSale || undefined)}
+      />
 
       {activeCount > 0 && (
         <button onClick={onClear} className="text-sm text-primary hover:underline">
@@ -380,7 +351,7 @@ export function FilterBar({
             )}
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[85vh] overflow-y-auto px-4 pb-8">
-            <h3 className="font-heading text-lg font-bold mb-4">Filters</h3>
+            <SheetTitle className="text-lg font-bold mb-4">Filters</SheetTitle>
             {mobileFilters}
           </SheetContent>
         </Sheet>
