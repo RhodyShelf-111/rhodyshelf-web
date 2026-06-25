@@ -30,7 +30,7 @@ export default async function DealsPage() {
       </div>
 
       {deals.length > 0 ? (
-        <MenuClient listings={deals} />
+        <MenuClient listings={deals} defaultSort="discount-desc" />
       ) : (
         <div className="text-center py-16">
           <p className="text-lg font-medium text-foreground mb-2">

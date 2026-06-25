@@ -80,7 +80,7 @@ function DispensaryCard({ dispensary: d }: { dispensary: DispensaryWithCounts })
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+      <div className="flex items-center gap-4 mt-auto pt-4 text-sm text-muted-foreground">
         {hasMenu ? (
           <>
             <span className="flex items-center gap-1">
@@ -107,7 +107,10 @@ function DispensaryCard({ dispensary: d }: { dispensary: DispensaryWithCounts })
     // No fresh inventory yet — show the location but don't link into an empty
     // menu page.
     return (
-      <div className="p-5 rounded-xl border border-border bg-card/60 opacity-75">
+      <div
+        aria-disabled="true"
+        className="flex flex-col h-full p-5 rounded-xl border border-border bg-card/60 opacity-75 cursor-default"
+      >
         {inner}
       </div>
     )
@@ -116,7 +119,7 @@ function DispensaryCard({ dispensary: d }: { dispensary: DispensaryWithCounts })
   return (
     <Link
       href={`/dispensary/${d.slug}`}
-      className="group p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all"
+      className="group flex flex-col h-full p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all"
     >
       {inner}
     </Link>

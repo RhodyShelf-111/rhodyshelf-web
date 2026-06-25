@@ -75,7 +75,7 @@ export default async function DispensaryDetailPage({
       </div>
 
       {dispensaryListings.length > 0 ? (
-        <MenuClient listings={dispensaryListings} />
+        <MenuClient listings={dispensaryListings} showDispensary={false} />
       ) : (
         <div className="text-center py-16">
           <p className="text-lg font-medium text-foreground mb-2">

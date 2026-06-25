@@ -57,7 +57,9 @@ export function getFreshnessBadge(droppedAt: string): {
   }
   if (days <= 14) {
     return {
-      label: "This Week",
+      // 8–14 days: "This Week" would be inaccurate, so use a window-accurate
+      // label that matches the page's "last 14 days" framing.
+      label: "New",
       className: "bg-muted text-muted-foreground border-border",
     }
   }
