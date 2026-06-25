@@ -114,3 +114,10 @@ export interface Brand {
   slug: string
   category: string | null
 }
+
+// Search autocomplete suggestion (from /api/search/suggest)
+export type SuggestionType = "product" | "brand" | "strain"
+export interface Suggestion {
+  type: SuggestionType
+  value: string
+}
