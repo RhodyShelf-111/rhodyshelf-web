@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ExternalLink, MapPin, ArrowLeft } from "lucide-react"
+import { ExternalLink, MapPin } from "lucide-react"
 import { getListingById, getInventoryByBrand } from "@/lib/queries/products"
 import { formatPrice, formatRelativeTime } from "@/lib/utils"
+import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductCard } from "@/components/product/product-card"
 import { ProductHeroImage } from "@/components/product/product-hero-image"
@@ -72,13 +73,17 @@ export default async function ProductPage({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <Link
-        href="/search"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Browse all products
-      </Link>
+      <Breadcrumbs
+        items={[
+          {
+            name:
+              product.category.charAt(0).toUpperCase() +
+              product.category.slice(1),
+            href: `/search?category=${encodeURIComponent(product.category)}`,
+          },
+          { name: product.name, href: `/product/${id}` },
+        ]}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Image */}
