@@ -32,6 +32,9 @@ export function SiteFooter() {
             >
               Dispensaries
             </Link>
+            <Link href="/saved" className="hover:text-foreground transition-colors">
+              Saved
+            </Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">
               Privacy
             </Link>
