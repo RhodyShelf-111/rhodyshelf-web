@@ -147,8 +147,12 @@ export function SearchClient({
     }
   }, [query, nextPage, pageSize])
 
-  // Single-brand view: skip brand grouping entirely, render a flat grid.
-  const isSingleBrandView = Boolean(query.brand)
+  // Render a flat, scannable grid whenever the visitor has a specific intent:
+  // a keyword search ("gummies") or a brand filter. Brand-grouped results are
+  // kept only for pure category/dispensary browsing (no keyword), where the
+  // grouping reads as merchandising rather than scattering matches across
+  // dozens of mostly-single-product sections.
+  const isFlatResults = Boolean(query.q) || Boolean(query.brand)
 
   // Group loaded results by brand, preserving server sort order
   const brandGroups = useMemo(() => {
@@ -212,8 +216,9 @@ export function SearchClient({
             categories={categories}
             onCategory={(cat) => navigate({ category: cat, sort: "brand-asc" })}
           />
-        ) : isSingleBrandView ? (
-          // Flat grid: user has filtered to a brand, show every product
+        ) : isFlatResults ? (
+          // Flat grid: keyword search or brand filter — show every match,
+          // dense and easy to scan, in the server's sort order.
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {listings.map((listing) => (
               <ProductCard key={listing.id} listing={listing} />
