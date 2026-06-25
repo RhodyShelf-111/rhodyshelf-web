@@ -115,6 +115,7 @@ export function AgeGate() {
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="age-gate-title"
+      aria-describedby="age-gate-desc"
       className={cn(
         "fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center px-6",
         "transition-opacity duration-[400ms]",
@@ -140,7 +141,7 @@ export function AgeGate() {
             >
               Are you 21 or older?
             </h1>
-            <p className="text-sm text-muted-foreground mb-10">
+            <p id="age-gate-desc" className="text-sm text-muted-foreground mb-10">
               You must be of legal age to view this site.
             </p>
 
@@ -182,7 +183,7 @@ export function AgeGate() {
             >
               Come back when you&apos;re 21.
             </h1>
-            <p className="text-sm text-muted-foreground mb-8">
+            <p id="age-gate-desc" className="text-sm text-muted-foreground mb-8">
               RhodyShelf is only available to adults 21 and older.
             </p>
 

@@ -187,29 +187,42 @@ export function FilterBar({
 
         {/* Brand dropdown */}
         <div className="relative z-50 hidden md:block">
-          <button
-            onClick={() => toggle("brand")}
-            className={cn(
-              "inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border transition-colors",
-              filters.brand
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card border-border text-foreground hover:bg-muted"
-            )}
-          >
-            {filters.brand ? filters.brand : `All Brands (${brands.length})`}
-            {filters.brand ? (
-              <X
-                className="w-3 h-3"
-                onClick={(e) => {
-                  e.stopPropagation()
+          {filters.brand ? (
+            // Active: two distinct, keyboard-reachable controls — open to
+            // change the brand, or clear it — instead of a clickable icon
+            // nested inside a button (invalid + unreachable by keyboard).
+            <div className="inline-flex items-stretch h-8 rounded-lg border border-primary bg-primary text-primary-foreground overflow-hidden">
+              <button
+                onClick={() => toggle("brand")}
+                aria-haspopup="listbox"
+                aria-expanded={openDropdown === "brand"}
+                className="inline-flex items-center gap-1.5 pl-3 pr-2 text-sm hover:bg-primary/90 transition-colors"
+              >
+                {filters.brand}
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => {
                   onFilterChange("brand", undefined)
                   setOpenDropdown(null)
                 }}
-              />
-            ) : (
+                aria-label={`Clear brand filter: ${filters.brand}`}
+                className="inline-flex items-center px-2 border-l border-primary-foreground/30 hover:bg-primary/80 transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => toggle("brand")}
+              aria-haspopup="listbox"
+              aria-expanded={openDropdown === "brand"}
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
+            >
+              {`All Brands (${brands.length})`}
               <ChevronDown className="w-3.5 h-3.5" />
-            )}
-          </button>
+            </button>
+          )}
           {openDropdown === "brand" && (
             <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-popover border border-border rounded-xl shadow-lg p-2">
               <input
@@ -249,32 +262,40 @@ export function FilterBar({
 
         {/* Dispensary dropdown */}
         <div className="relative z-50 hidden md:block">
-          <button
-            onClick={() => toggle("dispensary")}
-            className={cn(
-              "inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border transition-colors",
-              filters.dispensary
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card border-border text-foreground hover:bg-muted"
-            )}
-          >
-            {filters.dispensary
-              ? (dispensaries.find((d) => d.slug === filters.dispensary)?.name ??
-                  filters.dispensary)
-              : `All Dispensaries (${dispensaries.length})`}
-            {filters.dispensary ? (
-              <X
-                className="w-3 h-3"
-                onClick={(e) => {
-                  e.stopPropagation()
+          {filters.dispensary ? (
+            <div className="inline-flex items-stretch h-8 rounded-lg border border-primary bg-primary text-primary-foreground overflow-hidden">
+              <button
+                onClick={() => toggle("dispensary")}
+                aria-haspopup="listbox"
+                aria-expanded={openDropdown === "dispensary"}
+                className="inline-flex items-center gap-1.5 pl-3 pr-2 text-sm hover:bg-primary/90 transition-colors"
+              >
+                {dispensaries.find((d) => d.slug === filters.dispensary)?.name ??
+                  filters.dispensary}
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => {
                   onFilterChange("dispensary", undefined)
                   setOpenDropdown(null)
                 }}
-              />
-            ) : (
+                aria-label="Clear dispensary filter"
+                className="inline-flex items-center px-2 border-l border-primary-foreground/30 hover:bg-primary/80 transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => toggle("dispensary")}
+              aria-haspopup="listbox"
+              aria-expanded={openDropdown === "dispensary"}
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
+            >
+              {`All Dispensaries (${dispensaries.length})`}
               <ChevronDown className="w-3.5 h-3.5" />
-            )}
-          </button>
+            </button>
+          )}
           {openDropdown === "dispensary" && (
             <div className="absolute top-full left-0 mt-1 z-50 w-52 bg-popover border border-border rounded-xl shadow-lg p-2">
               {dispensaries.map((d) => (
@@ -387,7 +408,7 @@ export function FilterBar({
               : "border-border text-foreground hover:bg-muted"
           )}
         >
-          🏷️ On Sale
+          <span aria-hidden="true">🏷️</span> On Sale
         </button>
       </div>
     </div>
@@ -415,7 +436,7 @@ function CategoryChip({
           : "border-border text-foreground hover:bg-muted"
       )}
     >
-      {getCategoryIcon(category)} {label}
+      <span aria-hidden="true">{getCategoryIcon(category)}</span> {label}
     </button>
   )
 }
