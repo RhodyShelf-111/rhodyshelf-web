@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Bookmark } from "lucide-react"
+import { Bookmark, ChevronUp } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
@@ -110,9 +110,19 @@ function EmptyState({ hasSaved }: { hasSaved: boolean }) {
         {hasSaved ? "Your saved products aren't available right now" : "Nothing saved yet"}
       </p>
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-        {hasSaved
-          ? "The items you saved are out of the current menu window. Save more as you browse."
-          : "Tap the ▲ upvote on any product to keep it here. Your list lives on this device — no account needed."}
+        {hasSaved ? (
+          "The items you saved are out of the current menu window. Save more as you browse."
+        ) : (
+          <>
+            Tap the{" "}
+            <ChevronUp
+              className="inline-block w-4 h-4 align-text-bottom text-primary"
+              aria-hidden
+            />{" "}
+            upvote on any product to keep it here. Your list lives on this
+            device — no account needed.
+          </>
+        )}
       </p>
       <Link
         href="/search"

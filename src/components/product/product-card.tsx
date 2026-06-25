@@ -141,7 +141,7 @@ export function ProductCard({ listing, dropBadge }: ProductCardProps) {
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 aria-label={`Buy ${product.name} at ${dispensary.name} (opens dispensary site)`}
-                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[12px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-[12px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               >
                 Buy
                 <ExternalLink className="w-3 h-3" />
@@ -154,6 +154,7 @@ export function ProductCard({ listing, dropBadge }: ProductCardProps) {
               }}
               className={cn(
                 "flex items-center justify-center w-7 h-7 rounded-md transition-colors shrink-0 border",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
                 isUpvoted
                   ? "bg-primary/15 text-primary border-primary/40"
                   : "text-muted-foreground border-transparent hover:bg-muted hover:text-foreground"
