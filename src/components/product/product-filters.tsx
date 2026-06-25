@@ -57,9 +57,12 @@ export function ProductFiltersPanel({
         ))}
       </FilterSection>
 
+      {/* Brand — hidden when the listing set is a single brand (e.g. a brand
+          page), where filtering by brand is dead UI. */}
+      {brands.length > 1 && (
+        <>
       <Separator />
 
-      {/* Brand */}
       <FilterSection title="Brand">
         <Input
           placeholder="Search brands..."
@@ -87,10 +90,15 @@ export function ProductFiltersPanel({
           ))}
         </div>
       </FilterSection>
+        </>
+      )}
 
+      {/* Dispensary — hidden on single-dispensary pages (e.g. a dispensary
+          detail page), where it's a one-option, no-op control. */}
+      {dispensaries.length > 1 && (
+        <>
       <Separator />
 
-      {/* Dispensary */}
       <FilterSection title="Dispensary">
         {dispensaries.map((d) => (
           <label key={d.slug} className="flex items-center gap-2 cursor-pointer">
@@ -110,6 +118,8 @@ export function ProductFiltersPanel({
           </label>
         ))}
       </FilterSection>
+        </>
+      )}
 
       <Separator />
 
@@ -209,9 +219,9 @@ function FilterSection({
 }) {
   return (
     <div>
-      <h4 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+      <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
         {title}
-      </h4>
+      </h2>
       <div className="space-y-2">{children}</div>
     </div>
   )

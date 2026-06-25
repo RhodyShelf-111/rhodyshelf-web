@@ -97,7 +97,14 @@ export interface ProductFilters {
   minThc?: number
   onSale?: boolean
   search?: string
-  sort?: "price-asc" | "price-desc" | "thc-desc" | "name-asc" | "newest" | "brand-asc"
+  sort?:
+    | "price-asc"
+    | "price-desc"
+    | "thc-desc"
+    | "name-asc"
+    | "newest"
+    | "brand-asc"
+    | "discount-desc"
 }
 
 // Brand for brand pages

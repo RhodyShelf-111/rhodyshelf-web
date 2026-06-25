@@ -16,6 +16,8 @@ interface ProductGridProps {
   showFilters?: boolean
   pageSize?: number
   dropBadges?: Map<string, { label: string; className: string }>
+  /** Forwarded to each ProductCard; false on single-dispensary pages. */
+  showDispensary?: boolean
 }
 
 export function ProductGrid({
@@ -24,6 +26,7 @@ export function ProductGrid({
   showFilters = true,
   pageSize = 50,
   dropBadges,
+  showDispensary = true,
 }: ProductGridProps) {
   const [filters, setFilters] = useState<ProductFilters>(initialFilters)
   const [displayCount, setDisplayCount] = useState(pageSize)
@@ -95,8 +98,8 @@ export function ProductGrid({
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {/* Top bar: count + sort + mobile filter button */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-4">
+          <p className="text-sm text-muted-foreground whitespace-nowrap">
             Showing{" "}
             <span className="font-medium text-foreground">
               {Math.min(displayCount, filtered.length)}
@@ -114,7 +117,7 @@ export function ProductGrid({
             {showFilters && (
               <Sheet>
                 <SheetTrigger
-                  className="lg:hidden inline-flex items-center gap-1.5 px-2.5 h-7 text-[0.8rem] font-medium rounded-[min(var(--radius-md),12px)] border border-border bg-background hover:bg-muted transition-all"
+                  className="lg:hidden inline-flex items-center gap-1.5 px-3 h-9 text-sm font-medium rounded-[min(var(--radius-md),12px)] border border-border bg-background hover:bg-muted transition-all"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
@@ -195,6 +198,7 @@ export function ProductGrid({
                   key={listing.id}
                   listing={listing}
                   dropBadge={dropBadges?.get(listing.id)}
+                  showDispensary={showDispensary}
                 />
               ))}
             </div>

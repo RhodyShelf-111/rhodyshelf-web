@@ -99,6 +99,11 @@ export function applyFilters(
         a.product.brand_name.localeCompare(b.product.brand_name)
       )
       break
+    case "discount-desc":
+      result = [...result].sort(
+        (a, b) => (b.discount_percent ?? 0) - (a.discount_percent ?? 0)
+      )
+      break
   }
 
   return result

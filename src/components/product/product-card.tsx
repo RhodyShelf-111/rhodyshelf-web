@@ -11,9 +11,16 @@ import { useUpvotes } from "@/hooks/use-upvotes"
 interface ProductCardProps {
   listing: InventoryListing
   dropBadge?: { label: string; className: string } | null
+  /** Hide the per-card dispensary chip on pages already scoped to one
+   *  dispensary (it's redundant there and truncates badly on narrow cards). */
+  showDispensary?: boolean
 }
 
-export function ProductCard({ listing, dropBadge }: ProductCardProps) {
+export function ProductCard({
+  listing,
+  dropBadge,
+  showDispensary = true,
+}: ProductCardProps) {
   const {
     product,
     dispensary,
@@ -129,11 +136,13 @@ export function ProductCard({ listing, dropBadge }: ProductCardProps) {
 
         {/* Dispensary + actions (pinned to bottom) */}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <div className="flex items-center gap-1 text-[12px] text-muted-foreground truncate min-w-0">
-            <MapPin className="w-3 h-3 shrink-0" />
-            <span className="truncate">{dispensary.name}</span>
-          </div>
-          <div className="relative z-20 flex items-center gap-1 shrink-0">
+          {showDispensary && (
+            <div className="flex items-center gap-1 text-[12px] text-muted-foreground truncate min-w-0">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{dispensary.name}</span>
+            </div>
+          )}
+          <div className="relative z-20 ml-auto flex items-center gap-1 shrink-0">
             {buyUrl && (
               <a
                 href={buyUrl}

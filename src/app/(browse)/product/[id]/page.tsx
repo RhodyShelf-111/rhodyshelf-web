@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation"
-import Image from "next/image"
 import Link from "next/link"
 import { ExternalLink, MapPin, ArrowLeft } from "lucide-react"
 import { getListingById, getInventoryByBrand } from "@/lib/queries/products"
-import { formatPrice, formatRelativeTime, getCategoryIcon } from "@/lib/utils"
+import { formatPrice, formatRelativeTime } from "@/lib/utils"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductCard } from "@/components/product/product-card"
+import { ProductHeroImage } from "@/components/product/product-hero-image"
 import { UpvoteButton } from "@/components/product/upvote-button"
 import type { Metadata } from "next"
 
@@ -77,26 +77,17 @@ export default async function ProductPage({
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to all products
+        Browse all products
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Image */}
         <div className="relative aspect-square bg-muted rounded-xl overflow-hidden border border-border">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={product.name}
-              fill
-              className="object-contain p-6"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-6xl">
-              {getCategoryIcon(product.category)}
-            </div>
-          )}
+          <ProductHeroImage
+            imageUrl={imageUrl}
+            alt={product.name}
+            category={product.category}
+          />
           {isOnSale && (
             <div className="absolute top-3 left-3">
               <DealBadge percent={discount_percent} />
@@ -186,13 +177,13 @@ export default async function ProductPage({
             )}
           </Link>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             {buyUrl && (
               <a
                 href={buyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex flex-1 items-center justify-center h-12 px-4 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="inline-flex flex-1 items-center justify-center h-12 px-4 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 Buy at {dispensary.name}
                 <ExternalLink className="w-4 h-4 ml-1.5" />

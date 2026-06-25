@@ -408,7 +408,7 @@ export function FilterBar({
               : "border-border text-foreground hover:bg-muted"
           )}
         >
-          <span aria-hidden="true">🏷️</span> On Sale
+          On Sale
         </button>
       </div>
     </div>
