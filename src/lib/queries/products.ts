@@ -126,6 +126,61 @@ export async function getCategories(): Promise<string[]> {
   return [...new Set(index.map((r) => r.category))].sort()
 }
 
+/**
+ * Suggestion pool for the search autocomplete: distinct product names, brand
+ * names, and strain names across fresh inventory. Built once per revalidation
+ * window and held server-side — the /api/search/suggest endpoint filters it and
+ * only the handful of matches ever reaches the browser (never the full catalog).
+ */
+export const getSuggestPool = unstable_cache(
+  async (): Promise<{
+    products: string[]
+    brands: string[]
+    strains: string[]
+  }> => {
+    const client = createServiceClient()
+    const PAGE_SIZE = 1000
+    const products = new Set<string>()
+    const brands = new Set<string>()
+    const strains = new Set<string>()
+    let from = 0
+
+    while (true) {
+      const { data, error } = await client
+        .from("current_inventory")
+        .select(
+          "id, product:product_id!inner(name, brand_name, strain_name), dispensary:dispensary_id!inner(id)"
+        )
+        .gt("last_seen_at", freshnessCutoff())
+        .eq("dispensary.is_active", true)
+        .order("id")
+        .range(from, from + PAGE_SIZE - 1)
+      assertNoError(error, "getSuggestPool")
+      if (!data || data.length === 0) break
+      for (const row of data) {
+        const p = row.product as unknown as {
+          name: string | null
+          brand_name: string | null
+          strain_name: string | null
+        }
+        if (p.name) products.add(p.name)
+        if (p.brand_name) brands.add(p.brand_name)
+        if (p.strain_name) strains.add(p.strain_name)
+      }
+      if (data.length < PAGE_SIZE) break
+      from += PAGE_SIZE
+    }
+
+    return {
+      products: [...products].sort(),
+      brands: [...brands].sort(),
+      strains: [...strains].sort(),
+    }
+  },
+  ["suggest-pool-v1"],
+  { revalidate: 1800, tags: ["inventory"] }
+)
+
 // Category display config — maps DB category value to homepage rail label
 export const HOMEPAGE_CATEGORIES = [
   { key: "flower", label: "Flower" },
@@ -222,14 +277,17 @@ export const searchListings = unstable_cache(
     if (query.q) {
       const term = query.q.trim()
       const alias = resolveAlias(query.q)
+      // Match product name, brand, and strain name so strain-led searches
+      // (e.g. an autocomplete pick of "Blue Dream") still land on products whose
+      // name doesn't spell out the strain.
       if (alias) {
         q = q.or(
-          `brand_name.ilike.${orIlikePattern(alias)},name.ilike.${orIlikePattern(term)}`,
+          `brand_name.ilike.${orIlikePattern(alias)},name.ilike.${orIlikePattern(term)},strain_name.ilike.${orIlikePattern(term)}`,
           { referencedTable: "product" }
         )
       } else if (term) {
         q = q.or(
-          `name.ilike.${orIlikePattern(term)},brand_name.ilike.${orIlikePattern(term)}`,
+          `name.ilike.${orIlikePattern(term)},brand_name.ilike.${orIlikePattern(term)},strain_name.ilike.${orIlikePattern(term)}`,
           { referencedTable: "product" }
         )
       }
