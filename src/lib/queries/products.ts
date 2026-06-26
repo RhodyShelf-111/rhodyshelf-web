@@ -418,7 +418,10 @@ export const getDrops = unstable_cache(
 export const getListingById = cache(
   async (id: string): Promise<InventoryListing | null> => {
     const client = createServiceClient()
-    const { data } = await freshListings(client).eq("id", id).maybeSingle()
+    const { data, error } = await freshListings(client)
+      .eq("id", id)
+      .maybeSingle()
+    assertNoError(error, "getListingById")
     return (data as unknown as InventoryListing) ?? null
   }
 )
@@ -551,11 +554,12 @@ export const getBrands = unstable_cache(
 export const getBrandBySlug = cache(
   async (slug: string): Promise<Brand | null> => {
     const client = createServiceClient()
-    const { data } = await client
+    const { data, error } = await client
       .from("brands")
       .select("id, canonical_name, slug, category")
       .eq("slug", slug)
       .maybeSingle()
+    assertNoError(error, "getBrandBySlug")
     return (data as Brand) ?? null
   }
 )
