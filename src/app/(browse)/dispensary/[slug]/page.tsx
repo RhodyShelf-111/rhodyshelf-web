@@ -3,6 +3,7 @@ import { MapPin, ExternalLink } from "lucide-react"
 import { getDispensaryBySlug, getDispensaries } from "@/lib/queries/dispensaries"
 import { getInventoryByDispensary } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
+import { PageContainer } from "@/components/layout/page-container"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -42,7 +43,7 @@ export default async function DispensaryDetailPage({
   const dispensaryListings = await getInventoryByDispensary(dispensary.id)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <PageContainer className="py-6 md:py-8">
       <Breadcrumbs
         items={[
           { name: "Dispensaries", href: "/dispensary" },
@@ -94,6 +95,6 @@ export default async function DispensaryDetailPage({
           </p>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

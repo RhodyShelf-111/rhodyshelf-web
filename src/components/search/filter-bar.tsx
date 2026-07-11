@@ -358,7 +358,7 @@ export function FilterBar({
       </div>
 
       {/* Row 2: Category chips + on sale chip */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hidden -mx-4 px-4 pb-1">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-1">
         {categories.map((cat) => (
           <CategoryChip
             key={cat}
