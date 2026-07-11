@@ -6,6 +6,7 @@ import { Bookmark, ChevronUp } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
 import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
 
 export function SavedClient() {
@@ -55,16 +56,16 @@ export function SavedClient() {
 
   return (
     <PageContainer className="py-6 md:py-8">
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">Saved</h1>
-        <p className="text-muted-foreground mt-1">
-          {loading
+      <PageHeading
+        title="Saved"
+        description={
+          loading
             ? "Loading your saved products…"
             : displayed.length > 0
               ? `${displayed.length} product${displayed.length === 1 ? "" : "s"} you've upvoted, kept here for you`
-              : "Products you upvote are saved here, on this device"}
-        </p>
-      </div>
+              : "Products you upvote are saved here, on this device"
+        }
+      />
 
       {loading ? (
         <SkeletonGrid />
