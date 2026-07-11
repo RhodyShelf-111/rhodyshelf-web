@@ -19,6 +19,7 @@ Only the brand de-duplication work (2026-07-11) is mirrored in this folder:
 | `20260711150813` | `brand_canonical_dedup_apply.sql` | one-time backfill + `BEFORE INSERT/UPDATE` trigger on `products` that canonicalizes on every write |
 | `20260711152329` | `brand_pages_for_merged_brands.sql` | `brands` rows (+ `brand_id` backfill) for the 11 merged brands that lacked one |
 | `20260711152339` | `brand_dedup_candidates_view.sql` | `brand_dedup_candidates` view (trigram similarity) — a re-scan queue for future dupes |
+| `20260711164352` | `backfill_dispensary_cities.sql` | populate `dispensaries.city` (8/9 were null) for local-SEO `Store` markup + page display |
 
 Earlier migrations (`create_pending_posts`, `create_system_config`,
 `product_drops_trigger`, `address_security_and_perf_advisories`) exist only in the
