@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { getHomepageSections, getBrandNames } from "@/lib/queries/products"
 import { HeroSearch } from "@/components/search/hero-search"
+import { PageContainer } from "@/components/layout/page-container"
 import { HomepageClient } from "./homepage-client"
 import { getCategoryIcon } from "@/lib/utils"
 import { JsonLd } from "@/components/seo/json-ld"
@@ -25,7 +26,7 @@ export default async function HomePage() {
   ])
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <PageContainer className="py-6 md:py-8">
       <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
       {/* Hero */}
       <div className="mb-8">
@@ -65,6 +66,6 @@ export default async function HomePage() {
 
       {/* Category sections */}
       <HomepageClient sections={sections} />
-    </div>
+    </PageContainer>
   )
 }

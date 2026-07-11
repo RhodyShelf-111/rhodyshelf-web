@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Bookmark, ChevronUp } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
+import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
 
 export function SavedClient() {
@@ -53,36 +55,36 @@ export function SavedClient() {
   const isEmpty = !loading && displayed.length === 0
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">Saved</h1>
-        <p className="text-muted-foreground mt-1">
-          {loading
+    <PageContainer className="py-6 md:py-8">
+      <PageHeading
+        title="Saved"
+        description={
+          loading
             ? "Loading your saved products…"
             : displayed.length > 0
               ? `${displayed.length} product${displayed.length === 1 ? "" : "s"} you've upvoted, kept here for you`
-              : "Products you upvote are saved here, on this device"}
-        </p>
-      </div>
+              : "Products you upvote are saved here, on this device"
+        }
+      />
 
       {loading ? (
         <SkeletonGrid />
       ) : isEmpty ? (
         <EmptyState hasSaved={savedIds.length > 0} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
           {displayed.map((listing) => (
             <ProductCard key={listing.id} listing={listing} />
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
 
 function SkeletonGrid() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}

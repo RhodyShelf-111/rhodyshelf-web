@@ -1,3 +1,4 @@
+import { PageContainer } from "@/components/layout/page-container"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
+    <PageContainer className="max-w-3xl py-12">
       <h1 className="font-heading text-3xl font-bold text-foreground mb-6">
         Privacy Policy
       </h1>
@@ -51,6 +52,6 @@ export default function PrivacyPage() {
           .
         </p>
       </div>
-    </div>
+    </PageContainer>
   )
 }

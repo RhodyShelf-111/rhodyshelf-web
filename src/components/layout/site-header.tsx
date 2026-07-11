@@ -7,6 +7,7 @@ import { Search, Menu, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { SearchBar } from "./search-bar"
+import { PageContainer } from "./page-container"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
 import { useState } from "react"
 
@@ -62,7 +63,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border h-16">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-4">
+      <PageContainer className="h-full flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="shrink-0" aria-label="RhodyShelf home">
           <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
@@ -166,7 +167,7 @@ export function SiteHeader() {
             </SheetContent>
           </Sheet>
         </div>
-      </div>
+      </PageContainer>
     </header>
   )
 }

@@ -10,6 +10,7 @@ import { formatPrice, formatRelativeTime } from "@/lib/utils"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
 import { productJsonLd } from "@/lib/seo/structured-data"
+import { PageContainer } from "@/components/layout/page-container"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductCard } from "@/components/product/product-card"
 import { ProductHeroImage } from "@/components/product/product-hero-image"
@@ -95,7 +96,7 @@ export default async function ProductPage({
     : `/search?brand=${encodeURIComponent(product.brand_name)}`
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+    <PageContainer className="max-w-5xl py-6 md:py-8">
       <JsonLd data={productJsonLd(listing)} />
       <Breadcrumbs
         items={[
@@ -241,7 +242,7 @@ export default async function ProductPage({
               View all →
             </Link>
           </div>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-subtle -mx-4 px-4 pb-2 items-stretch snap-x">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-subtle -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch snap-x">
             {brandListings.map((l) => (
               <div
                 key={l.id}
@@ -253,6 +254,6 @@ export default async function ProductPage({
           </div>
         </section>
       )}
-    </div>
+    </PageContainer>
   )
 }

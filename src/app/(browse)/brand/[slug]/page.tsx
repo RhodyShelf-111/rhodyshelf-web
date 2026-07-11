@@ -7,6 +7,8 @@ import {
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
 import { collectionPageJsonLd } from "@/lib/seo/structured-data"
+import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -51,7 +53,7 @@ export default async function BrandPage({
   const brandListings = await getInventoryByBrand(brand.canonical_name)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <PageContainer className="py-6 md:py-8">
       <JsonLd
         data={collectionPageJsonLd({
           name: `${brand.canonical_name} Products`,
@@ -64,14 +66,10 @@ export default async function BrandPage({
         items={[{ name: brand.canonical_name, href: `/brand/${slug}` }]}
       />
 
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          {brand.canonical_name}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {brandListings.length} products across Rhode Island
-        </p>
-      </div>
+      <PageHeading
+        title={brand.canonical_name}
+        description={`${brandListings.length} products across Rhode Island`}
+      />
 
       {brandListings.length > 0 ? (
         <MenuClient listings={brandListings} />
@@ -85,6 +83,6 @@ export default async function BrandPage({
           </p>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
