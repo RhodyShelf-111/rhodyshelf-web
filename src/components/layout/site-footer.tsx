@@ -1,9 +1,10 @@
 import Link from "next/link"
+import { PageContainer } from "./page-container"
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-muted/30 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <PageContainer className="py-8">
         <div className="flex flex-col sm:flex-row justify-between gap-6">
           {/* Brand */}
           <div>
@@ -53,7 +54,7 @@ export function SiteFooter() {
             any dispensary.
           </p>
         </div>
-      </div>
+      </PageContainer>
     </footer>
   )
 }

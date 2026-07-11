@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Bookmark, ChevronUp } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
+import { PageContainer } from "@/components/layout/page-container"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
 
 export function SavedClient() {
@@ -53,7 +54,7 @@ export function SavedClient() {
   const isEmpty = !loading && displayed.length === 0
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <PageContainer className="py-6 md:py-8">
       <div className="mb-6">
         <h1 className="font-heading text-3xl font-bold text-foreground">Saved</h1>
         <p className="text-muted-foreground mt-1">
@@ -70,19 +71,19 @@ export function SavedClient() {
       ) : isEmpty ? (
         <EmptyState hasSaved={savedIds.length > 0} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
           {displayed.map((listing) => (
             <ProductCard key={listing.id} listing={listing} />
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
 
 function SkeletonGrid() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}

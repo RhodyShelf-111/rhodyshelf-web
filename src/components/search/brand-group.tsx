@@ -33,7 +33,7 @@ export function BrandGroup({ brandName, listings }: BrandGroupProps) {
       </div>
 
       {/* Horizontal scroll row */}
-      <div className="flex gap-4 overflow-x-auto scrollbar-subtle -mx-4 px-4 pb-2 items-stretch">
+      <div className="flex gap-4 overflow-x-auto scrollbar-subtle -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
         {listings.slice(0, 10).map((listing) => (
           <div key={listing.id} className="w-52 shrink-0">
             <ProductCard listing={listing} />

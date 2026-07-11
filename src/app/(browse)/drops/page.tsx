@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { getDrops } from "@/lib/queries/products"
 import { DropsClient } from "./drops-client"
+import { PageContainer } from "@/components/layout/page-container"
 import type { Metadata } from "next"
 
 export const revalidate = 3600 // 1 hour
@@ -16,7 +17,7 @@ export default async function DropsPage() {
   const drops = await getDrops()
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <PageContainer className="py-6 md:py-8">
       <div className="mb-6">
         <h1 className="font-heading text-3xl font-bold text-foreground">
           New Drops
@@ -45,6 +46,6 @@ export default async function DropsPage() {
           </Link>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

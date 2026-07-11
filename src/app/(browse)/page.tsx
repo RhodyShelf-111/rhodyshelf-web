@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { getHomepageSections, getBrandNames } from "@/lib/queries/products"
 import { HeroSearch } from "@/components/search/hero-search"
+import { PageContainer } from "@/components/layout/page-container"
 import { HomepageClient } from "./homepage-client"
 import { getCategoryIcon } from "@/lib/utils"
 import type { Metadata } from "next"
@@ -22,7 +23,7 @@ export default async function HomePage() {
   ])
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <PageContainer className="py-6 md:py-8">
       {/* Hero */}
       <div className="mb-8">
         <h1 className="font-heading text-[clamp(1.625rem,3.2vw,2.5rem)] font-bold tracking-tight leading-[1.1] text-foreground mb-2">
@@ -61,6 +62,6 @@ export default async function HomePage() {
 
       {/* Category sections */}
       <HomepageClient sections={sections} />
-    </div>
+    </PageContainer>
   )
 }

@@ -6,6 +6,7 @@ import {
 import { getDispensaries } from "@/lib/queries/dispensaries"
 import { parseSearchQuery } from "@/lib/search-params"
 import { SearchClient } from "./search-client"
+import { PageContainer } from "@/components/layout/page-container"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -45,7 +46,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   ])
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <PageContainer className="py-6 md:py-8">
       <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">
           {query.q ? `Results for "${query.q}"` : query.brand ? query.brand : "Browse Menu"}
@@ -67,6 +68,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         categories={categories}
         dispensaries={dispensaries}
       />
-    </div>
+    </PageContainer>
   )
 }
