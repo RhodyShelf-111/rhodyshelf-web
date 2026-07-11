@@ -1,9 +1,15 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ExternalLink, MapPin } from "lucide-react"
-import { getListingById, getInventoryByBrand } from "@/lib/queries/products"
+import {
+  getListingById,
+  getInventoryByBrand,
+  getBrands,
+} from "@/lib/queries/products"
 import { formatPrice, formatRelativeTime } from "@/lib/utils"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
+import { JsonLd } from "@/components/seo/json-ld"
+import { productJsonLd } from "@/lib/seo/structured-data"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductCard } from "@/components/product/product-card"
 import { ProductHeroImage } from "@/components/product/product-hero-image"
@@ -27,9 +33,12 @@ export async function generateMetadata({
   return {
     title: `${listing.product.name} — ${listing.product.brand_name}`,
     description,
+    alternates: { canonical: `/product/${id}` },
     openGraph: {
+      type: "website",
       title: `${listing.product.name} — ${listing.product.brand_name}`,
       description,
+      url: `/product/${id}`,
       images: image ? [image] : undefined,
     },
   }
@@ -71,8 +80,23 @@ export default async function ProductPage({
     .filter((l) => l.id !== listing.id)
     .slice(0, 12)
 
+  // Prefer the indexable /brand/[slug] page when this brand has a canonical
+  // row; otherwise fall back to the (noindex) search filter. Reuses the cached
+  // brands list — no extra DB round-trip. This is the main internal link that
+  // keeps brand landing pages from being orphaned.
+  const brands = await getBrands().catch(() => [])
+  const brandRow = brands.find(
+    (b) =>
+      (product.brand_id && b.id === product.brand_id) ||
+      b.canonical_name === product.brand_name
+  )
+  const brandHref = brandRow?.slug
+    ? `/brand/${brandRow.slug}`
+    : `/search?brand=${encodeURIComponent(product.brand_name)}`
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
+      <JsonLd data={productJsonLd(listing)} />
       <Breadcrumbs
         items={[
           {
@@ -112,7 +136,7 @@ export default async function ProductPage({
               {product.name}
             </h1>
             <Link
-              href={`/search?brand=${encodeURIComponent(product.brand_name)}`}
+              href={brandHref}
               className="text-muted-foreground mt-0.5 inline-block hover:text-foreground transition-colors"
             >
               {product.brand_name}
@@ -211,7 +235,7 @@ export default async function ProductPage({
               More from {product.brand_name}
             </h2>
             <Link
-              href={`/search?brand=${encodeURIComponent(product.brand_name)}`}
+              href={brandHref}
               className="text-sm text-primary hover:underline shrink-0"
             >
               View all →

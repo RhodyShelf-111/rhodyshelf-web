@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Deals",
   description:
     "Cannabis deals and discounts across Rhode Island dispensaries. Find products on sale now.",
+  alternates: { canonical: "/deals" },
 }
 
 export default async function DealsPage() {

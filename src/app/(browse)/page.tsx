@@ -3,6 +3,8 @@ import { getHomepageSections, getBrandNames } from "@/lib/queries/products"
 import { HeroSearch } from "@/components/search/hero-search"
 import { HomepageClient } from "./homepage-client"
 import { getCategoryIcon } from "@/lib/utils"
+import { JsonLd } from "@/components/seo/json-ld"
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo/structured-data"
 import type { Metadata } from "next"
 
 export const revalidate = 1800 // 30 minutes
@@ -11,6 +13,7 @@ export const metadata: Metadata = {
   title: "RhodyShelf — Rhode Island Cannabis Menus & Deals",
   description:
     "Browse cannabis products across 9 Rhode Island dispensaries. Search by brand, category, strain, price, and more.",
+  alternates: { canonical: "/" },
 }
 
 export default async function HomePage() {
@@ -23,6 +26,7 @@ export default async function HomePage() {
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
       {/* Hero */}
       <div className="mb-8">
         <h1 className="font-heading text-[clamp(1.625rem,3.2vw,2.5rem)] font-bold tracking-tight leading-[1.1] text-foreground mb-2">

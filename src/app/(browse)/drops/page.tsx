@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "New Drops",
   description:
     "Newly added cannabis products across Rhode Island dispensaries. See what just hit the shelves.",
+  alternates: { canonical: "/drops" },
 }
 
 export default async function DropsPage() {
