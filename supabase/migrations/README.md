@@ -11,7 +11,7 @@ re-run them).
 
 ## What's captured here
 
-Only the brand de-duplication work (2026-07-11) is mirrored in this folder:
+The brand de-duplication work and later data-hygiene fixes (2026-07-11) are mirrored in this folder:
 
 | Version | File | What it does |
 |---|---|---|
@@ -20,6 +20,7 @@ Only the brand de-duplication work (2026-07-11) is mirrored in this folder:
 | `20260711152329` | `brand_pages_for_merged_brands.sql` | `brands` rows (+ `brand_id` backfill) for the 11 merged brands that lacked one |
 | `20260711152339` | `brand_dedup_candidates_view.sql` | `brand_dedup_candidates` view (trigram similarity) — a re-scan queue for future dupes |
 | `20260711164352` | `backfill_dispensary_cities.sql` | populate `dispensaries.city` (8/9 were null) for local-SEO `Store` markup + page display |
+| `20260711171133` | `normalize_product_names.sql` | `normalize_product_name()` fn + `BEFORE INSERT/UPDATE` trigger on `products` that strips a trailing `" -"` from `name`/`strain_name` on every write; one-time backfill of 578 names (+1 strain) |
 
 Earlier migrations (`create_pending_posts`, `create_system_config`,
 `product_drops_trigger`, `address_security_and_perf_advisories`) exist only in the
