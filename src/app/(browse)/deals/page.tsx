@@ -2,6 +2,7 @@ import Link from "next/link"
 import { getDeals } from "@/lib/queries/products"
 import { MenuClient } from "../menu/menu-client"
 import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import type { Metadata } from "next"
 
 export const revalidate = 900
@@ -18,17 +19,17 @@ export default async function DealsPage() {
 
   return (
     <PageContainer className="py-6 md:py-8">
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          Deals
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {total.toLocaleString()} products on sale right now
-          {total > deals.length
-            ? ` — showing the top ${deals.length} by discount`
-            : ""}
-        </p>
-      </div>
+      <PageHeading
+        title="Deals"
+        description={
+          <>
+            {total.toLocaleString()} products on sale right now
+            {total > deals.length
+              ? ` — showing the top ${deals.length} by discount`
+              : ""}
+          </>
+        }
+      />
 
       {deals.length > 0 ? (
         <MenuClient listings={deals} defaultSort="discount-desc" />

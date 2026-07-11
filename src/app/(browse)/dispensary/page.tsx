@@ -4,6 +4,7 @@ import { getDispensaries } from "@/lib/queries/dispensaries"
 import type { DispensaryWithCounts } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import type { Metadata } from "next"
 
 export const revalidate = 1800
@@ -25,16 +26,14 @@ export default async function DispensaryListPage() {
 
   return (
     <PageContainer className="py-6 md:py-8">
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          Dispensaries
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {liveCount === dispensaries.length
+      <PageHeading
+        title="Dispensaries"
+        description={
+          liveCount === dispensaries.length
             ? `${dispensaries.length} locations across Rhode Island`
-            : `${liveCount} of ${dispensaries.length} Rhode Island locations with live menus`}
-        </p>
-      </div>
+            : `${liveCount} of ${dispensaries.length} Rhode Island locations with live menus`
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sorted.map((d) => (

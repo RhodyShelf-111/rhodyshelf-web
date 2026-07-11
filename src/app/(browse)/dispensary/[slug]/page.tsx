@@ -4,6 +4,7 @@ import { getDispensaryBySlug, getDispensaries } from "@/lib/queries/dispensaries
 import { getInventoryByDispensary } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -52,36 +53,35 @@ export default async function DispensaryDetailPage({
       />
 
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-heading text-3xl font-bold text-foreground">
-              {dispensary.name}
-            </h1>
+      <PageHeading
+        title={dispensary.name}
+        description={
+          <div className="space-y-1">
             {dispensary.city && (
-              <p className="text-muted-foreground mt-1 flex items-center gap-1">
+              <span className="flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
                 {dispensary.city}, RI
-              </p>
+              </span>
             )}
-            <p className="text-sm text-muted-foreground mt-1">
+            <span className="block text-sm">
               {dispensaryListings.length} products available
-            </p>
+            </span>
           </div>
-
-          {dispensary.menu_url && (
+        }
+        actions={
+          dispensary.menu_url && (
             <a
               href={dispensary.menu_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center h-7 px-2.5 text-[0.8rem] font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+              className="inline-flex shrink-0 items-center justify-center h-7 px-2.5 text-[0.8rem] font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
               Visit Site
               <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
             </a>
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
 
       {dispensaryListings.length > 0 ? (
         <MenuClient listings={dispensaryListings} showDispensary={false} />

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { getDrops } from "@/lib/queries/products"
 import { DropsClient } from "./drops-client"
 import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import type { Metadata } from "next"
 
 export const revalidate = 3600 // 1 hour
@@ -18,14 +19,10 @@ export default async function DropsPage() {
 
   return (
     <PageContainer className="py-6 md:py-8">
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          New Drops
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Products added in the last 14 days
-        </p>
-      </div>
+      <PageHeading
+        title="New Drops"
+        description="Products added in the last 14 days"
+      />
 
       {drops.length > 0 ? (
         <DropsClient drops={drops} />

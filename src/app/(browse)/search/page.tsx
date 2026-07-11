@@ -7,6 +7,7 @@ import { getDispensaries } from "@/lib/queries/dispensaries"
 import { parseSearchQuery } from "@/lib/search-params"
 import { SearchClient } from "./search-client"
 import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -47,14 +48,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <PageContainer className="py-6 md:py-8">
-      <div className="mb-6">
-        <h1 className="font-heading text-2xl font-bold text-foreground">
-          {query.q ? `Results for "${query.q}"` : query.brand ? query.brand : "Browse Menu"}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {page.total.toLocaleString()} products across Rhode Island dispensaries
-        </p>
-      </div>
+      <PageHeading
+        title={
+          query.q ? `Results for "${query.q}"` : query.brand ? query.brand : "Browse Menu"
+        }
+        description={`${page.total.toLocaleString()} products across Rhode Island dispensaries`}
+      />
 
       {/* No remount key: FilterBar UI state (mobile sheet open, brand search
           text) must survive filter navigations. SearchClient resets its own

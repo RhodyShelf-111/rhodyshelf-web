@@ -6,6 +6,7 @@ import {
 } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { PageContainer } from "@/components/layout/page-container"
+import { PageHeading } from "@/components/layout/page-heading"
 import { MenuClient } from "../../menu/menu-client"
 import type { Metadata } from "next"
 
@@ -50,14 +51,10 @@ export default async function BrandPage({
         items={[{ name: brand.canonical_name, href: `/brand/${slug}` }]}
       />
 
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-foreground">
-          {brand.canonical_name}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {brandListings.length} products across Rhode Island
-        </p>
-      </div>
+      <PageHeading
+        title={brand.canonical_name}
+        description={`${brandListings.length} products across Rhode Island`}
+      />
 
       {brandListings.length > 0 ? (
         <MenuClient listings={brandListings} />
