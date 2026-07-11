@@ -45,6 +45,20 @@ export const metadata: Metadata = {
     title: "RhodyShelf — Rhode Island Cannabis Menus & Deals",
     description: SITE_DESCRIPTION,
   },
+  // Site-wide crawl defaults. Individual pages (e.g. /search, /saved) override
+  // `robots` to opt out of indexing.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  formatDetection: { telephone: false, address: false, email: false },
 }
 
 export default function RootLayout({

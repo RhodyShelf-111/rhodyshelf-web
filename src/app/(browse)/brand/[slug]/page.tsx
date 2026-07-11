@@ -5,6 +5,8 @@ import {
   getInventoryByBrand,
 } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
+import { JsonLd } from "@/components/seo/json-ld"
+import { collectionPageJsonLd } from "@/lib/seo/structured-data"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { MenuClient } from "../../menu/menu-client"
@@ -28,9 +30,14 @@ export async function generateMetadata({
   const brand = await getBrandBySlug(slug)
   if (!brand) return { title: "Brand Not Found" }
 
+  const title = `${brand.canonical_name} Products`
+  const description = `Browse all ${brand.canonical_name} cannabis products available across Rhode Island dispensaries.`
+
   return {
-    title: `${brand.canonical_name} Products`,
-    description: `Browse all ${brand.canonical_name} cannabis products available across Rhode Island dispensaries.`,
+    title,
+    description,
+    alternates: { canonical: `/brand/${slug}` },
+    openGraph: { type: "website", title, description, url: `/brand/${slug}` },
   }
 }
 
@@ -47,6 +54,14 @@ export default async function BrandPage({
 
   return (
     <PageContainer className="py-6 md:py-8">
+      <JsonLd
+        data={collectionPageJsonLd({
+          name: `${brand.canonical_name} Products`,
+          description: `${brand.canonical_name} cannabis products available across Rhode Island dispensaries.`,
+          path: `/brand/${slug}`,
+          itemCount: brandListings.length,
+        })}
+      />
       <Breadcrumbs
         items={[{ name: brand.canonical_name, href: `/brand/${slug}` }]}
       />

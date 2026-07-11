@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   title: "Search",
   description:
     "Search cannabis products across all Rhode Island dispensaries. Filter by brand, category, strain, price, and more.",
+  alternates: { canonical: "/search" },
+  // Parameterized results (infinite brand/category/price combinations) — let
+  // crawlers follow links out but don't index the result permutations.
+  robots: { index: false, follow: true },
 }
 
 interface SearchPageProps {

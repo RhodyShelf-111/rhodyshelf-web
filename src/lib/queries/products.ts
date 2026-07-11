@@ -563,3 +563,40 @@ export const getBrandBySlug = cache(
     return (data as Brand) ?? null
   }
 )
+
+/**
+ * Every fresh listing id (+ last-seen timestamp) for the XML sitemap. Light
+ * id-level scan of current_inventory (no product/dispensary embed beyond the
+ * active-dispensary join), paginated past PostgREST's 1000-row cap. Cached
+ * daily to match the sitemap's revalidate window.
+ */
+export const getSitemapListings = unstable_cache(
+  async (): Promise<{ id: string; lastModified: string }[]> => {
+    const client = createServiceClient()
+    const rows: { id: string; lastModified: string }[] = []
+    const PAGE_SIZE = 1000
+    let from = 0
+    while (true) {
+      const { data, error } = await client
+        .from("current_inventory")
+        .select("id, last_seen_at, dispensary:dispensary_id!inner(is_active)")
+        .eq("dispensary.is_active", true)
+        .gt("last_seen_at", freshnessCutoff())
+        .order("id")
+        .range(from, from + PAGE_SIZE - 1)
+      assertNoError(error, "getSitemapListings")
+      if (!data || data.length === 0) break
+      for (const row of data as unknown as {
+        id: string
+        last_seen_at: string
+      }[]) {
+        rows.push({ id: row.id, lastModified: row.last_seen_at })
+      }
+      if (data.length < PAGE_SIZE) break
+      from += PAGE_SIZE
+    }
+    return rows
+  },
+  ["sitemap-listings-v1"],
+  { revalidate: 86400, tags: ["inventory"] }
+)

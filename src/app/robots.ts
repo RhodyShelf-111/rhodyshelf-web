@@ -7,6 +7,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      // API responses and the device-local saved list have no crawl value.
+      disallow: ["/api/", "/saved"],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   }

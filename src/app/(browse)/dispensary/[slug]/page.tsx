@@ -3,6 +3,8 @@ import { MapPin, ExternalLink } from "lucide-react"
 import { getDispensaryBySlug, getDispensaries } from "@/lib/queries/dispensaries"
 import { getInventoryByDispensary } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
+import { JsonLd } from "@/components/seo/json-ld"
+import { storeJsonLd } from "@/lib/seo/structured-data"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { MenuClient } from "../../menu/menu-client"
@@ -29,6 +31,7 @@ export async function generateMetadata({
   return {
     title: `${dispensary.name} Menu`,
     description: `Browse ${dispensary.name}'s full cannabis menu in ${dispensary.city ?? "Rhode Island"}. Compare prices and find deals.`,
+    alternates: { canonical: `/dispensary/${slug}` },
   }
 }
 
@@ -45,6 +48,7 @@ export default async function DispensaryDetailPage({
 
   return (
     <PageContainer className="py-6 md:py-8">
+      <JsonLd data={storeJsonLd(dispensary, dispensaryListings.length)} />
       <Breadcrumbs
         items={[
           { name: "Dispensaries", href: "/dispensary" },

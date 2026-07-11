@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Dispensaries",
   description:
     "Browse every Rhode Island cannabis dispensary. See menus, product counts, and deals at each location.",
+  alternates: { canonical: "/dispensary" },
 }
 
 export default async function DispensaryListPage() {
