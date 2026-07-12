@@ -414,12 +414,26 @@ export const getDrops = unstable_cache(
   { revalidate: 1800, tags: ["inventory"] }
 )
 
+// A non-UUID id makes PostgREST reject the `.eq("id", …)` on the uuid column
+// (it throws), so short-circuit to null and let every caller degrade to a clean
+// not-found — the full page → notFound(), generateMetadata → "Product Not
+// Found", the /api/product/[id] drawer fallback → 404 — instead of a 500.
+const LISTING_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /**
- * Single listing by ID (product detail page). React-cached so the page and
- * generateMetadata share one fetch per request.
+ * Single listing by ID (full product page + quick-look drawer fallback).
+ * React-cached so the page and generateMetadata share one fetch per request.
+ * Deliberately NOT data-cached across requests: both the public /product/[id]
+ * page and the public /api/product/[id] fallback call this with a URL-supplied
+ * id, so persisting per-id (including not-found) results would let a random-id
+ * flood pump the data cache full of nulls. The full page is ISR-cached at the
+ * route level (revalidate = 1800); found API responses are CDN-cached via
+ * s-maxage.
  */
 export const getListingById = cache(
   async (id: string): Promise<InventoryListing | null> => {
+    if (!LISTING_ID_RE.test(id)) return null
     const client = createServiceClient()
     const { data, error } = await freshListings(client)
       .eq("id", id)

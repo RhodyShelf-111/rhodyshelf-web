@@ -2,11 +2,13 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect } from "react"
 import { MapPin, ChevronUp, ExternalLink, Clock } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
 import { cn, formatPrice, formatRelativeTime, getCategoryIcon } from "@/lib/utils"
 import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
+import { rememberListing } from "@/lib/listing-cache"
 
 interface ProductCardProps {
   listing: InventoryListing
@@ -56,6 +58,12 @@ export function ProductCard({
     outOfStock && listing.last_seen_at
       ? formatRelativeTime(listing.last_seen_at)
       : null
+
+  // Seed the in-memory cache so the quick-look drawer can open instantly from
+  // this already-loaded listing instead of re-fetching it on click.
+  useEffect(() => {
+    rememberListing(listing)
+  }, [listing])
 
   return (
     <article
