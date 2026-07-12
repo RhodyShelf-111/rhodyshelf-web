@@ -2,11 +2,13 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect } from "react"
 import { MapPin, ChevronUp, ExternalLink } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
 import { cn, formatPrice, getCategoryIcon } from "@/lib/utils"
 import { DealBadge, DropBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
+import { rememberListing } from "@/lib/listing-cache"
 
 interface ProductCardProps {
   listing: InventoryListing
@@ -37,6 +39,12 @@ export function ProductCard({
   // Per-product deep-link into the dispensary menu (the money action).
   const buyUrl = listing.product_url ?? dispensary.menu_url
   const { isUpvoted, toggle } = useUpvotes(product.id)
+
+  // Seed the in-memory cache so the quick-look drawer can open instantly from
+  // this already-loaded listing instead of re-fetching it on click.
+  useEffect(() => {
+    rememberListing(listing)
+  }, [listing])
 
   return (
     <article

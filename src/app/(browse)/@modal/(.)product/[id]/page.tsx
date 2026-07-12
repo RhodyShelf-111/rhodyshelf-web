@@ -1,7 +1,4 @@
-import { getListingById } from "@/lib/queries/products"
 import { ProductDrawer } from "@/components/product/product-drawer"
-import { ProductQuickLook } from "@/components/product/product-quick-look"
-import { SheetTitle } from "@/components/ui/sheet"
 
 // Intercepts client-side navigations to /product/[id] from anywhere in
 // (browse) and renders the product as a quick-look drawer over the current
@@ -9,28 +6,19 @@ import { SheetTitle } from "@/components/ui/sheet"
 // because @modal is a slot, not a segment. A hard load / refresh / shared link
 // is NOT intercepted and falls through to the full page at
 // src/app/(browse)/product/[id]/page.tsx.
+//
+// This server component deliberately does NOT fetch the listing: the drawer is
+// a client component that renders instantly from the listing already in memory
+// (see product-drawer / listing-cache), and only fetches on a cache miss. That
+// keeps the click-to-open path free of a blocking server round-trip.
 export default async function ProductModal({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const listing = await getListingById(id)
 
-  return (
-    <ProductDrawer>
-      {listing ? (
-        <ProductQuickLook listing={listing} />
-      ) : (
-        <div className="p-8 text-center">
-          <SheetTitle className="font-medium text-foreground">
-            Product not found
-          </SheetTitle>
-          <p className="mt-1 text-sm text-muted-foreground">
-            It may no longer be in stock.
-          </p>
-        </div>
-      )}
-    </ProductDrawer>
-  )
+  // key={id} so navigating between two product modals mounts a fresh drawer
+  // (and re-reads the in-memory cache) instead of reusing stale state.
+  return <ProductDrawer key={id} id={id} />
 }
