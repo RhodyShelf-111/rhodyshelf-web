@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Bookmark, ChevronUp } from "lucide-react"
-import type { InventoryListing } from "@/lib/types"
+import type { UpvotedListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
@@ -14,8 +14,8 @@ export function SavedClient() {
   const idsKey = savedIds.join(",")
 
   const [mounted, setMounted] = useState(false)
-  // null = not loaded yet; [] = loaded, nothing fresh
-  const [listings, setListings] = useState<InventoryListing[] | null>(null)
+  // null = not loaded yet; [] = loaded, nothing resolved
+  const [listings, setListings] = useState<UpvotedListing[] | null>(null)
 
   useEffect(() => setMounted(true), [])
 
@@ -34,7 +34,7 @@ export function SavedClient() {
     fetch(`/api/saved?ids=${ids.join(",")}`)
       .then((r) => (r.ok ? r.json() : { listings: [] }))
       .then((d) => {
-        if (!cancelled) setListings((d.listings ?? []) as InventoryListing[])
+        if (!cancelled) setListings((d.listings ?? []) as UpvotedListing[])
       })
       .catch(() => {
         if (!cancelled) setListings((prev) => prev ?? [])
@@ -50,6 +50,11 @@ export function SavedClient() {
     () => (listings ?? []).filter((l) => savedSet.has(l.product.id)),
     [listings, savedSet]
   )
+  const inStock = useMemo(() => displayed.filter((l) => l.inStock), [displayed])
+  const outOfStock = useMemo(
+    () => displayed.filter((l) => !l.inStock),
+    [displayed]
+  )
 
   const loading = !mounted || (savedIds.length > 0 && listings === null)
   const isEmpty = !loading && displayed.length === 0
@@ -62,7 +67,7 @@ export function SavedClient() {
           loading
             ? "Loading your saved products…"
             : displayed.length > 0
-              ? `${displayed.length} product${displayed.length === 1 ? "" : "s"} you've upvoted, kept here for you`
+              ? summaryLine(inStock.length, outOfStock.length)
               : "Products you upvote are saved here, on this device"
         }
       />
@@ -72,13 +77,55 @@ export function SavedClient() {
       ) : isEmpty ? (
         <EmptyState hasSaved={savedIds.length > 0} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
-          {displayed.map((listing) => (
-            <ProductCard key={listing.id} listing={listing} />
-          ))}
+        <div className="space-y-10">
+          {inStock.length > 0 && <CardGrid listings={inStock} />}
+
+          {outOfStock.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Out of stock
+                </h2>
+                <span className="text-xs text-muted-foreground">
+                  {outOfStock.length}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-prose">
+                Not on any Rhode Island menu right now. We&apos;ll keep them here
+                in case they come back.
+              </p>
+              <CardGrid listings={outOfStock} />
+            </section>
+          )}
         </div>
       )}
     </PageContainer>
+  )
+}
+
+/** Human summary of the saved list's stock split, shown under the title. */
+function summaryLine(inStockCount: number, outCount: number): string {
+  const total = inStockCount + outCount
+  const products = `${total} product${total === 1 ? "" : "s"}`
+  if (outCount === 0) return `${products} you've upvoted, in stock now`
+  if (inStockCount === 0) return `${products} you've upvoted — none in stock right now`
+  return `${products} you've upvoted · ${inStockCount} in stock · ${outCount} out of stock`
+}
+
+function CardGrid({ listings }: { listings: UpvotedListing[] }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
+      {listings.map((listing) => (
+        <ProductCard
+          key={listing.id}
+          listing={listing}
+          stock={{
+            inStock: listing.inStock,
+            dispensaryCount: listing.dispensaryCount,
+          }}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -109,11 +156,11 @@ function EmptyState({ hasSaved }: { hasSaved: boolean }) {
         <Bookmark className="w-6 h-6 text-muted-foreground" />
       </div>
       <p className="font-heading text-xl font-bold text-foreground mb-2">
-        {hasSaved ? "Your saved products aren't available right now" : "Nothing saved yet"}
+        {hasSaved ? "We couldn't find your saved products" : "Nothing saved yet"}
       </p>
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
         {hasSaved ? (
-          "The items you saved are out of the current menu window. Save more as you browse."
+          "The products you saved are no longer in our Rhode Island catalog. Save more as you browse."
         ) : (
           <>
             Tap the{" "}
