@@ -2,9 +2,9 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { MapPin, ChevronUp, ExternalLink } from "lucide-react"
+import { MapPin, ChevronUp, ExternalLink, Clock } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
-import { cn, formatPrice, getCategoryIcon } from "@/lib/utils"
+import { cn, formatPrice, formatRelativeTime, getCategoryIcon } from "@/lib/utils"
 import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 
@@ -50,6 +50,12 @@ export function ProductCard({
     stock?.inStock && stock.dispensaryCount > 1
       ? `${stock.dispensaryCount} dispensaries`
       : dispensary.name
+  // Out-of-stock cards show when the product was last on a menu (helps judge
+  // whether it might return). Empty for products purged from inventory entirely.
+  const lastSeenLabel =
+    outOfStock && listing.last_seen_at
+      ? formatRelativeTime(listing.last_seen_at)
+      : null
 
   return (
     <article
@@ -181,12 +187,19 @@ export function ProductCard({
             dispensary name the full card width so it stops truncating.
             sm+: a single compact inline row where a precise pointer is in use. */}
         <div className="mt-auto pt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          {showDispensary && !outOfStock && (
-            <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
-              <MapPin className="w-3 h-3 shrink-0" />
-              <span className="truncate">{dispensaryLabel}</span>
-            </div>
-          )}
+          {outOfStock
+            ? lastSeenLabel && (
+                <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
+                  <Clock className="w-3 h-3 shrink-0" />
+                  <span className="truncate">Last seen {lastSeenLabel}</span>
+                </div>
+              )
+            : showDispensary && (
+                <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{dispensaryLabel}</span>
+                </div>
+              )}
           <div
             className={cn(
               "relative z-20 flex items-center gap-1.5 sm:gap-1 sm:ml-auto shrink-0",
