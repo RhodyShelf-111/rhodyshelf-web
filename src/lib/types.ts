@@ -43,6 +43,18 @@ export interface InventoryListing {
   dispensary: Dispensary
 }
 
+// One upvoted product resolved for the Saved page: a single representative
+// listing (deduped across dispensaries) plus its live stock status. Out-of-stock
+// upvotes still resolve to a card — via their last-known listing, or a synthetic
+// listing built from the products row once every inventory snapshot is purged.
+export interface UpvotedListing extends InventoryListing {
+  // True when the product has at least one fresh (< 24h) listing at an active
+  // dispensary. False means out of stock — the listing carries last-known info.
+  inStock: boolean
+  // How many active dispensaries currently carry it (fresh). 0 when out of stock.
+  dispensaryCount: number
+}
+
 // Product event from partitioned product_events table
 export interface ProductEvent {
   product_id: string

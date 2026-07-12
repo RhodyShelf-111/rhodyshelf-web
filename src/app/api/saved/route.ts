@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { getListingsByProductIds, SAVED_MAX } from "@/lib/queries/products"
+import { getUpvotedListings, SAVED_MAX } from "@/lib/queries/products"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const listings = await getListingsByProductIds(ids)
+    const listings = await getUpvotedListings(ids)
     return NextResponse.json(
       { listings },
       { headers: { "Cache-Control": "no-store" } }
