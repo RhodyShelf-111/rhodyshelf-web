@@ -3,10 +3,10 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect } from "react"
-import { MapPin, ChevronUp, ExternalLink } from "lucide-react"
+import { MapPin, ChevronUp, ExternalLink, Clock } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
-import { cn, formatPrice, getCategoryIcon } from "@/lib/utils"
-import { DealBadge, DropBadge } from "./deal-badge"
+import { cn, formatPrice, formatRelativeTime, getCategoryIcon } from "@/lib/utils"
+import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { rememberListing } from "@/lib/listing-cache"
 
@@ -16,12 +16,17 @@ interface ProductCardProps {
   /** Hide the per-card dispensary chip on pages already scoped to one
    *  dispensary (it's redundant there and truncates badly on narrow cards). */
   showDispensary?: boolean
+  /** Saved page only: show an In stock / Out of stock badge, mute the card when
+   *  out of stock, and summarize how many dispensaries carry it. Omitted
+   *  everywhere else, so those cards render exactly as before. */
+  stock?: { inStock: boolean; dispensaryCount: number }
 }
 
 export function ProductCard({
   listing,
   dropBadge,
   showDispensary = true,
+  stock,
 }: ProductCardProps) {
   const {
     product,
@@ -33,12 +38,26 @@ export function ProductCard({
     thc_percent,
   } = listing
   const imageUrl = listing.image_url ?? product.image_url
-  const isOnSale = (discount_amount ?? 0) > 0
+  const outOfStock = stock != null && !stock.inStock
+  const isOnSale = !outOfStock && (discount_amount ?? 0) > 0
   const showStrike =
     isOnSale && original_price != null && price != null && original_price > price
-  // Per-product deep-link into the dispensary menu (the money action).
-  const buyUrl = listing.product_url ?? dispensary.menu_url
+  // Per-product deep-link into the dispensary menu (the money action). Nothing
+  // to buy when it's out of stock, so the CTA is suppressed there.
+  const buyUrl = outOfStock ? null : listing.product_url ?? dispensary.menu_url
   const { isUpvoted, toggle } = useUpvotes(product.id)
+  // Saved-page dispensary line: collapse several shops to a count so a product
+  // carried at multiple stores isn't misrepresented by a single store name.
+  const dispensaryLabel =
+    stock?.inStock && stock.dispensaryCount > 1
+      ? `${stock.dispensaryCount} dispensaries`
+      : dispensary.name
+  // Out-of-stock cards show when the product was last on a menu (helps judge
+  // whether it might return). Empty for products purged from inventory entirely.
+  const lastSeenLabel =
+    outOfStock && listing.last_seen_at
+      ? formatRelativeTime(listing.last_seen_at)
+      : null
 
   // Seed the in-memory cache so the quick-look drawer can open instantly from
   // this already-loaded listing instead of re-fetching it on click.
@@ -57,12 +76,16 @@ export function ProductCard({
       {/* The whole card is one real link to the full product page: keyboard
           focusable, crawlable, open-in-new-tab friendly, works without JS.
           Stretched (inset-0) so the entire card is the target; the inset focus
-          ring stays visible despite the article's overflow-hidden. */}
-      <Link
-        href={`/product/${listing.id}`}
-        aria-label={`${product.name} by ${product.brand_name}`}
-        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-      />
+          ring stays visible despite the article's overflow-hidden. Skipped when
+          out of stock — the product page only serves fresh listings, so the link
+          would dead-end on a 404. */}
+      {!outOfStock && (
+        <Link
+          href={`/product/${listing.id}`}
+          aria-label={`${product.name} by ${product.brand_name}`}
+          className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        />
+      )}
 
       {/* Image plate — object-contain + padding so mixed-background packshots
           from different dispensary CDNs all sit on a consistent muted tile. */}
@@ -72,7 +95,10 @@ export function ProductCard({
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-contain p-3"
+            className={cn(
+              "object-contain p-3",
+              outOfStock && "grayscale opacity-50"
+            )}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={(e) => {
               const target = e.currentTarget as HTMLImageElement
@@ -83,7 +109,10 @@ export function ProductCard({
           />
         ) : null}
         <div
-          className="absolute inset-0 items-center justify-center text-4xl"
+          className={cn(
+            "absolute inset-0 items-center justify-center text-4xl",
+            outOfStock && "grayscale opacity-50"
+          )}
           style={{ display: imageUrl ? "none" : "flex" }}
         >
           {getCategoryIcon(product.category)}
@@ -96,6 +125,14 @@ export function ProductCard({
             <DropBadge label={dropBadge.label} badgeClassName={dropBadge.className} />
           )}
         </div>
+
+        {/* Live stock status (Saved page only) — top-right so it never collides
+            with the sale/drop badges on the left. */}
+        {stock && (
+          <div className="absolute top-2 right-2 z-10 pointer-events-none">
+            <StockBadge inStock={stock.inStock} />
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -117,9 +154,19 @@ export function ProductCard({
             {product.brand_name}
           </p>
 
-          {/* Price + savings */}
-          <p className="text-sm font-semibold text-foreground">
-            {formatPrice(price) ?? (
+          {/* Price + savings. Out of stock keeps the last-known price, muted,
+              as a reference point (or an em dash once inventory is gone). */}
+          <p
+            className={cn(
+              "text-sm font-semibold",
+              outOfStock ? "text-muted-foreground" : "text-foreground"
+            )}
+          >
+            {price != null ? (
+              formatPrice(price)
+            ) : outOfStock ? (
+              <span className="font-normal">—</span>
+            ) : (
               <span className="text-muted-foreground font-normal">
                 See dispensary
               </span>
@@ -148,13 +195,25 @@ export function ProductCard({
             dispensary name the full card width so it stops truncating.
             sm+: a single compact inline row where a precise pointer is in use. */}
         <div className="mt-auto pt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          {showDispensary && (
-            <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
-              <MapPin className="w-3 h-3 shrink-0" />
-              <span className="truncate">{dispensary.name}</span>
-            </div>
-          )}
-          <div className="relative z-20 flex items-center gap-1.5 sm:gap-1 sm:ml-auto shrink-0">
+          {outOfStock
+            ? lastSeenLabel && (
+                <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
+                  <Clock className="w-3 h-3 shrink-0" />
+                  <span className="truncate">Last seen {lastSeenLabel}</span>
+                </div>
+              )
+            : showDispensary && (
+                <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{dispensaryLabel}</span>
+                </div>
+              )}
+          <div
+            className={cn(
+              "relative z-20 flex items-center gap-1.5 sm:gap-1 sm:ml-auto shrink-0",
+              outOfStock && "ml-auto"
+            )}
+          >
             {buyUrl && (
               <a
                 href={buyUrl}

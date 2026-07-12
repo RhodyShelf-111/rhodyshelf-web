@@ -5,6 +5,9 @@ import type {
   CategorySection,
   DropListing,
   InventoryListing,
+  UpvotedListing,
+  Product,
+  Dispensary,
   Brand,
   SearchQuery,
   SearchPage,
@@ -443,45 +446,125 @@ export const getListingById = cache(
 /** Hard cap on how many saved products we resolve in one /saved request. */
 export const SAVED_MAX = 200
 
+/** Sort key that pushes null/missing prices to the end. */
+function rankPrice(price: number | null): number {
+  return price == null ? Number.POSITIVE_INFINITY : price
+}
+
+// Stand-in dispensary for a synthetic out-of-stock card (product fully purged
+// from inventory). The Saved card hides the dispensary chip when out of stock,
+// so these empty fields never surface.
+const PLACEHOLDER_DISPENSARY: Dispensary = {
+  id: "",
+  name: "",
+  slug: "",
+  city: null,
+  menu_url: null,
+}
+
+/** Build an out-of-stock card straight from a products row (no inventory left). */
+function synthesizeUpvotedListing(product: Product): UpvotedListing {
+  return {
+    id: `product:${product.id}`, // synthetic — not a real current_inventory id
+    price: null,
+    original_price: null,
+    discount_amount: null,
+    discount_percent: null,
+    thc_percent: null,
+    cbd_percent: null,
+    image_url: null,
+    product_url: null,
+    last_seen_at: "",
+    product,
+    dispensary: PLACEHOLDER_DISPENSARY,
+    inStock: false,
+    dispensaryCount: 0,
+  }
+}
+
 /**
- * Resolve a set of saved product ids to one current listing each. Upvotes are
- * stored client-side by product id, so a product may have several fresh
- * listings (one per dispensary) — we keep the cheapest in-stock one so the
- * saved card shows the best available price. Products no longer in the fresh
- * window are simply dropped. Not cached (input is per-visitor and unbounded).
+ * Resolve a set of upvoted product ids to ONE representative listing each,
+ * annotated with live stock status — so the Saved page shows every upvoted
+ * product (in stock or not) with no per-dispensary duplicates.
+ *
+ * A product can sit at several dispensaries and go stale at different times, so
+ * each product collapses to a single card:
+ *   • in stock → the cheapest listing that is fresh (< 24h) at an active
+ *     dispensary; dispensaryCount = how many active dispensaries carry it now.
+ *   • out of stock → the most-recently-seen listing (last-known price/shop), or
+ *     — once every inventory snapshot has been purged — a synthetic card built
+ *     from the products row so the upvote never silently disappears.
+ *
+ * The service-role key bypasses RLS, so the 24h window and active-dispensary
+ * check are applied here rather than by policy. Not cached (input is per-visitor
+ * and unbounded).
  */
-export async function getListingsByProductIds(
+export async function getUpvotedListings(
   productIds: string[]
-): Promise<InventoryListing[]> {
+): Promise<UpvotedListing[]> {
   const ids = [...new Set(productIds)].slice(0, SAVED_MAX)
   if (ids.length === 0) return []
 
   const client = createServiceClient()
-  const cheapestByProduct = new Map<string, InventoryListing>()
+  const cutoffMs = Date.now() - 24 * 60 * 60 * 1000
+
+  // Every listing for these products at ACTIVE dispensaries — fresh OR stale.
+  // (No freshness filter here: stale rows are what let out-of-stock upvotes
+  // still render with their last-known price and shop.)
+  const rowsByProduct = new Map<string, InventoryListing[]>()
   for (let i = 0; i < ids.length; i += 50) {
-    const { data, error } = await freshListings(client).in(
-      "product_id",
-      ids.slice(i, i + 50)
-    )
-    assertNoError(error, "getListingsByProductIds")
+    const { data, error } = await client
+      .from("current_inventory")
+      .select(LISTING_SELECT)
+      .in("product_id", ids.slice(i, i + 50))
+      .eq("dispensary.is_active", true)
+    assertNoError(error, "getUpvotedListings")
     for (const row of (data ?? []) as unknown as InventoryListing[]) {
-      const pid = row.product.id
-      const current = cheapestByProduct.get(pid)
-      if (!current || rankPrice(row.price) < rankPrice(current.price)) {
-        cheapestByProduct.set(pid, row)
-      }
+      const list = rowsByProduct.get(row.product.id)
+      if (list) list.push(row)
+      else rowsByProduct.set(row.product.id, [row])
     }
   }
 
-  // Preserve the caller's order (the client sends most-recently-saved first).
-  return ids
-    .map((id) => cheapestByProduct.get(id))
-    .filter((l): l is InventoryListing => !!l)
-}
+  const byProduct = new Map<string, UpvotedListing>()
+  for (const [pid, rows] of rowsByProduct) {
+    const fresh = rows.filter((r) => new Date(r.last_seen_at).getTime() > cutoffMs)
+    if (fresh.length > 0) {
+      // Cheapest fresh listing represents the product; count the distinct shops.
+      const cheapest = fresh.reduce((best, r) =>
+        rankPrice(r.price) < rankPrice(best.price) ? r : best
+      )
+      const dispensaryCount = new Set(fresh.map((r) => r.dispensary.id)).size
+      byProduct.set(pid, { ...cheapest, inStock: true, dispensaryCount })
+    } else {
+      // Out of stock: surface the most recently seen listing's last-known info.
+      const mostRecent = rows.reduce((best, r) =>
+        r.last_seen_at > best.last_seen_at ? r : best
+      )
+      byProduct.set(pid, { ...mostRecent, inStock: false, dispensaryCount: 0 })
+    }
+  }
 
-/** Sort key that pushes null/missing prices to the end. */
-function rankPrice(price: number | null): number {
-  return price == null ? Number.POSITIVE_INFINITY : price
+  // Products whose inventory has been fully purged: synthesize from products so
+  // the upvote still shows as out of stock instead of vanishing.
+  const missing = ids.filter((id) => !byProduct.has(id))
+  for (let i = 0; i < missing.length; i += 50) {
+    const { data, error } = await client
+      .from("products")
+      .select(
+        "id, name, brand_id, brand_name, category, subcategory, weight_grams, weight_display, strain_type, strain_name, image_url"
+      )
+      .in("id", missing.slice(i, i + 50))
+    assertNoError(error, "getUpvotedListings products")
+    for (const p of (data ?? []) as unknown as Product[]) {
+      byProduct.set(p.id, synthesizeUpvotedListing(p))
+    }
+  }
+
+  // Preserve the caller's order (client sends most-recently-saved first).
+  return ids
+    .map((id) => byProduct.get(id))
+    .filter((l): l is UpvotedListing => !!l)
 }
 
 /**
