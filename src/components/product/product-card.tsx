@@ -172,19 +172,19 @@ export function ProductCard({
               </span>
             )}
             {showStrike && (
-              <span className="text-muted-foreground font-normal text-[12px] line-through ml-1.5">
+              <span className="text-muted-foreground font-normal text-[13px] line-through ml-1.5">
                 {formatPrice(original_price)}
               </span>
             )}
             {product.weight_display && (
-              <span className="text-muted-foreground font-normal text-[12px] ml-1">
+              <span className="text-muted-foreground font-normal text-[13px] ml-1">
                 / {product.weight_display}
               </span>
             )}
           </p>
 
           {/* THC — always reserve one line */}
-          <p className="text-[12px] text-muted-foreground min-h-[1rem]">
+          <p className="text-[13px] text-muted-foreground min-h-[1rem]">
             {thc_percent != null ? `THC: ${thc_percent.toFixed(1)}%` : " "}
           </p>
         </div>
