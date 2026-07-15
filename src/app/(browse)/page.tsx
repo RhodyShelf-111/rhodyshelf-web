@@ -48,13 +48,13 @@ export default async function HomePage() {
         {sections.length > 0 && (
           <nav
             aria-label="Browse by category"
-            className="mt-4 flex gap-2 overflow-x-auto scrollbar-hidden md:flex-wrap md:overflow-visible"
+            className="mt-4 flex gap-2 overflow-x-auto overscroll-x-contain scrollbar-hidden [mask-image:linear-gradient(to_right,#000_90%,transparent)] md:[mask-image:none] md:flex-wrap md:overflow-visible"
           >
             {sections.map((section) => (
               <Link
                 key={section.key}
                 href={`/search?category=${encodeURIComponent(section.key)}`}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span aria-hidden="true">{getCategoryIcon(section.key)}</span>
                 {section.label}

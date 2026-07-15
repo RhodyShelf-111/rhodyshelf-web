@@ -53,15 +53,20 @@ export function HomepageClient({ sections }: HomepageClientProps) {
                 </div>
                 <Link
                   href={`/search?category=${encodeURIComponent(section.key)}`}
-                  className="text-sm text-primary hover:underline shrink-0"
+                  className="-my-3 inline-flex min-h-11 shrink-0 items-center py-3 text-sm text-primary hover:underline"
                 >
                   View all →
                 </Link>
               </div>
 
               {/* Product cards row — horizontal scroll on every breakpoint so
-                  mobile gets real merchandising, not just a list of links. */}
-              <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto scrollbar-subtle items-stretch snap-x snap-mandatory">
+                  mobile gets real merchandising, not just a list of links.
+                  snap-proximity (not -mandatory) lets the last card rest at the
+                  end instead of being yanked back and clipped; scroll-px matches
+                  the rail padding so a snapped card isn't flush to the edge;
+                  overscroll-x-contain stops an iOS edge swipe from triggering
+                  back-navigation off the homepage. */}
+              <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto overscroll-x-contain scroll-px-3 sm:scroll-px-4 scrollbar-subtle items-stretch snap-x snap-proximity">
                 {cards.map((listing) => (
                   <div
                     key={listing.id}
