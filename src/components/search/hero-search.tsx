@@ -154,6 +154,7 @@ export function HeroSearch({
           <input
             ref={inputRef}
             type="search"
+            enterKeyHint="search"
             role="combobox"
             aria-expanded={showDropdown}
             aria-controls={listboxId}
@@ -197,7 +198,10 @@ export function HeroSearch({
           className={cn(
             "absolute z-50 left-0 right-0 mt-1",
             "bg-popover border border-border rounded-xl shadow-lg",
-            "overflow-hidden py-1"
+            // Cap + scroll so lower options and "View all" aren't stranded
+            // behind the mobile keyboard; overscroll-contain stops the scroll
+            // from chaining out to the page.
+            "max-h-[60dvh] overflow-y-auto overscroll-contain py-1"
           )}
         >
           {suggestions.map((s, i) => {
@@ -218,7 +222,7 @@ export function HeroSearch({
                   }}
                   onMouseEnter={() => setActiveIndex(i)}
                   className={cn(
-                    "w-full text-left px-4 py-2.5 text-sm transition-colors truncate",
+                    "w-full text-left px-4 py-3 text-sm transition-colors truncate",
                     i === activeIndex
                       ? "bg-accent text-accent-foreground"
                       : "text-foreground hover:bg-muted"

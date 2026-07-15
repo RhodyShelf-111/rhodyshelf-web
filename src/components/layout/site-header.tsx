@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { createPortal } from "react-dom"
+import { createPortal, flushSync } from "react-dom"
 import { usePathname } from "next/navigation"
 import { Search, Menu, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { SearchBar } from "./search-bar"
 import { PageContainer } from "./page-container"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
@@ -60,6 +60,27 @@ export function SiteHeader() {
   const pathname = usePathname()
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Lock body scroll while the mobile search overlay is open, matching the
+  // hamburger Sheet — otherwise the page scrolls behind the focused scrim.
+  useEffect(() => {
+    if (!mobileSearchOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [mobileSearchOpen])
+
+  // Open the search AND focus its input within the same tap, so iOS raises the
+  // keyboard. flushSync renders the overlay synchronously so the input exists
+  // before we focus it; a post-render effect happens outside the gesture and
+  // iOS then refuses to show the keyboard.
+  const openMobileSearch = () => {
+    flushSync(() => setMobileSearchOpen(true))
+    searchInputRef.current?.focus()
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border h-16">
@@ -114,7 +135,7 @@ export function SiteHeader() {
                 document.body
               )}
               <div className="absolute inset-x-0 top-0 h-16 bg-background px-4 flex items-center gap-2 z-10">
-                <SearchBar autoFocus />
+                <SearchBar autoFocus inputRef={searchInputRef} />
                 <button
                   onClick={() => setMobileSearchOpen(false)}
                   className="px-2 min-h-11 inline-flex items-center text-sm text-muted-foreground shrink-0"
@@ -125,7 +146,7 @@ export function SiteHeader() {
             </>
           ) : (
             <button
-              onClick={() => setMobileSearchOpen(true)}
+              onClick={openMobileSearch}
               className="inline-flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
               aria-label="Search"
             >

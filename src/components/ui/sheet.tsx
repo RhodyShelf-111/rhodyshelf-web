@@ -65,7 +65,8 @@ function SheetContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-3 right-3"
+                // 44px hit area on touch layouts (was 28px), compact on sm+.
+                className="absolute top-2.5 right-2.5 size-11 sm:size-8"
                 size="icon-sm"
               />
             }
