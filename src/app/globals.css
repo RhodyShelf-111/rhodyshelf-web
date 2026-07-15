@@ -38,6 +38,9 @@
 }
 
 :root {
+  /* The app is dark-only. Telling the UA lets native controls, form fields, and
+     scrollbars render dark and prevents a white flash before CSS paints. */
+  color-scheme: dark;
   --background: #0a0f0a;
   --foreground: #f9fafb;
   --card: #141a14;
