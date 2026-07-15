@@ -147,6 +147,7 @@ function QuickLookSheet({ children }: { children: ReactNode }) {
   } | null>(null)
   const navigatedRef = useRef(false)
   const closingRef = useRef(false)
+  const closeTimerRef = useRef<number | null>(null)
 
   const media = (query: string) =>
     typeof window !== "undefined" && window.matchMedia(query).matches
@@ -159,6 +160,15 @@ function QuickLookSheet({ children }: { children: ReactNode }) {
   const navigateBack = () => {
     if (navigatedRef.current) return
     navigatedRef.current = true
+    // Base UI locks body scroll (`body { overflow: hidden }`) on open but only
+    // releases it on its own close transition — which we bypass by unmounting
+    // via router.back() while the dialog is still "open". Release it here, as we
+    // drop the route, so the page behind isn't left frozen. Scoped to the real
+    // close (not a StrictMode remount) and to the exact value Base UI sets, so
+    // it never fights the lock or clobbers an unrelated body style.
+    if (document.body.style.overflow === "hidden") {
+      document.body.style.overflow = ""
+    }
     router.back()
   }
 
@@ -208,7 +218,7 @@ function QuickLookSheet({ children }: { children: ReactNode }) {
       backdrop.style.transition = `opacity ${ms}ms ease`
       backdrop.style.opacity = "0"
     }
-    window.setTimeout(navigateBack, ms + 40)
+    closeTimerRef.current = window.setTimeout(navigateBack, ms + 40)
   }
 
   // Escape fallback: Base UI's own handler can miss when focus never lands
@@ -232,6 +242,16 @@ function QuickLookSheet({ children }: { children: ReactNode }) {
       60
     )
     return () => window.clearTimeout(id)
+  }, [])
+
+  // Clear a pending close timer on unmount so a sheet torn down by some other
+  // navigation mid-close can't fire a stray router.back().
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current)
+      }
+    }
   }, [])
 
   // --- Swipe-to-dismiss (mobile only: the handle these fire from is sm:hidden).
