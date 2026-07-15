@@ -74,9 +74,9 @@ export function FilterBar({
           placeholder="Search brands..."
           value={brandSearch}
           onChange={(e) => setBrandSearch(e.target.value)}
-          className="w-full h-10 px-3 text-base rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+          className="w-full h-11 px-3 text-base rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
         />
-        <div className="max-h-48 overflow-y-auto space-y-1.5 mt-2">
+        <div className="max-h-64 overflow-y-auto overscroll-contain space-y-1 mt-2">
           {filteredBrands.slice(0, 20).map((brand) => (
             <FilterRadio
               key={brand}
@@ -341,7 +341,7 @@ export function FilterBar({
 
         {/* Mobile filter sheet */}
         <Sheet>
-          <SheetTrigger className="md:hidden inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors">
+          <SheetTrigger className="md:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors">
             <SlidersHorizontal className="w-4 h-4" />
             Filters
             {activeCount > 0 && (
@@ -350,7 +350,7 @@ export function FilterBar({
               </span>
             )}
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[85vh] overflow-y-auto px-4 pb-8">
+          <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
             <SheetTitle className="text-lg font-bold mb-4">Filters</SheetTitle>
             {mobileFilters}
           </SheetContent>
@@ -373,7 +373,7 @@ export function FilterBar({
           aria-pressed={!!filters.onSale}
           onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
           className={cn(
-            "md:hidden shrink-0 inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-full border transition-colors",
+            "md:hidden shrink-0 inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-full border transition-colors",
             filters.onSale
               ? "bg-primary text-primary-foreground border-primary"
               : "border-border text-foreground hover:bg-muted"
@@ -401,7 +401,7 @@ function CategoryChip({
       aria-pressed={active}
       onClick={onToggle}
       className={cn(
-        "shrink-0 inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-full border transition-colors",
+        "shrink-0 inline-flex items-center gap-1.5 h-11 md:h-8 px-3 text-sm rounded-full border transition-colors",
         active
           ? "bg-primary text-primary-foreground border-primary"
           : "border-border text-foreground hover:bg-muted"

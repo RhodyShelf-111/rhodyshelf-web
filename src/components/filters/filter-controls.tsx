@@ -23,7 +23,7 @@ export function FilterRadio({
   labelClassName?: string
 }) {
   return (
-    <label className="flex items-center gap-2.5 cursor-pointer py-0.5">
+    <label className="flex min-h-11 items-center gap-2.5 cursor-pointer">
       <span className="relative flex h-[18px] w-[18px] shrink-0 items-center justify-center">
         <input
           type="radio"

@@ -117,7 +117,7 @@ export function ProductGrid({
             {showFilters && (
               <Sheet>
                 <SheetTrigger
-                  className="lg:hidden inline-flex items-center gap-1.5 px-3 h-9 text-sm font-medium rounded-[min(var(--radius-md),12px)] border border-border bg-background hover:bg-muted transition-all"
+                  className="lg:hidden inline-flex items-center gap-1.5 px-3 h-11 text-sm font-medium rounded-[min(var(--radius-md),12px)] border border-border bg-background hover:bg-muted transition-all"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
@@ -132,7 +132,7 @@ export function ProductGrid({
                     deals/drops grid and search. */}
                 <SheetContent
                   side="bottom"
-                  className="h-[85vh] overflow-y-auto px-4 pb-8"
+                  className="max-h-[85dvh] overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))]"
                 >
                   <SheetTitle className="font-heading text-lg font-bold mb-4">
                     Filters
