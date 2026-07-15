@@ -111,8 +111,9 @@ export default async function ProductPage({
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Image */}
-        <div className="relative aspect-square bg-muted rounded-xl overflow-hidden border border-border">
+        {/* Image — shorter on mobile (single column) so the title, price, and
+            key facts sit higher; square on md+ where it shares the row. */}
+        <div className="relative aspect-[4/3] md:aspect-square bg-muted rounded-xl overflow-hidden border border-border">
           <ProductHeroImage
             imageUrl={imageUrl}
             alt={product.name}
@@ -133,7 +134,7 @@ export default async function ProductPage({
               {product.strain_type ? ` · ${product.strain_type}` : ""}
               {product.weight_display ? ` · ${product.weight_display}` : ""}
             </p>
-            <h1 className="font-heading text-2xl font-bold text-foreground mt-1">
+            <h1 className="font-heading text-3xl font-bold text-foreground mt-1">
               {product.name}
             </h1>
             <Link
@@ -207,16 +208,18 @@ export default async function ProductPage({
             )}
           </Link>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Desktop actions — inline beside the image. On mobile these move to
+              a sticky bar pinned to the bottom of the page (below). */}
+          <div className="hidden md:flex gap-3">
             {buyUrl && (
               <a
                 href={buyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex flex-1 items-center justify-center h-12 px-4 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 h-12 px-4 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                Buy at {dispensary.name}
-                <ExternalLink className="w-4 h-4 ml-1.5" />
+                <span className="truncate">Buy at {dispensary.name}</span>
+                <ExternalLink className="w-4 h-4 shrink-0" />
               </a>
             )}
             <UpvoteButton
@@ -253,6 +256,39 @@ export default async function ProductPage({
             ))}
           </div>
         </section>
+      )}
+
+      {/* Mobile sticky buy bar — the money action is otherwise ~700px down the
+          single-column page. Sticky (not fixed) so it un-pins at the end and
+          never covers the footer; pb clears the iOS home indicator. Hidden on
+          md+ where the inline Buy row already sits beside the image. */}
+      {buyUrl && (
+        <div className="md:hidden sticky bottom-0 z-40 -mx-4 mt-8 flex items-center gap-3 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
+          <div className="min-w-0 shrink-0">
+            <p className="text-lg font-bold leading-tight text-foreground">
+              {formatPrice(price) ?? (
+                <span className="text-sm font-normal text-muted-foreground">
+                  See dispensary
+                </span>
+              )}
+            </p>
+            {showStrike && (
+              <p className="text-xs text-muted-foreground line-through">
+                {formatPrice(original_price)}
+              </p>
+            )}
+          </div>
+          <a
+            href={buyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <span className="truncate">Buy at {dispensary.name}</span>
+            <ExternalLink className="h-4 w-4 shrink-0" />
+          </a>
+          <UpvoteButton productId={product.id} className="h-12 w-12 shrink-0" />
+        </div>
       )}
     </PageContainer>
   )
