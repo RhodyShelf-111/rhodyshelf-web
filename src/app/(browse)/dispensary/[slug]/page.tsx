@@ -78,10 +78,10 @@ export default async function DispensaryDetailPage({
               href={dispensary.menu_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center justify-center h-7 px-2.5 text-[0.8rem] font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+              className="inline-flex shrink-0 items-center justify-center h-11 sm:h-9 px-4 sm:px-3 text-sm sm:text-[0.8rem] font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
               Visit Site
-              <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+              <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5 ml-1.5" />
             </a>
           )
         }

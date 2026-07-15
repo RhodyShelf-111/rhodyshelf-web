@@ -18,28 +18,28 @@ export function SiteFooter() {
 
           {/* Links */}
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <Link href="/search" className="hover:text-foreground transition-colors">
+            <Link href="/search" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
               Search
             </Link>
-            <Link href="/deals" className="hover:text-foreground transition-colors">
+            <Link href="/deals" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
               Deals
             </Link>
-            <Link href="/drops" className="hover:text-foreground transition-colors">
+            <Link href="/drops" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
               Drops
             </Link>
             <Link
               href="/dispensary"
-              className="hover:text-foreground transition-colors"
+              className="inline-flex min-h-11 items-center hover:text-foreground transition-colors"
             >
               Dispensaries
             </Link>
-            <Link href="/saved" className="hover:text-foreground transition-colors">
+            <Link href="/saved" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
               Saved
             </Link>
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
+            <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">
+            <Link href="/terms" className="inline-flex min-h-11 items-center hover:text-foreground transition-colors">
               Terms
             </Link>
           </nav>
