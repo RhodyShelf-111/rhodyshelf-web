@@ -22,7 +22,10 @@ export function PageContainer({
   return (
     <Comp
       className={cn(
-        "mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8",
+        // The gutters fold in env(safe-area-inset-*) so content clears the notch
+        // and rounded corners in landscape on modern phones; they collapse to the
+        // plain px value (insets are 0) in the common portrait case.
+        "mx-auto w-full max-w-screen-2xl px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] sm:px-[max(1.5rem,env(safe-area-inset-left),env(safe-area-inset-right))] lg:px-[max(2rem,env(safe-area-inset-left),env(safe-area-inset-right))]",
         className
       )}
       {...props}

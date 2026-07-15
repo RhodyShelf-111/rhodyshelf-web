@@ -4,7 +4,7 @@ import { PageContainer } from "./page-container"
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-muted/30 mt-auto">
-      <PageContainer className="py-8">
+      <PageContainer className="pt-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="flex flex-col sm:flex-row justify-between gap-6">
           {/* Brand */}
           <div>

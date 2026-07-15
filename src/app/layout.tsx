@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Space_Grotesk } from "next/font/google"
 import "./globals.css"
 
@@ -59,6 +59,17 @@ export const metadata: Metadata = {
     },
   },
   formatDetection: { telephone: false, address: false, email: false },
+}
+
+// viewport-fit=cover lets the page (and the product bottom sheet) extend into the
+// notch / home-indicator zones so `env(safe-area-inset-*)` returns real values on
+// modern phones; without it those insets are always 0. themeColor tints the
+// mobile browser chrome to match the app's near-black background, and colorScheme
+// tells the UA this is a dark surface (correct form controls, no white flashes).
+export const viewport: Viewport = {
+  themeColor: "#0a0f0a",
+  colorScheme: "dark",
+  viewportFit: "cover",
 }
 
 export default function RootLayout({
