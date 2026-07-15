@@ -117,7 +117,11 @@ export function AgeGate() {
       aria-labelledby="age-gate-title"
       aria-describedby="age-gate-desc"
       className={cn(
-        "fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center px-6",
+        // items-start + overflow-y-auto so the accept/reject buttons never clip
+        // off-screen (and become unreachable, trapping the visitor) when the
+        // viewport is short — landscape or large Dynamic Type. Centered once
+        // there's room. Vertical padding folds in the safe-area insets.
+        "fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-start sm:items-center justify-center overflow-y-auto px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]",
         "transition-opacity duration-[400ms]",
         // pending state must not swallow clicks: verified visitors get this
         // overlay in the static HTML until hydration removes it
@@ -190,7 +194,7 @@ export function AgeGate() {
             <a
               ref={leaveRef}
               href="https://www.google.com"
-              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded"
+              className="inline-flex min-h-[44px] items-center gap-2 px-4 py-3 text-sm text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded-lg"
             >
               Leave this site &rarr;
             </a>

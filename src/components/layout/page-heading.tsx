@@ -25,7 +25,10 @@ export function PageHeading({
     <div
       className={cn(
         "mb-6",
-        actions && "flex items-start justify-between gap-4",
+        // Stack the title and actions on mobile so a long title + a "Visit
+        // Site"-style action don't cramp into one narrow row; side-by-side on sm+.
+        actions &&
+          "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
         className
       )}
     >

@@ -64,7 +64,7 @@ export function Breadcrumbs({
               ) : (
                 <Link
                   href={crumb.href}
-                  className="truncate rounded transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-block -my-1.5 truncate rounded py-1.5 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {crumb.name}
                 </Link>
