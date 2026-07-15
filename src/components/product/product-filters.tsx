@@ -60,13 +60,15 @@ export function ProductFiltersPanel({
           <Separator />
 
           <FilterSection title="Brand">
+            {/* No text-sm override: the Input's base is text-base (16px) on
+                mobile, so iOS won't zoom the viewport on focus. */}
             <Input
               placeholder="Search brands..."
               value={brandSearch}
               onChange={(e) => setBrandSearch(e.target.value)}
-              className="mb-2 h-8 text-sm"
+              className="mb-2 h-11"
             />
-            <div className="max-h-48 overflow-y-auto space-y-1.5">
+            <div className="max-h-64 overflow-y-auto overscroll-contain space-y-1">
               {filteredBrands.slice(0, 20).map((brand) => (
                 <FilterRadio
                   key={brand}
@@ -148,7 +150,7 @@ export function ProductFiltersPanel({
                 e.target.value ? Number(e.target.value) : undefined
               )
             }
-            className="h-8 text-sm w-20"
+            className="h-11 w-20"
             min={0}
           />
           <span className="text-muted-foreground">—</span>
@@ -162,7 +164,7 @@ export function ProductFiltersPanel({
                 e.target.value ? Number(e.target.value) : undefined
               )
             }
-            className="h-8 text-sm w-20"
+            className="h-11 w-20"
             min={0}
           />
         </div>
