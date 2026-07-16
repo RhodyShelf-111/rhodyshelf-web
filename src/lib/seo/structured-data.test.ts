@@ -119,6 +119,19 @@ describe("collectionPageJsonLd", () => {
     expect(list.itemListElement[24].position).toBe(25)
   })
 
+  it("keeps mainEntity but omits itemListElement when itemPaths is absent, and links isPartOf to the WebSite @id", () => {
+    const data = collectionPageJsonLd({
+      name: "Dispensaries",
+      description: "d",
+      path: "/dispensary",
+      itemCount: 9,
+    })
+    expect(data.isPartOf).toEqual({ "@id": `${BASE}#website` })
+    const list = data.mainEntity as Record<string, unknown>
+    expect(list.numberOfItems).toBe(9)
+    expect(list).not.toHaveProperty("itemListElement")
+  })
+
   it("omits mainEntity for an empty collection", () => {
     const data = collectionPageJsonLd({
       name: "Empty",
