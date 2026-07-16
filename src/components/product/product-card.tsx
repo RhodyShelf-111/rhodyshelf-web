@@ -20,6 +20,9 @@ interface ProductCardProps {
    *  out of stock, and summarize how many dispensaries carry it. Omitted
    *  everywhere else, so those cards render exactly as before. */
   stock?: { inStock: boolean; dispensaryCount: number }
+  /** Above-the-fold cards on listing pages: load the image eagerly with high
+   *  fetch priority so it can win LCP instead of being lazy-deferred. */
+  eager?: boolean
 }
 
 export function ProductCard({
@@ -27,6 +30,7 @@ export function ProductCard({
   dropBadge,
   showDispensary = true,
   stock,
+  eager = false,
 }: ProductCardProps) {
   const {
     product,
@@ -95,6 +99,11 @@ export function ProductCard({
             src={imageUrl}
             alt={product.name}
             fill
+            // Deprecated `priority`/`preload` avoided: multiple grid images can
+            // be the LCP depending on viewport, so per-image eager loading +
+            // high fetch priority on the first row is the recommended hint.
+            loading={eager ? "eager" : undefined}
+            fetchPriority={eager ? "high" : "auto"}
             className={cn(
               "object-contain p-3",
               outOfStock && "grayscale opacity-50"

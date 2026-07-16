@@ -202,12 +202,13 @@ export function ProductGrid({
         {displayed.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
-              {displayed.map((listing) => (
+              {displayed.map((listing, index) => (
                 <ProductCard
                   key={listing.id}
                   listing={listing}
                   dropBadge={dropBadges?.get(listing.id)}
                   showDispensary={showDispensary}
+                  eager={index < 6}
                 />
               ))}
             </div>
