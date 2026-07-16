@@ -3,6 +3,15 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
+  description:
+    "How RhodyShelf handles data: no accounts, no personal information, and a single age-verification cookie.",
+  alternates: { canonical: "/privacy" },
+  openGraph: {
+    type: "website",
+    title: "Privacy Policy | RhodyShelf",
+    description: "How RhodyShelf handles data.",
+    url: "/privacy",
+  },
 }
 
 export default function PrivacyPage() {

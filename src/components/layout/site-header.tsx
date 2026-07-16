@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react"
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
   { href: "/dispensary", label: "Dispensaries" },
+  { href: "/brand", label: "Brands" },
   { href: "/deals", label: "Deals" },
   { href: "/drops", label: "Drops" },
 ]

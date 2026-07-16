@@ -3,6 +3,15 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Terms of Use",
+  description:
+    "RhodyShelf terms of use: an informational cannabis menu service for adults 21+ in Rhode Island. Not a dispensary.",
+  alternates: { canonical: "/terms" },
+  openGraph: {
+    type: "website",
+    title: "Terms of Use | RhodyShelf",
+    description: "RhodyShelf terms of use.",
+    url: "/terms",
+  },
 }
 
 export default function TermsPage() {

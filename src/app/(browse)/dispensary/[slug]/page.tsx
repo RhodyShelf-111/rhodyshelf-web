@@ -28,10 +28,20 @@ export async function generateMetadata({
   const dispensary = await getDispensaryBySlug(slug)
   if (!dispensary) return { title: "Dispensary Not Found" }
 
+  const loc = dispensary.city ? `${dispensary.city}, RI` : "Rhode Island"
+  const title = `${dispensary.name} Menu — Cannabis Dispensary in ${loc}`
+  const description = `Browse ${dispensary.name}'s full cannabis menu in ${loc}. Compare prices, potency, and deals across Rhode Island dispensaries.`
+
   return {
-    title: `${dispensary.name} Menu`,
-    description: `Browse ${dispensary.name}'s full cannabis menu in ${dispensary.city ?? "Rhode Island"}. Compare prices and find deals.`,
+    title,
+    description,
     alternates: { canonical: `/dispensary/${slug}` },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: `/dispensary/${slug}`,
+    },
   }
 }
 
@@ -87,8 +97,19 @@ export default async function DispensaryDetailPage({
         }
       />
 
+      <p className="text-muted-foreground max-w-2xl mb-6 -mt-2">
+        Full recreational cannabis menu for {dispensary.name}
+        {dispensary.city ? ` in ${dispensary.city}, RI` : " in Rhode Island"} —
+        compare live prices, potency, and deals. Menus refresh throughout the
+        day.
+      </p>
+
       {dispensaryListings.length > 0 ? (
-        <MenuClient listings={dispensaryListings} showDispensary={false} />
+        <MenuClient
+          listings={dispensaryListings}
+          showDispensary={false}
+          headingLabel={`${dispensary.name} menu`}
+        />
       ) : (
         <div className="text-center py-16">
           <p className="text-lg font-medium text-foreground mb-2">

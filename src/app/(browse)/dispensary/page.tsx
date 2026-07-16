@@ -5,15 +5,21 @@ import type { DispensaryWithCounts } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
+import { JsonLd } from "@/components/seo/json-ld"
+import { collectionPageJsonLd } from "@/lib/seo/structured-data"
 import type { Metadata } from "next"
 
 export const revalidate = 1800
 
+const TITLE = "Rhode Island Cannabis Dispensaries"
+const DESCRIPTION =
+  "Browse every Rhode Island cannabis dispensary in one place. Compare menus, product counts, and deals at each location — updated daily."
+
 export const metadata: Metadata = {
-  title: "Dispensaries",
-  description:
-    "Browse every Rhode Island cannabis dispensary. See menus, product counts, and deals at each location.",
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: "/dispensary" },
+  openGraph: { type: "website", title: TITLE, description: DESCRIPTION, url: "/dispensary" },
 }
 
 export default async function DispensaryListPage() {
@@ -24,17 +30,37 @@ export default async function DispensaryListPage() {
     (a, b) => b.product_count - a.product_count || a.name.localeCompare(b.name)
   )
   const liveCount = sorted.filter((d) => d.product_count > 0).length
+  // Cities served, for a keyword-bearing intro line (only the populated ones).
+  const cities = [
+    ...new Set(sorted.map((d) => d.city).filter((c): c is string => !!c)),
+  ]
 
   return (
     <PageContainer className="py-6 md:py-8">
+      <JsonLd
+        data={collectionPageJsonLd({
+          name: TITLE,
+          description: DESCRIPTION,
+          path: "/dispensary",
+          itemCount: sorted.length,
+          itemPaths: sorted.map((d) => `/dispensary/${d.slug}`),
+        })}
+      />
       <PageHeading
-        title="Dispensaries"
+        title={TITLE}
         description={
           liveCount === dispensaries.length
             ? `${dispensaries.length} locations across Rhode Island`
             : `${liveCount} of ${dispensaries.length} Rhode Island locations with live menus`
         }
       />
+
+      <p className="text-muted-foreground max-w-2xl mb-6 -mt-2">
+        Every recreational cannabis dispensary in Rhode Island
+        {cities.length > 0 ? ` — including ${cities.slice(0, 5).join(", ")}` : ""}
+        . Tap a dispensary to browse its full menu, compare prices, and find
+        today&apos;s deals.
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sorted.map((d) => (

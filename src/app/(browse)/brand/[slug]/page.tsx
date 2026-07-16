@@ -60,6 +60,7 @@ export default async function BrandPage({
           description: `${brand.canonical_name} cannabis products available across Rhode Island dispensaries.`,
           path: `/brand/${slug}`,
           itemCount: brandListings.length,
+          itemPaths: brandListings.map((l) => `/product/${l.id}`),
         })}
       />
       <Breadcrumbs
@@ -72,7 +73,10 @@ export default async function BrandPage({
       />
 
       {brandListings.length > 0 ? (
-        <MenuClient listings={brandListings} />
+        <MenuClient
+          listings={brandListings}
+          headingLabel={`${brand.canonical_name} products`}
+        />
       ) : (
         <div className="text-center py-16">
           <p className="text-lg font-medium text-foreground mb-2">

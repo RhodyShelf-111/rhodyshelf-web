@@ -13,7 +13,7 @@ const display = Space_Grotesk({
 
 const SITE_NAME = "RhodyShelf"
 const SITE_DESCRIPTION =
-  "Browse cannabis menus across 9 Rhode Island dispensaries in one place. Search products, compare prices, find deals, and buy direct."
+  "Browse cannabis menus across 9 Rhode Island dispensaries in one place. Search products, compare prices, find deals, and see where to buy."
 
 export const metadata: Metadata = {
   title: {
@@ -25,13 +25,6 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "https://rhodyshelf.com"
   ),
   applicationName: SITE_NAME,
-  keywords: [
-    "Rhode Island cannabis",
-    "RI dispensary menus",
-    "cannabis deals Rhode Island",
-    "weed menu RI",
-    "dispensary near me",
-  ],
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
@@ -40,10 +33,22 @@ export const metadata: Metadata = {
     url: "/",
     locale: "en_US",
   },
+  // Only `card` here: pages that set their own openGraph (product, brand, …)
+  // then fall back to their og:title/og:description on X, instead of every page
+  // inheriting the generic homepage Twitter title/description. twitter-image.png
+  // still supplies the sitewide default card image.
   twitter: {
     card: "summary_large_image",
-    title: "RhodyShelf — Rhode Island Cannabis Menus & Deals",
-    description: SITE_DESCRIPTION,
+  },
+  // Search-engine ownership verification. Inert until the matching env var is
+  // set in Vercel (DNS TXT is the primary method; this is a paste-a-token
+  // fallback). Tokens are public in the HTML anyway.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.YANDEX_SITE_VERIFICATION,
+    ...(process.env.BING_SITE_VERIFICATION
+      ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } }
+      : {}),
   },
   // Site-wide crawl defaults. Individual pages (e.g. /search, /saved) override
   // `robots` to opt out of indexing.
