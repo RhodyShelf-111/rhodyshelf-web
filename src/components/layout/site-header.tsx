@@ -3,7 +3,17 @@
 import Link from "next/link"
 import { createPortal, flushSync } from "react-dom"
 import { usePathname } from "next/navigation"
-import { Search, Menu, Bookmark } from "lucide-react"
+import {
+  Search,
+  Menu,
+  Bookmark,
+  Store,
+  Percent,
+  Sparkles,
+  Tags,
+  ChevronRight,
+  type LucideIcon,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { SearchBar } from "./search-bar"
@@ -11,12 +21,20 @@ import { PageContainer } from "./page-container"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
 import { useEffect, useRef, useState } from "react"
 
-const NAV_LINKS = [
-  { href: "/search", label: "Search" },
-  { href: "/dispensary", label: "Dispensaries" },
-  { href: "/brand", label: "Brands" },
-  { href: "/deals", label: "Deals" },
-  { href: "/drops", label: "Drops" },
+type NavLink = {
+  href: string
+  label: string
+  /** Short scannable subtitle shown in the mobile menu (not on desktop). */
+  desc: string
+  icon: LucideIcon
+}
+
+const NAV_LINKS: NavLink[] = [
+  { href: "/search", label: "Search", desc: "Find any product", icon: Search },
+  { href: "/dispensary", label: "Dispensaries", desc: "All 9 RI shops", icon: Store },
+  { href: "/brand", label: "Brands", desc: "Browse by brand", icon: Tags },
+  { href: "/deals", label: "Deals", desc: "Today's price drops", icon: Percent },
+  { href: "/drops", label: "Drops", desc: "Just added", icon: Sparkles },
 ]
 
 /** Nav entry to the personal saved list, with a live count badge. The count is
@@ -24,11 +42,9 @@ const NAV_LINKS = [
  *  only appears after hydration — no mismatch. */
 function SavedNavLink({
   active,
-  mobile,
   onNavigate,
 }: {
   active: boolean
-  mobile?: boolean
   onNavigate?: () => void
 }) {
   const count = useSavedProductIds().length
@@ -37,13 +53,10 @@ function SavedNavLink({
       href="/saved"
       onClick={onNavigate}
       className={cn(
-        "rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-1.5",
-        mobile ? "px-4 py-3 text-base" : "px-3 py-2 text-[15px]",
+        "rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 px-3 py-2 text-[15px]",
         active
           ? "text-primary bg-accent"
-          : mobile
-            ? "text-foreground hover:bg-muted"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
     >
       <Bookmark className={cn("w-4 h-4", active && "fill-current")} />
@@ -57,11 +70,107 @@ function SavedNavLink({
   )
 }
 
+/** One row in the mobile menu bottom sheet: icon chip, label + subtitle, and a
+ *  trailing chevron (or count badge). Big full-width tap target. */
+function MobileMenuRow({
+  href,
+  label,
+  desc,
+  icon: Icon,
+  active,
+  onNavigate,
+  trailing,
+}: {
+  href: string
+  label: string
+  desc: string
+  icon: LucideIcon
+  active: boolean
+  onNavigate: () => void
+  trailing?: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex items-center gap-3.5 rounded-xl px-3 py-3 transition-colors min-h-14",
+        active ? "bg-accent" : "hover:bg-muted active:bg-muted"
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+          active
+            ? "bg-primary/20 text-primary"
+            : "bg-muted text-muted-foreground"
+        )}
+      >
+        <Icon className="h-[18px] w-[18px]" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={cn(
+            "block text-base font-medium leading-tight",
+            active ? "text-accent-foreground" : "text-foreground"
+          )}
+        >
+          {label}
+        </span>
+        <span className="block text-xs text-muted-foreground leading-tight mt-0.5">
+          {desc}
+        </span>
+      </span>
+      {trailing ?? (
+        <ChevronRight
+          className={cn(
+            "h-4 w-4 shrink-0",
+            active ? "text-primary" : "text-muted-foreground/40"
+          )}
+        />
+      )}
+    </Link>
+  )
+}
+
+/** Saved row for the mobile menu — same rhythm as MobileMenuRow but with a live
+ *  count badge instead of a chevron once the user has saved something. */
+function MobileSavedRow({
+  active,
+  onNavigate,
+}: {
+  active: boolean
+  onNavigate: () => void
+}) {
+  const count = useSavedProductIds().length
+  return (
+    <MobileMenuRow
+      href="/saved"
+      label="Saved"
+      desc="Your shortlist"
+      icon={Bookmark}
+      active={active}
+      onNavigate={onNavigate}
+      trailing={
+        count > 0 ? (
+          <span className="min-w-6 h-6 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0">
+            {count}
+          </span>
+        ) : undefined
+      }
+    />
+  )
+}
+
 export function SiteHeader() {
   const pathname = usePathname()
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const isActive = (href: string) => pathname?.startsWith(href) ?? false
+  const closeNav = () => setMobileNavOpen(false)
 
   // Lock body scroll while the mobile search overlay is open, matching the
   // hamburger Sheet — otherwise the page scrolls behind the focused scrim.
@@ -101,7 +210,7 @@ export function SiteHeader() {
               href={link.href}
               className={cn(
                 "px-3 py-2 text-[15px] font-medium rounded-lg transition-colors whitespace-nowrap",
-                pathname?.startsWith(link.href)
+                isActive(link.href)
                   ? "text-primary bg-accent"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
@@ -109,7 +218,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <SavedNavLink active={pathname?.startsWith("/saved") ?? false} />
+          <SavedNavLink active={isActive("/saved")} />
         </nav>
 
         {/* Desktop search */}
@@ -155,6 +264,8 @@ export function SiteHeader() {
             </button>
           )}
 
+          {/* Mobile menu — a bottom sheet that rises into the thumb zone, matching
+              the app's product quick-look and filter sheets. */}
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetTrigger
               className="inline-flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
@@ -162,30 +273,52 @@ export function SiteHeader() {
             >
               <Menu className="w-5 h-5 text-muted-foreground" />
             </SheetTrigger>
-            <SheetContent side="right" className="w-[260px]">
-              <SheetTitle className="sr-only">Menu</SheetTitle>
-              <nav className="flex flex-col gap-1 pt-8">
+            <SheetContent
+              side="bottom"
+              className="rounded-t-2xl gap-0 px-0 pt-0 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[85dvh] overflow-y-auto overscroll-contain"
+            >
+              {/* Grab handle — signals "swipe / drag" and matches the product sheet. */}
+              <div
+                aria-hidden="true"
+                className="mx-auto mt-2.5 mb-1 h-1.5 w-9 rounded-full bg-border"
+              />
+              <SheetTitle className="px-5 pt-1 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Browse
+              </SheetTitle>
+              <nav className="px-3 pb-1 flex flex-col gap-1">
                 {NAV_LINKS.map((link) => (
-                  <Link
+                  <MobileMenuRow
                     key={link.href}
                     href={link.href}
-                    onClick={() => setMobileNavOpen(false)}
-                    className={cn(
-                      "px-4 py-3 text-base font-medium rounded-lg transition-colors",
-                      pathname?.startsWith(link.href)
-                        ? "text-primary bg-accent"
-                        : "text-foreground hover:bg-muted"
-                    )}
-                  >
-                    {link.label}
-                  </Link>
+                    label={link.label}
+                    desc={link.desc}
+                    icon={link.icon}
+                    active={isActive(link.href)}
+                    onNavigate={closeNav}
+                  />
                 ))}
-                <SavedNavLink
-                  active={pathname?.startsWith("/saved") ?? false}
-                  mobile
-                  onNavigate={() => setMobileNavOpen(false)}
-                />
+                <MobileSavedRow active={isActive("/saved")} onNavigate={closeNav} />
               </nav>
+              <div className="mt-2 mx-3 pt-3 border-t border-border flex items-center justify-between px-3 text-[11.5px] text-muted-foreground">
+                <span>Rhode Island · 21+</span>
+                {/* -my-1 keeps the row height while giving the links a taller tap area. */}
+                <span className="flex items-center gap-1 -my-1">
+                  <Link
+                    href="/privacy"
+                    onClick={closeNav}
+                    className="px-2 py-1 rounded hover:text-foreground transition-colors"
+                  >
+                    Privacy
+                  </Link>
+                  <Link
+                    href="/terms"
+                    onClick={closeNav}
+                    className="px-2 py-1 rounded hover:text-foreground transition-colors"
+                  >
+                    Terms
+                  </Link>
+                </span>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
