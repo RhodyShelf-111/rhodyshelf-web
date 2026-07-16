@@ -611,6 +611,26 @@ export const getInventoryByBrand = unstable_cache(
   { revalidate: 1800, tags: ["inventory"] }
 )
 
+/** All fresh listings in one category (DB category value, e.g. "flower"). */
+export const getInventoryByCategory = unstable_cache(
+  async (category: string): Promise<InventoryListing[]> => {
+    const client = createServiceClient()
+    const listings = await fetchAllListings(
+      () =>
+        freshListings(client).ilike(
+          "product.category",
+          escapeLike(category)
+        ),
+      "getInventoryByCategory"
+    )
+    return listings.sort((a, b) =>
+      a.product.brand_name.localeCompare(b.product.brand_name)
+    )
+  },
+  ["category-inventory-v1"],
+  { revalidate: 1800, tags: ["inventory"] }
+)
+
 /** All fresh listings at one dispensary (the largest store is ~925 rows and growing). */
 export const getInventoryByDispensary = unstable_cache(
   async (dispensaryId: string): Promise<InventoryListing[]> => {
@@ -668,15 +688,20 @@ export const getBrandBySlug = cache(
  * daily to match the sitemap's revalidate window.
  */
 export const getSitemapListings = unstable_cache(
-  async (): Promise<{ id: string; lastModified: string }[]> => {
+  async (): Promise<
+    { id: string; lastModified: string; image: string | null }[]
+  > => {
     const client = createServiceClient()
-    const rows: { id: string; lastModified: string }[] = []
+    const rows: { id: string; lastModified: string; image: string | null }[] =
+      []
     const PAGE_SIZE = 1000
     let from = 0
     while (true) {
       const { data, error } = await client
         .from("current_inventory")
-        .select("id, last_seen_at, dispensary:dispensary_id!inner(is_active)")
+        .select(
+          "id, last_seen_at, image_url, dispensary:dispensary_id!inner(is_active)"
+        )
         .eq("dispensary.is_active", true)
         .gt("last_seen_at", freshnessCutoff())
         .order("id")
@@ -686,14 +711,19 @@ export const getSitemapListings = unstable_cache(
       for (const row of data as unknown as {
         id: string
         last_seen_at: string
+        image_url: string | null
       }[]) {
-        rows.push({ id: row.id, lastModified: row.last_seen_at })
+        rows.push({
+          id: row.id,
+          lastModified: row.last_seen_at,
+          image: row.image_url,
+        })
       }
       if (data.length < PAGE_SIZE) break
       from += PAGE_SIZE
     }
     return rows
   },
-  ["sitemap-listings-v1"],
+  ["sitemap-listings-v2"],
   { revalidate: 86400, tags: ["inventory"] }
 )

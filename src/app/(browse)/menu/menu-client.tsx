@@ -10,9 +10,17 @@ interface MenuClientProps {
   showDispensary?: boolean
   /** Page-specific default sort, e.g. "discount-desc" on /deals. */
   defaultSort?: ProductFilters["sort"]
+  /** Screen-reader label for the results section — keeps the heading outline
+   *  H1 → H2 → H3 (cards are H3) instead of skipping a level. */
+  headingLabel?: string
 }
 
-export function MenuClient({ listings, showDispensary = true, defaultSort }: MenuClientProps) {
+export function MenuClient({
+  listings,
+  showDispensary = true,
+  defaultSort,
+  headingLabel = "Products",
+}: MenuClientProps) {
   const [initialFilters, setInitialFilters] = useState<ProductFilters>(
     defaultSort ? { sort: defaultSort } : {}
   )
@@ -41,11 +49,14 @@ export function MenuClient({ listings, showDispensary = true, defaultSort }: Men
   }, [defaultSort])
 
   return (
-    <ProductGrid
-      key={filtersKey}
-      listings={listings}
-      initialFilters={initialFilters}
-      showDispensary={showDispensary}
-    />
+    <>
+      <h2 className="sr-only">{headingLabel}</h2>
+      <ProductGrid
+        key={filtersKey}
+        listings={listings}
+        initialFilters={initialFilters}
+        showDispensary={showDispensary}
+      />
+    </>
   )
 }

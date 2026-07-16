@@ -11,7 +11,12 @@ const BASE_URL =
 
 const SITE_NAME = "RhodyShelf"
 const SITE_DESCRIPTION =
-  "Browse cannabis menus across 9 Rhode Island dispensaries in one place. Search products, compare prices, find deals, and buy direct."
+  "Browse cannabis menus across 9 Rhode Island dispensaries in one place. Search products, compare prices, find deals, and see where to buy."
+
+// Stable node identifiers so the home-page Organization and WebSite entities
+// form a single connected graph (WebSite.publisher → Organization).
+const ORG_ID = `${BASE_URL}#organization`
+const WEBSITE_ID = `${BASE_URL}#website`
 
 const abs = (path: string) => new URL(path, BASE_URL).toString()
 
@@ -20,10 +25,24 @@ export function organizationJsonLd(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": ORG_ID,
     name: SITE_NAME,
     url: BASE_URL,
     logo: abs("/icon.png"),
     description: SITE_DESCRIPTION,
+    // Aggregator serving the whole state — reinforces the geographic scope.
+    areaServed: { "@type": "State", name: "Rhode Island" },
+    knowsAbout: [
+      "Rhode Island cannabis dispensaries",
+      "cannabis menus",
+      "cannabis deals",
+      "cannabis strains",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "hello@rhodyshelf.com",
+    },
   }
 }
 
@@ -32,8 +51,10 @@ export function websiteJsonLd(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": WEBSITE_ID,
     name: SITE_NAME,
     url: BASE_URL,
+    publisher: { "@id": ORG_ID },
     potentialAction: {
       "@type": "SearchAction",
       target: {
@@ -70,10 +91,21 @@ export function productJsonLd(listing: InventoryListing): Record<string, unknown
 
   // A valid Offer needs a price; skip offers entirely when price is unknown.
   if (listing.price != null) {
+    // Cap the price's validity at ~48h from when we last saw it: listings are
+    // only shown while fresh (<24h), so this never advertises a stale price as
+    // still valid. Clears Google's "priceValidUntil" non-critical warning.
+    const priceValidUntil = new Date(
+      new Date(listing.last_seen_at).getTime() + 48 * 60 * 60 * 1000
+    )
+      .toISOString()
+      .slice(0, 10)
+
     data.offers = {
       "@type": "Offer",
       priceCurrency: "USD",
       price: listing.price.toFixed(2),
+      priceValidUntil,
+      itemCondition: "https://schema.org/NewCondition",
       availability: "https://schema.org/InStock",
       url: abs(`/product/${listing.id}`),
       seller: { "@type": "Organization", name: listing.dispensary.name },
@@ -91,6 +123,7 @@ export function storeJsonLd(
   return {
     "@context": "https://schema.org",
     "@type": "Store",
+    "@id": abs(`/dispensary/${dispensary.slug}#store`),
     name: dispensary.name,
     url: abs(`/dispensary/${dispensary.slug}`),
     ...(dispensary.menu_url ? { sameAs: dispensary.menu_url } : {}),
@@ -118,25 +151,39 @@ export function storeJsonLd(
   }
 }
 
-/** CollectionPage for a brand's product listing page. */
+/**
+ * CollectionPage for a listing/hub page (brand, category, dispensary index,
+ * deals, drops). Pass `itemPaths` (app-relative URLs of the first items shown)
+ * to emit an explicit ItemList of ListItem URLs — this gives Google the
+ * page→child relationships and is eligible for list carousels (unlike price
+ * rich results, which cannabis policy blocks). Capped so the markup stays lean.
+ */
 export function collectionPageJsonLd(opts: {
   name: string
   description: string
   path: string
   itemCount: number
+  itemPaths?: string[]
 }): Record<string, unknown> {
+  const itemListElement = (opts.itemPaths ?? []).slice(0, 25).map((p, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    url: abs(p),
+  }))
+
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: opts.name,
     description: opts.description,
     url: abs(opts.path),
-    isPartOf: { "@type": "WebSite", name: SITE_NAME, url: BASE_URL },
+    isPartOf: { "@id": WEBSITE_ID },
     ...(opts.itemCount > 0
       ? {
           mainEntity: {
             "@type": "ItemList",
             numberOfItems: opts.itemCount,
+            ...(itemListElement.length ? { itemListElement } : {}),
           },
         }
       : {}),
