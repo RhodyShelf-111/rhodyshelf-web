@@ -19,8 +19,9 @@ npm run test        # single run (CI mode)
 npm run test:watch  # watch mode
 ```
 
-CI runs lint, `tsc --noEmit`, and the test suite on every push and PR
-(`.github/workflows/test.yml`).
+Recommended CI (add `.github/workflows/test.yml` via GitHub's web UI — the
+CLI token lacks `workflow` scope): run `npm run lint`, `npx tsc --noEmit`, and
+`npm run test` on every push and PR.
 
 ## Test layers
 
