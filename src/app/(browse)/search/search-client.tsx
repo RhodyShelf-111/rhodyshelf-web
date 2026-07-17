@@ -13,7 +13,7 @@ import { buildSearchParams } from "@/lib/search-params"
 import { FilterBar } from "@/components/search/filter-bar"
 import { BrandGroup } from "@/components/search/brand-group"
 import { HeroSearch } from "@/components/search/hero-search"
-import { ProductCard } from "@/components/product/product-card"
+import { ProductCard, EAGER_IMAGE_COUNT } from "@/components/product/product-card"
 import { resolveAlias } from "@/lib/brand-aliases"
 
 interface SearchClientProps {
@@ -224,7 +224,7 @@ export function SearchClient({
               <ProductCard
                 key={listing.id}
                 listing={listing}
-                eager={index < 6}
+                eager={index < EAGER_IMAGE_COUNT}
               />
             ))}
           </div>

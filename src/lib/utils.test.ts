@@ -42,6 +42,15 @@ describe("getFreshnessBadge", () => {
     expect(getFreshnessBadge(daysAgo(10))?.label).toBe("New")
     expect(getFreshnessBadge(daysAgo(20))).toBeNull()
   })
+
+  it("uses inclusive boundaries at 3, 7, and 14 days", () => {
+    expect(getFreshnessBadge(daysAgo(3))?.label).toBe("Just Dropped")
+    expect(getFreshnessBadge(daysAgo(4))?.label).toBe("Fresh")
+    expect(getFreshnessBadge(daysAgo(7))?.label).toBe("Fresh")
+    expect(getFreshnessBadge(daysAgo(8))?.label).toBe("New")
+    expect(getFreshnessBadge(daysAgo(14))?.label).toBe("New")
+    expect(getFreshnessBadge(daysAgo(15))).toBeNull()
+  })
 })
 
 describe("slugify", () => {

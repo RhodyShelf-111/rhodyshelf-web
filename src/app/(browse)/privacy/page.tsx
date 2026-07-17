@@ -1,17 +1,23 @@
 import { PageContainer } from "@/components/layout/page-container"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
+
+// ISR so the footer (async, fetches dispensaries) can self-heal instead of
+// baking a degraded or stale dispensary column into a build-time-only page.
+export const revalidate = 86400
+
+const DESCRIPTION =
+  "How RhodyShelf handles data: no accounts, no personal information, and a single age-verification cookie."
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description:
-    "How RhodyShelf handles data: no accounts, no personal information, and a single age-verification cookie.",
+  description: DESCRIPTION,
   alternates: { canonical: "/privacy" },
-  openGraph: {
-    type: "website",
-    title: "Privacy Policy | RhodyShelf",
-    description: "How RhodyShelf handles data.",
+  openGraph: pageOpenGraph({
+    title: "Privacy Policy",
+    description: DESCRIPTION,
     url: "/privacy",
-  },
+  }),
 }
 
 export default function PrivacyPage() {

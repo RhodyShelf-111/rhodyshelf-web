@@ -1,6 +1,11 @@
 import Link from "next/link"
 import { PageContainer } from "@/components/layout/page-container"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
+
+// ISR so the footer (async, fetches dispensaries) can self-heal instead of
+// baking a degraded or stale dispensary column into a build-time-only page.
+export const revalidate = 86400
 
 const TITLE = "About RhodyShelf"
 const DESCRIPTION =
@@ -10,7 +15,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/about" },
-  openGraph: { type: "website", title: `${TITLE} | RhodyShelf`, description: DESCRIPTION, url: "/about" },
+  openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/about" }),
 }
 
 export default function AboutPage() {

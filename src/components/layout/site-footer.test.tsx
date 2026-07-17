@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, cleanup } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { render, screen } from "@testing-library/react"
 import type { DispensaryWithCounts } from "@/lib/types"
 
 // Stub the query layer: the footer is a server component whose only data
@@ -37,10 +37,6 @@ describe("SiteFooter", () => {
   beforeEach(() => {
     mockedGetDispensaries.mockReset()
   })
-
-  // No vitest globals, so Testing Library's auto-cleanup never registers —
-  // unmount explicitly or the second test queries both renders.
-  afterEach(cleanup)
 
   it("links all 7 categories and lists live dispensaries alphabetically, capped at 9", async () => {
     const dispensaries = [

@@ -10,6 +10,12 @@ import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { rememberListing } from "@/lib/listing-cache"
 
+/** How many leading grid cards get the eager/high-fetch-priority image hint.
+ *  Roughly one viewport row on desktop (5 cols) / three on mobile (2 cols) —
+ *  enough for the LCP candidate without defeating lazy loading below the fold.
+ *  Shared by ProductGrid and the search results grid so they can't drift. */
+export const EAGER_IMAGE_COUNT = 6
+
 interface ProductCardProps {
   listing: InventoryListing
   dropBadge?: { label: string; className: string } | null

@@ -151,12 +151,17 @@ export function storeJsonLd(
   }
 }
 
+/** Cap on ItemList entries — keeps the JSON-LD lean; callers should pre-slice
+ *  their listing arrays to this so they don't map thousands of paths only for
+ *  the excess to be discarded here. */
+export const ITEM_LIST_MAX = 25
+
 /**
  * CollectionPage for a listing/hub page (brand, category, dispensary index,
  * deals, drops). Pass `itemPaths` (app-relative URLs of the first items shown)
  * to emit an explicit ItemList of ListItem URLs — this gives Google the
  * page→child relationships and is eligible for list carousels (unlike price
- * rich results, which cannabis policy blocks). Capped so the markup stays lean.
+ * rich results, which cannabis policy blocks). Capped at ITEM_LIST_MAX.
  */
 export function collectionPageJsonLd(opts: {
   name: string
@@ -165,11 +170,13 @@ export function collectionPageJsonLd(opts: {
   itemCount: number
   itemPaths?: string[]
 }): Record<string, unknown> {
-  const itemListElement = (opts.itemPaths ?? []).slice(0, 25).map((p, i) => ({
-    "@type": "ListItem",
-    position: i + 1,
-    url: abs(p),
-  }))
+  const itemListElement = (opts.itemPaths ?? [])
+    .slice(0, ITEM_LIST_MAX)
+    .map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: abs(p),
+    }))
 
   return {
     "@context": "https://schema.org",

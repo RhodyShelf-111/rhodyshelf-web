@@ -5,7 +5,11 @@ import {
 } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
-import { collectionPageJsonLd } from "@/lib/seo/structured-data"
+import {
+  collectionPageJsonLd,
+  ITEM_LIST_MAX,
+} from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { MenuClient } from "../../menu/menu-client"
@@ -41,12 +45,7 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/category/${slug}` },
-    openGraph: {
-      type: "website",
-      title,
-      description,
-      url: `/category/${slug}`,
-    },
+    openGraph: pageOpenGraph({ title, description, url: `/category/${slug}` }),
   }
 }
 
@@ -69,7 +68,9 @@ export default async function CategoryPage({
           description: `${category.label} available across Rhode Island dispensaries.`,
           path: `/category/${slug}`,
           itemCount: listings.length,
-          itemPaths: listings.map((l) => `/product/${l.id}`),
+          itemPaths: listings
+            .slice(0, ITEM_LIST_MAX)
+            .map((l) => `/product/${l.id}`),
         })}
       />
       <Breadcrumbs

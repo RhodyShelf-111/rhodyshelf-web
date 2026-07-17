@@ -8,6 +8,28 @@ import {
 
 export const revalidate = 86400 // daily
 
+/**
+ * Next interpolates sitemap `images` into the XML verbatim (no entity
+ * escaping), and third-party menu-platform image URLs routinely contain a
+ * bare `&` — one such row would make the whole sitemap malformed XML and
+ * get it rejected by Google. Escape the XML entities and drop anything that
+ * isn't a valid http(s) URL.
+ */
+function xmlSafeImageUrl(raw: string): string | null {
+  try {
+    const u = new URL(raw)
+    if (u.protocol !== "https:" && u.protocol !== "http:") return null
+  } catch {
+    return null
+  }
+  return raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;")
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rhodyshelf.com"
   const now = new Date()
@@ -25,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/deals`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/drops`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/dispensary`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${baseUrl}/brand`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${baseUrl}/brand`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${baseUrl}/privacy`, changeFrequency: "monthly", priority: 0.2 },
     { url: `${baseUrl}/terms`, changeFrequency: "monthly", priority: 0.2 },
@@ -55,14 +77,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }))
 
-  const productPages: MetadataRoute.Sitemap = listings.map((l) => ({
-    url: `${baseUrl}/product/${l.id}`,
-    lastModified: new Date(l.lastModified),
-    changeFrequency: "daily" as const,
-    priority: 0.5,
+  const productPages: MetadataRoute.Sitemap = listings.map((l) => {
     // Image sitemap: opens the product catalog to Google Images.
-    ...(l.image ? { images: [l.image] } : {}),
-  }))
+    const image = l.image ? xmlSafeImageUrl(l.image) : null
+    return {
+      url: `${baseUrl}/product/${l.id}`,
+      lastModified: new Date(l.lastModified),
+      changeFrequency: "daily" as const,
+      priority: 0.5,
+      ...(image ? { images: [image] } : {}),
+    }
+  })
 
   return [
     ...staticPages,

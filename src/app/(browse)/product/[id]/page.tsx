@@ -11,6 +11,7 @@ import { formatPrice, formatRelativeTime } from "@/lib/utils"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
 import { productJsonLd } from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import { PageContainer } from "@/components/layout/page-container"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductCard } from "@/components/product/product-card"
@@ -36,13 +37,12 @@ export async function generateMetadata({
     title: `${listing.product.name} — ${listing.product.brand_name}`,
     description,
     alternates: { canonical: `/product/${id}` },
-    openGraph: {
-      type: "website",
+    openGraph: pageOpenGraph({
       title: `${listing.product.name} — ${listing.product.brand_name}`,
       description,
       url: `/product/${id}`,
-      images: image ? [image] : undefined,
-    },
+      ...(image ? { images: [image] } : {}),
+    }),
   }
 }
 

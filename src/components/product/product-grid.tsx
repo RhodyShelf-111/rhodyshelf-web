@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import type { InventoryListing, ProductFilters } from "@/lib/types"
-import { ProductCard } from "./product-card"
+import { ProductCard, EAGER_IMAGE_COUNT } from "./product-card"
 import { ProductFiltersPanel } from "./product-filters"
 import { ProductSort } from "./product-sort"
 import { applyFilters } from "@/lib/filter-utils"
@@ -208,7 +208,7 @@ export function ProductGrid({
                   listing={listing}
                   dropBadge={dropBadges?.get(listing.id)}
                   showDispensary={showDispensary}
-                  eager={index < 6}
+                  eager={index < EAGER_IMAGE_COUNT}
                 />
               ))}
             </div>

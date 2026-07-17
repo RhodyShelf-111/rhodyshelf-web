@@ -184,7 +184,10 @@ export const getSuggestPool = unstable_cache(
   { revalidate: 1800, tags: ["inventory"] }
 )
 
-// Category display config — maps DB category value to homepage rail label
+// The canonical category registry. Started as homepage-rail display config;
+// an entry here now also creates a public indexable /category/[slug] route
+// (generateStaticParams + dynamicParams=false), a sitemap entry, a footer
+// link, and the product-breadcrumb link target.
 export const HOMEPAGE_CATEGORIES = [
   { key: "flower", label: "Flower" },
   { key: "concentrate", label: "Concentrates" },

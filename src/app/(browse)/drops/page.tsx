@@ -4,7 +4,11 @@ import { DropsClient } from "./drops-client"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { JsonLd } from "@/components/seo/json-ld"
-import { collectionPageJsonLd } from "@/lib/seo/structured-data"
+import {
+  collectionPageJsonLd,
+  ITEM_LIST_MAX,
+} from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
 
 export const revalidate = 3600 // 1 hour
@@ -17,7 +21,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/drops" },
-  openGraph: { type: "website", title: TITLE, description: DESCRIPTION, url: "/drops" },
+  openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/drops" }),
 }
 
 export default async function DropsPage() {
@@ -32,7 +36,7 @@ export default async function DropsPage() {
           description: DESCRIPTION,
           path: "/drops",
           itemCount: drops.length,
-          itemPaths: drops.map((d) => `/product/${d.id}`),
+          itemPaths: drops.slice(0, ITEM_LIST_MAX).map((d) => `/product/${d.id}`),
         })}
       />
       <PageHeading

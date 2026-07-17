@@ -57,12 +57,14 @@ export async function SiteFooter() {
             <FooterLink href="/saved">Saved</FooterLink>
             <FooterLink href="/privacy">Privacy</FooterLink>
             <FooterLink href="/terms">Terms</FooterLink>
-            <a
-              href="mailto:hello@rhodyshelf.com"
-              className="inline-flex min-h-9 items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Contact
-            </a>
+            <li>
+              <a
+                href="mailto:hello@rhodyshelf.com"
+                className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Contact
+              </a>
+            </li>
           </FooterColumn>
         </div>
 
@@ -91,7 +93,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-foreground/70 mb-2">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
         {title}
       </h2>
       <ul className="flex flex-col">{children}</ul>
@@ -108,9 +110,14 @@ function FooterLink({
 }) {
   return (
     <li>
+      {/* prefetch={false}: the footer is on every page and links the heaviest
+          full-inventory routes (7 categories + 9 dispensaries + deals) —
+          default viewport prefetch would background-download all of them on
+          every page view. */}
       <Link
         href={href}
-        className="inline-flex min-h-9 items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        prefetch={false}
+        className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         {children}
       </Link>

@@ -4,7 +4,11 @@ import { MenuClient } from "../menu/menu-client"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { JsonLd } from "@/components/seo/json-ld"
-import { collectionPageJsonLd } from "@/lib/seo/structured-data"
+import {
+  collectionPageJsonLd,
+  ITEM_LIST_MAX,
+} from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
 
 export const revalidate = 900
@@ -17,7 +21,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/deals" },
-  openGraph: { type: "website", title: TITLE, description: DESCRIPTION, url: "/deals" },
+  openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/deals" }),
 }
 
 export default async function DealsPage() {
@@ -32,7 +36,7 @@ export default async function DealsPage() {
           description: DESCRIPTION,
           path: "/deals",
           itemCount: total,
-          itemPaths: deals.map((l) => `/product/${l.id}`),
+          itemPaths: deals.slice(0, ITEM_LIST_MAX).map((l) => `/product/${l.id}`),
         })}
       />
       <PageHeading

@@ -4,6 +4,7 @@ import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { JsonLd } from "@/components/seo/json-ld"
 import { collectionPageJsonLd } from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
 
 export const revalidate = 3600
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/brand" },
-  openGraph: { type: "website", title: TITLE, description: DESCRIPTION, url: "/brand" },
+  openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/brand" }),
 }
 
 export default async function BrandListPage() {
@@ -35,7 +36,7 @@ export default async function BrandListPage() {
         })}
       />
       <PageHeading
-        title={TITLE}
+        title="Rhode Island Cannabis Brands"
         description={`${brands.length} brands across Rhode Island dispensaries`}
       />
 

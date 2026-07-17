@@ -7,6 +7,7 @@ import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { JsonLd } from "@/components/seo/json-ld"
 import { collectionPageJsonLd } from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
 
 export const revalidate = 1800
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/dispensary" },
-  openGraph: { type: "website", title: TITLE, description: DESCRIPTION, url: "/dispensary" },
+  openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/dispensary" }),
 }
 
 export default async function DispensaryListPage() {

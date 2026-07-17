@@ -5,6 +5,7 @@ import { getInventoryByDispensary } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
 import { storeJsonLd } from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { MenuClient } from "../../menu/menu-client"
@@ -36,12 +37,11 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/dispensary/${slug}` },
-    openGraph: {
-      type: "website",
+    openGraph: pageOpenGraph({
       title,
       description,
       url: `/dispensary/${slug}`,
-    },
+    }),
   }
 }
 
@@ -97,12 +97,16 @@ export default async function DispensaryDetailPage({
         }
       />
 
-      <p className="text-muted-foreground max-w-2xl mb-6 -mt-2">
-        Full recreational cannabis menu for {dispensary.name}
-        {dispensary.city ? ` in ${dispensary.city}, RI` : " in Rhode Island"} —
-        compare live prices, potency, and deals. Menus refresh throughout the
-        day.
-      </p>
+      {/* Keyword intro only when there IS a live menu — otherwise it would
+          contradict the empty state below and get ISR-cached that way. */}
+      {dispensaryListings.length > 0 && (
+        <p className="text-muted-foreground max-w-2xl mb-6 -mt-2">
+          Full recreational cannabis menu for {dispensary.name}
+          {dispensary.city ? ` in ${dispensary.city}, RI` : " in Rhode Island"} —
+          compare live prices, potency, and deals. Menus refresh throughout the
+          day.
+        </p>
+      )}
 
       {dispensaryListings.length > 0 ? (
         <MenuClient
