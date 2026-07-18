@@ -4,6 +4,7 @@ import {
   HOMEPAGE_CATEGORIES,
 } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
+import { CategoryNav } from "@/components/layout/category-nav"
 import { JsonLd } from "@/components/seo/json-ld"
 import {
   collectionPageJsonLd,
@@ -82,11 +83,13 @@ export default async function CategoryPage({
         description={`${listings.length.toLocaleString()} ${category.label.toLowerCase()} across Rhode Island dispensaries`}
       />
 
-      <p className="text-muted-foreground max-w-2xl mb-6 -mt-2">
+      <p className="text-muted-foreground max-w-2xl mb-4 -mt-2">
         Compare {category.label.toLowerCase()} prices, potency, and deals from
         every Rhode Island dispensary in one place. Menus refresh throughout the
         day.
       </p>
+
+      <CategoryNav activeSlug={slug} />
 
       {listings.length > 0 ? (
         <MenuClient listings={listings} headingLabel={category.label} />
