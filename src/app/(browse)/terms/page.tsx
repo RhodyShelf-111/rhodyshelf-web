@@ -1,8 +1,23 @@
 import { PageContainer } from "@/components/layout/page-container"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
+
+// ISR so the footer (async, fetches dispensaries) can self-heal instead of
+// baking a degraded or stale dispensary column into a build-time-only page.
+export const revalidate = 86400
+
+const DESCRIPTION =
+  "RhodyShelf terms of use: an informational cannabis menu service for adults 21+ in Rhode Island. Not a dispensary."
 
 export const metadata: Metadata = {
   title: "Terms of Use",
+  description: DESCRIPTION,
+  alternates: { canonical: "/terms" },
+  openGraph: pageOpenGraph({
+    title: "Terms of Use",
+    description: DESCRIPTION,
+    url: "/terms",
+  }),
 }
 
 export default function TermsPage() {

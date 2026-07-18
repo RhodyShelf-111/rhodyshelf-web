@@ -37,27 +37,31 @@ export function ProductFiltersPanel({
 
   return (
     <div className="space-y-6">
-      {/* Category */}
-      <FilterSection title="Category">
-        {categories.map((cat) => (
-          <FilterRadio
-            key={cat}
-            name="category"
-            checked={filters.category === cat}
-            onChange={() =>
-              onFilterChange("category", filters.category === cat ? undefined : cat)
-            }
-            label={cat}
-            labelClassName="capitalize"
-          />
-        ))}
-      </FilterSection>
+      {/* Category — hidden when the listing set is a single category (e.g. a
+          /category/[slug] page), where it's a one-option, no-op control. Those
+          pages use the CategoryNav chips to switch categories instead. */}
+      {categories.length > 1 && (
+        <FilterSection title="Category">
+          {categories.map((cat) => (
+            <FilterRadio
+              key={cat}
+              name="category"
+              checked={filters.category === cat}
+              onChange={() =>
+                onFilterChange("category", filters.category === cat ? undefined : cat)
+              }
+              label={cat}
+              labelClassName="capitalize"
+            />
+          ))}
+        </FilterSection>
+      )}
 
       {/* Brand — hidden when the listing set is a single brand (e.g. a brand
           page), where filtering by brand is dead UI. */}
       {brands.length > 1 && (
         <>
-          <Separator />
+          {categories.length > 1 && <Separator />}
 
           <FilterSection title="Brand">
             {/* No text-sm override: the Input's base is text-base (16px) on
@@ -93,7 +97,7 @@ export function ProductFiltersPanel({
           detail page), where it's a one-option, no-op control. */}
       {dispensaries.length > 1 && (
         <>
-          <Separator />
+          {(categories.length > 1 || brands.length > 1) && <Separator />}
 
           <FilterSection title="Dispensary">
             {dispensaries.map((d) => (

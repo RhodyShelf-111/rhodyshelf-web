@@ -53,7 +53,11 @@ export default async function HomePage() {
             {sections.map((section) => (
               <Link
                 key={section.key}
-                href={`/search?category=${encodeURIComponent(section.key)}`}
+                href={`/category/${section.key}`}
+                // No prefetch: these chips are in-viewport on load and the
+                // category pages carry the site's largest RSC payloads —
+                // default prefetch would download all 7 on every home visit.
+                prefetch={false}
                 className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span aria-hidden="true">{getCategoryIcon(section.key)}</span>

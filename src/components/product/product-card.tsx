@@ -10,6 +10,12 @@ import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { rememberListing } from "@/lib/listing-cache"
 
+/** How many leading grid cards get the eager/high-fetch-priority image hint.
+ *  Roughly one viewport row on desktop (5 cols) / three on mobile (2 cols) —
+ *  enough for the LCP candidate without defeating lazy loading below the fold.
+ *  Shared by ProductGrid and the search results grid so they can't drift. */
+export const EAGER_IMAGE_COUNT = 6
+
 interface ProductCardProps {
   listing: InventoryListing
   dropBadge?: { label: string; className: string } | null
@@ -20,6 +26,9 @@ interface ProductCardProps {
    *  out of stock, and summarize how many dispensaries carry it. Omitted
    *  everywhere else, so those cards render exactly as before. */
   stock?: { inStock: boolean; dispensaryCount: number }
+  /** Above-the-fold cards on listing pages: load the image eagerly with high
+   *  fetch priority so it can win LCP instead of being lazy-deferred. */
+  eager?: boolean
 }
 
 export function ProductCard({
@@ -27,6 +36,7 @@ export function ProductCard({
   dropBadge,
   showDispensary = true,
   stock,
+  eager = false,
 }: ProductCardProps) {
   const {
     product,
@@ -95,6 +105,11 @@ export function ProductCard({
             src={imageUrl}
             alt={product.name}
             fill
+            // Deprecated `priority`/`preload` avoided: multiple grid images can
+            // be the LCP depending on viewport, so per-image eager loading +
+            // high fetch priority on the first row is the recommended hint.
+            loading={eager ? "eager" : undefined}
+            fetchPriority={eager ? "high" : "auto"}
             className={cn(
               "object-contain p-3",
               outOfStock && "grayscale opacity-50"

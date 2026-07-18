@@ -3,15 +3,25 @@ import { getDeals } from "@/lib/queries/products"
 import { MenuClient } from "../menu/menu-client"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
+import { JsonLd } from "@/components/seo/json-ld"
+import {
+  collectionPageJsonLd,
+  ITEM_LIST_MAX,
+} from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
 
 export const revalidate = 900
 
+const TITLE = "Cannabis Deals — Rhode Island Dispensaries"
+const DESCRIPTION =
+  "Cannabis deals and discounts across Rhode Island dispensaries. Find products on sale right now, ranked by discount."
+
 export const metadata: Metadata = {
-  title: "Deals",
-  description:
-    "Cannabis deals and discounts across Rhode Island dispensaries. Find products on sale now.",
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: "/deals" },
+  openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/deals" }),
 }
 
 export default async function DealsPage() {
@@ -20,6 +30,15 @@ export default async function DealsPage() {
 
   return (
     <PageContainer className="py-6 md:py-8">
+      <JsonLd
+        data={collectionPageJsonLd({
+          name: TITLE,
+          description: DESCRIPTION,
+          path: "/deals",
+          itemCount: total,
+          itemPaths: deals.slice(0, ITEM_LIST_MAX).map((l) => `/product/${l.id}`),
+        })}
+      />
       <PageHeading
         title="Deals"
         description={
@@ -33,7 +52,11 @@ export default async function DealsPage() {
       />
 
       {deals.length > 0 ? (
-        <MenuClient listings={deals} defaultSort="discount-desc" />
+        <MenuClient
+          listings={deals}
+          defaultSort="discount-desc"
+          headingLabel="Deals"
+        />
       ) : (
         <div className="text-center py-16">
           <p className="text-lg font-medium text-foreground mb-2">

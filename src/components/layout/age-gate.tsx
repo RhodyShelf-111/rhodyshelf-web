@@ -194,6 +194,7 @@ export function AgeGate() {
             <a
               ref={leaveRef}
               href="https://www.google.com"
+              rel="nofollow noopener"
               className="inline-flex min-h-[44px] items-center gap-2 px-4 py-3 text-sm text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded-lg"
             >
               Leave this site &rarr;

@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation"
+import { permanentRedirect } from "next/navigation"
 
 export default async function MenuPage({
   searchParams,
@@ -26,5 +26,7 @@ export default async function MenuPage({
   if (sale) params.set("sale", sale)
 
   const qs = params.toString()
-  redirect(`/search${qs ? `?${qs}` : ""}`)
+  // 308 permanent: /menu is a legacy route fully replaced by /search, so
+  // consolidate it rather than signalling a temporary move.
+  permanentRedirect(`/search${qs ? `?${qs}` : ""}`)
 }

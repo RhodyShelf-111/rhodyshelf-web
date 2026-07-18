@@ -10,6 +10,7 @@ import {
   Store,
   Percent,
   Sparkles,
+  Tags,
   ChevronRight,
   type LucideIcon,
 } from "lucide-react"
@@ -31,6 +32,7 @@ type NavLink = {
 const NAV_LINKS: NavLink[] = [
   { href: "/search", label: "Search", desc: "Find any product", icon: Search },
   { href: "/dispensary", label: "Dispensaries", desc: "All 9 RI shops", icon: Store },
+  { href: "/brand", label: "Brands", desc: "Browse by brand", icon: Tags },
   { href: "/deals", label: "Deals", desc: "Today's price drops", icon: Percent },
   { href: "/drops", label: "Drops", desc: "Just added", icon: Sparkles },
 ]

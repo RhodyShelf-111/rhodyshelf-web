@@ -13,7 +13,7 @@ import { buildSearchParams } from "@/lib/search-params"
 import { FilterBar } from "@/components/search/filter-bar"
 import { BrandGroup } from "@/components/search/brand-group"
 import { HeroSearch } from "@/components/search/hero-search"
-import { ProductCard } from "@/components/product/product-card"
+import { ProductCard, EAGER_IMAGE_COUNT } from "@/components/product/product-card"
 import { resolveAlias } from "@/lib/brand-aliases"
 
 interface SearchClientProps {
@@ -220,8 +220,12 @@ export function SearchClient({
           // Flat grid: keyword search or brand filter — show every match,
           // dense and easy to scan, in the server's sort order.
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
-            {listings.map((listing) => (
-              <ProductCard key={listing.id} listing={listing} />
+            {listings.map((listing, index) => (
+              <ProductCard
+                key={listing.id}
+                listing={listing}
+                eager={index < EAGER_IMAGE_COUNT}
+              />
             ))}
           </div>
         ) : (

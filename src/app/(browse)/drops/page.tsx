@@ -3,15 +3,25 @@ import { getDrops } from "@/lib/queries/products"
 import { DropsClient } from "./drops-client"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
+import { JsonLd } from "@/components/seo/json-ld"
+import {
+  collectionPageJsonLd,
+  ITEM_LIST_MAX,
+} from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import type { Metadata } from "next"
 
 export const revalidate = 3600 // 1 hour
 
+const TITLE = "New Cannabis Drops — Rhode Island Dispensaries"
+const DESCRIPTION =
+  "Newly added cannabis products across Rhode Island dispensaries. See what just hit the shelves in the last 14 days."
+
 export const metadata: Metadata = {
-  title: "New Drops",
-  description:
-    "Newly added cannabis products across Rhode Island dispensaries. See what just hit the shelves.",
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: "/drops" },
+  openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/drops" }),
 }
 
 export default async function DropsPage() {
@@ -20,6 +30,15 @@ export default async function DropsPage() {
 
   return (
     <PageContainer className="py-6 md:py-8">
+      <JsonLd
+        data={collectionPageJsonLd({
+          name: TITLE,
+          description: DESCRIPTION,
+          path: "/drops",
+          itemCount: drops.length,
+          itemPaths: drops.slice(0, ITEM_LIST_MAX).map((d) => `/product/${d.id}`),
+        })}
+      />
       <PageHeading
         title="New Drops"
         description="Products added in the last 14 days"

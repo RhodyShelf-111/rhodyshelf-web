@@ -5,11 +5,13 @@ import {
   getListingById,
   getInventoryByBrand,
   getBrands,
+  HOMEPAGE_CATEGORIES,
 } from "@/lib/queries/products"
 import { formatPrice, formatRelativeTime } from "@/lib/utils"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
 import { productJsonLd } from "@/lib/seo/structured-data"
+import { pageOpenGraph } from "@/lib/seo/og"
 import { PageContainer } from "@/components/layout/page-container"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductCard } from "@/components/product/product-card"
@@ -35,13 +37,12 @@ export async function generateMetadata({
     title: `${listing.product.name} — ${listing.product.brand_name}`,
     description,
     alternates: { canonical: `/product/${id}` },
-    openGraph: {
-      type: "website",
+    openGraph: pageOpenGraph({
       title: `${listing.product.name} — ${listing.product.brand_name}`,
       description,
       url: `/product/${id}`,
-      images: image ? [image] : undefined,
-    },
+      ...(image ? { images: [image] } : {}),
+    }),
   }
 }
 
@@ -95,6 +96,15 @@ export default async function ProductPage({
     ? `/brand/${brandRow.slug}`
     : `/search?brand=${encodeURIComponent(product.brand_name)}`
 
+  // Link the category crumb to the indexable /category page when it's one of
+  // the known landing categories; otherwise fall back to the (noindex) search
+  // filter so crumbs for niche categories (tincture, other) never 404.
+  const categoryKey = product.category.toLowerCase()
+  const hasCategoryPage = HOMEPAGE_CATEGORIES.some((c) => c.key === categoryKey)
+  const categoryHref = hasCategoryPage
+    ? `/category/${categoryKey}`
+    : `/search?category=${encodeURIComponent(product.category)}`
+
   return (
     <PageContainer className="max-w-5xl py-6 md:py-8">
       <JsonLd data={productJsonLd(listing)} />
@@ -104,7 +114,7 @@ export default async function ProductPage({
             name:
               product.category.charAt(0).toUpperCase() +
               product.category.slice(1),
-            href: `/search?category=${encodeURIComponent(product.category)}`,
+            href: categoryHref,
           },
           { name: product.name, href: `/product/${id}` },
         ]}
