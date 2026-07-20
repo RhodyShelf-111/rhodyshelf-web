@@ -155,4 +155,34 @@ describe("organization/website graph", () => {
     const org = organizationJsonLd()
     expect(org.contactPoint).toMatchObject({ email: "hello@rhodyshelf.com" })
   })
+
+  it("claims the official social profiles via sameAs", () => {
+    const org = organizationJsonLd()
+    // Google reads sameAs to bind the site to its social accounts; the URL must
+    // match the one the footer actually links or the association is dropped.
+    expect(org.sameAs).toContain("https://www.instagram.com/rhodyshelf")
+  })
+
+  it("emits sameAs as an array of absolute profile URLs", () => {
+    const org = organizationJsonLd()
+    // toContain() above passes for a bare string too, but schema.org sameAs is
+    // consumed as a list — pin the shape so a future profile appends rather
+    // than overwrites, and reject relative URLs (crawlers drop them).
+    expect(Array.isArray(org.sameAs)).toBe(true)
+    expect(org.sameAs).toEqual(["https://www.instagram.com/rhodyshelf"])
+    for (const url of org.sameAs as string[]) {
+      expect(url).toMatch(/^https:\/\//)
+    }
+  })
+
+  it("hands each caller its own sameAs array", () => {
+    // sameAs is spread from a module-scope constant that outlives every request
+    // in a long-running server. Returning the shared reference would let one
+    // caller mutating org.sameAs corrupt the JSON-LD on every later render.
+    const first = organizationJsonLd()
+    const second = organizationJsonLd()
+    expect(first.sameAs).not.toBe(second.sameAs)
+    ;(first.sameAs as string[]).push("https://evil.example/injected")
+    expect(second.sameAs).toEqual(["https://www.instagram.com/rhodyshelf"])
+  })
 })
