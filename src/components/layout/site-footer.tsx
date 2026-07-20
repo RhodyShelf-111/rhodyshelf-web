@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { PageContainer } from "./page-container"
+import { SocialLinks } from "./social-links"
 import { getDispensaries } from "@/lib/queries/dispensaries"
 import { HOMEPAGE_CATEGORIES } from "@/lib/queries/products"
 
@@ -27,6 +28,7 @@ export async function SiteFooter() {
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
               Rhode Island cannabis menus, prices, and deals — all in one place.
             </p>
+            <SocialLinks className="mt-2" />
           </div>
 
           {/* Browse by category */}
