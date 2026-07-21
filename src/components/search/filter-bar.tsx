@@ -139,7 +139,10 @@ export function FilterBar({
       />
 
       {activeCount > 0 && (
-        <button onClick={onClear} className="text-sm text-primary hover:underline">
+        <button
+          onClick={onClear}
+          className="inline-flex min-h-11 items-center text-sm text-primary hover:underline"
+        >
           Clear all filters
         </button>
       )}

@@ -63,7 +63,10 @@ export function OnSaleToggle({
   label?: string
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer">
+    // min-h-11: a 44px touch row — the visual switch is 24px tall, and
+    // without the taller hit area it was the one sub-44px control left in
+    // the mobile filter sheet.
+    <label className="flex min-h-11 items-center gap-3 cursor-pointer">
       <div
         role="switch"
         aria-checked={checked}
