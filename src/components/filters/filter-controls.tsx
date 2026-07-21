@@ -65,13 +65,18 @@ export function OnSaleToggle({
   return (
     // min-h-11: a 44px touch row — the visual switch is 24px tall, and
     // without the taller hit area it was the one sub-44px control left in
-    // the mobile filter sheet.
-    <label className="flex min-h-11 items-center gap-3 cursor-pointer">
+    // the mobile filter sheet. The click lives on the row and the name on
+    // aria-label because a role="switch" div isn't labelable: a wrapping
+    // <label> alone neither makes the text tappable nor names the switch.
+    <label
+      className="flex min-h-11 items-center gap-3 cursor-pointer"
+      onClick={onChange}
+    >
       <div
         role="switch"
         aria-checked={checked}
+        aria-label={label}
         tabIndex={0}
-        onClick={onChange}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault()
