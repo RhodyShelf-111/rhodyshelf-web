@@ -128,6 +128,7 @@ export function ProductGrid({
                 the search page. */}
             {showFilters && (
               <FilterSheet
+                resultCount={filtered.length}
                 triggerClassName="lg:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
                 trigger={
                   <>

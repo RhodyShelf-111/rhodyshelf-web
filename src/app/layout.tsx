@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Space_Grotesk } from "next/font/google"
+import { AgeGate } from "@/components/layout/age-gate"
 import "./globals.css"
 
 // Display/heading face. Exposed as --font-display and mapped onto the
@@ -88,6 +89,13 @@ export default function RootLayout({
       className={`dark h-full antialiased ${display.variable}`}
     >
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground">
+        {/* Age gate lives at the root so it wraps *every* route — browse pages,
+            and just as importantly the root 404 (which renders the marketing
+            footer, now carrying a social link) and any unmatched URL, none of
+            which inherit the (browse) layout. It's a client component that
+            reads the verification cookie via document.cookie and uses no server
+            request APIs, so all routes stay static/ISR-cacheable. */}
+        <AgeGate />
         {children}
       </body>
     </html>
