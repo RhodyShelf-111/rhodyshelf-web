@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import { SlidersHorizontal, ChevronDown, X } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import { FilterSheet } from "@/components/filters/filter-sheet"
 import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
 import { cn, getCategoryIcon } from "@/lib/utils"
 import type { ProductFilters, Dispensary } from "@/lib/types"
 
@@ -76,14 +78,16 @@ export function FilterBar({
         </div>
       </FilterSection>
 
-      {/* Brand */}
+      <Separator />
+
+      {/* Brand — the shared Input primitive, same control as the grid
+          sheet's brand search (16px base so iOS doesn't zoom on focus). */}
       <FilterSection title="Brand">
-        <input
-          type="text"
+        <Input
           placeholder="Search brands..."
           value={brandSearch}
           onChange={(e) => setBrandSearch(e.target.value)}
-          className="w-full h-11 px-3 text-base rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+          className="h-11"
         />
         <div className="max-h-64 overflow-y-auto overscroll-contain space-y-1 mt-2">
           {filteredBrands.map((brand) => (
@@ -100,6 +104,8 @@ export function FilterBar({
           ))}
         </div>
       </FilterSection>
+
+      <Separator />
 
       {/* Dispensary */}
       <FilterSection title="Dispensary">
@@ -119,6 +125,8 @@ export function FilterBar({
         ))}
       </FilterSection>
 
+      <Separator />
+
       {/* Sort */}
       <FilterSection title="Sort">
         {SORT_OPTIONS.map((opt) => (
@@ -132,6 +140,8 @@ export function FilterBar({
         ))}
       </FilterSection>
 
+      <Separator />
+
       {/* On Sale */}
       <OnSaleToggle
         checked={!!filters.onSale}
@@ -139,7 +149,10 @@ export function FilterBar({
       />
 
       {activeCount > 0 && (
-        <button onClick={onClear} className="text-sm text-primary hover:underline">
+        <button
+          onClick={onClear}
+          className="inline-flex min-h-11 items-center text-sm text-primary hover:underline"
+        >
           Clear all filters
         </button>
       )}
@@ -348,22 +361,24 @@ export function FilterBar({
           On Sale
         </button>
 
-        {/* Mobile filter sheet */}
-        <Sheet>
-          <SheetTrigger className="md:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors">
-            <SlidersHorizontal className="w-4 h-4" />
-            Filters
-            {activeCount > 0 && (
-              <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
-                {activeCount}
-              </span>
-            )}
-          </SheetTrigger>
-          <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
-            <SheetTitle className="text-lg font-bold mb-4">Filters</SheetTitle>
-            {mobileFilters}
-          </SheetContent>
-        </Sheet>
+        {/* Mobile filter sheet — shared FilterSheet chrome (handle, aligned
+            header, swipe-to-dismiss), same as the grid pages. */}
+        <FilterSheet
+          triggerClassName="md:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+          trigger={
+            <>
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
+              {activeCount > 0 && (
+                <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
+                  {activeCount}
+                </span>
+              )}
+            </>
+          }
+        >
+          {mobileFilters}
+        </FilterSheet>
       </div>
 
       {/* Row 2: Category chips + on sale chip */}
@@ -430,7 +445,10 @@ function FilterSection({
 }) {
   return (
     <div>
-      <h4 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+      {/* Same label treatment as ProductFiltersPanel's sections — the two
+          hosts share the sheet chrome, so their internals should read as one
+          pattern. */}
+      <h4 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
         {title}
       </h4>
       <div className="space-y-2">{children}</div>

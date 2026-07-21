@@ -6,7 +6,7 @@ import { ProductCard, EAGER_IMAGE_COUNT } from "./product-card"
 import { ProductFiltersPanel } from "./product-filters"
 import { ProductSort } from "./product-sort"
 import { applyFilters, deriveFacetOptions } from "@/lib/filter-utils"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import { FilterSheet } from "@/components/filters/filter-sheet"
 import { Button } from "@/components/ui/button"
 import { SlidersHorizontal } from "lucide-react"
 
@@ -123,33 +123,26 @@ export function ProductGrid({
               onChange={(sort) => updateFilter("sort", sort)}
             />
 
-            {/* Mobile filter button */}
+            {/* Mobile filter button — FilterSheet is the one bottom-sheet
+                chrome (handle, aligned header, swipe-to-dismiss) shared with
+                the search page. */}
             {showFilters && (
-              <Sheet>
-                <SheetTrigger
-                  className="lg:hidden inline-flex items-center gap-1.5 px-3 h-11 text-sm font-medium rounded-[min(var(--radius-md),12px)] border border-border bg-background hover:bg-muted transition-all"
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </SheetTrigger>
-                {/* Bottom sheet to match the search filter UX (was a left
-                    drawer) — one consistent mobile filter pattern across the
-                    deals/drops grid and search. */}
-                <SheetContent
-                  side="bottom"
-                  className="max-h-[85dvh] overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))]"
-                >
-                  <SheetTitle className="font-heading text-lg font-bold mb-4">
+              <FilterSheet
+                triggerClassName="lg:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                trigger={
+                  <>
+                    <SlidersHorizontal className="w-4 h-4" />
                     Filters
-                  </SheetTitle>
-                  {filterPanel}
-                </SheetContent>
-              </Sheet>
+                    {activeFilterCount > 0 && (
+                      <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </>
+                }
+              >
+                {filterPanel}
+              </FilterSheet>
             )}
           </div>
         </div>
