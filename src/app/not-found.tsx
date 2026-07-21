@@ -1,6 +1,16 @@
+import type { Metadata } from "next"
 import { SiteHeader } from "@/components/layout/site-header"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { NotFoundContent } from "@/components/layout/not-found-content"
+
+// Without this, a bare unmatched-URL 404 inherits the root layout's default
+// title ("RhodyShelf — Rhode Island Cannabis Menus & Deals"), which reads as a
+// real page in the tab/history. The not-found boundary is resolved outside the
+// layout's title template, so this renders as a bare "Page not found" (no
+// "| RhodyShelf" suffix) — which is what we want for a 404.
+export const metadata: Metadata = {
+  title: "Page not found",
+}
 
 export default function NotFound() {
   // Root-level not-found sits outside the (browse) group, so it doesn't inherit

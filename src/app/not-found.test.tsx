@@ -12,9 +12,13 @@ vi.mock("@/components/layout/site-footer", () => ({
   SiteFooter: () => <footer data-testid="site-footer" />,
 }))
 
-import NotFound from "./not-found"
+import NotFound, { metadata } from "./not-found"
 
 describe("root not-found", () => {
+  it("titles the tab 'Page not found' so a bare 404 doesn't inherit the homepage title", () => {
+    expect(metadata.title).toBe("Page not found")
+  })
+
   it("is self-chromed with exactly one header, footer, and main", () => {
     const { container } = render(<NotFound />)
 

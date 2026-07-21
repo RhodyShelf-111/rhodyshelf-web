@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
-import BrowseNotFound from "./not-found"
+import BrowseNotFound, { metadata } from "./not-found"
 
 // For the composed test below, the (browse) layout drags in a client SiteHeader,
 // an async Supabase-querying SiteFooter, and the AgeGate — none render in jsdom.
@@ -20,6 +20,10 @@ vi.mock("@/components/layout/age-gate", () => ({
 import BrowseLayout from "./layout"
 
 describe("(browse) not-found", () => {
+  it("titles in-group 404s 'Page not found' (overrides the throwing page's own title)", () => {
+    expect(metadata.title).toBe("Page not found")
+  })
+
   it("renders the 404 body with no chrome of its own — the browse layout supplies the single header/footer", () => {
     const { container } = render(<BrowseNotFound />)
 
