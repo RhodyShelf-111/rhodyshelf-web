@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
 import type { ProductFilters, Dispensary } from "@/lib/types"
-import { useState } from "react"
+import { useId, useState } from "react"
 
 interface ProductFiltersPanelProps {
   filters: ProductFilters
@@ -28,6 +28,12 @@ export function ProductFiltersPanel({
   onFilterChange,
 }: ProductFiltersPanelProps) {
   const [brandSearch, setBrandSearch] = useState("")
+  // Radio-group names must be unique PER PANEL INSTANCE: the grid mounts this
+  // panel twice at once (CSS-hidden desktop sidebar + mobile sheet). With a
+  // shared name, checking a radio in the sheet makes React's controlled-input
+  // restore re-check the sidebar twin, which natively unchecks the radio the
+  // user just tapped — the sheet then shows no selection until reopened.
+  const uid = useId()
 
   const filteredBrands = brandSearch
     ? brands.filter((b) =>
@@ -45,7 +51,7 @@ export function ProductFiltersPanel({
           {categories.map((cat) => (
             <FilterRadio
               key={cat}
-              name="category"
+              name={`${uid}category`}
               checked={filters.category === cat}
               onChange={() =>
                 onFilterChange("category", filters.category === cat ? undefined : cat)
@@ -76,7 +82,7 @@ export function ProductFiltersPanel({
               {filteredBrands.slice(0, 20).map((brand) => (
                 <FilterRadio
                   key={brand}
-                  name="brand"
+                  name={`${uid}brand`}
                   checked={filters.brand === brand}
                   onChange={() =>
                     onFilterChange(
@@ -103,7 +109,7 @@ export function ProductFiltersPanel({
             {dispensaries.map((d) => (
               <FilterRadio
                 key={d.slug}
-                name="dispensary"
+                name={`${uid}dispensary`}
                 checked={filters.dispensary === d.slug}
                 onChange={() =>
                   onFilterChange(
@@ -125,7 +131,7 @@ export function ProductFiltersPanel({
         {strainTypes.map((st) => (
           <FilterRadio
             key={st}
-            name="strainType"
+            name={`${uid}strainType`}
             checked={filters.strainType === st}
             onChange={() =>
               onFilterChange(
