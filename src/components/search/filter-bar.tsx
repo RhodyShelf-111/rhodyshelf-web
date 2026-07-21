@@ -42,9 +42,18 @@ export function FilterBar({
   const toggle = (name: OpenDropdown) =>
     setOpenDropdown((prev) => (prev === name ? null : name))
 
+  // The list may be narrowed to the active category/dispensary scope — keep
+  // the selected brand in it regardless, so it can be seen and unchecked.
+  const brandOptions =
+    filters.brand && !brands.includes(filters.brand)
+      ? [...brands, filters.brand].sort()
+      : brands
+
   const filteredBrands = brandSearch
-    ? brands.filter((b) => b.toLowerCase().includes(brandSearch.toLowerCase()))
-    : brands
+    ? brandOptions.filter((b) =>
+        b.toLowerCase().includes(brandSearch.toLowerCase())
+      )
+    : brandOptions
 
   const activeCount = Object.values(filters).filter(
     (v) => v != null && v !== "" && v !== false
@@ -77,7 +86,7 @@ export function FilterBar({
           className="w-full h-11 px-3 text-base rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
         />
         <div className="max-h-64 overflow-y-auto overscroll-contain space-y-1 mt-2">
-          {filteredBrands.slice(0, 20).map((brand) => (
+          {filteredBrands.map((brand) => (
             <FilterRadio
               key={brand}
               name="brand-mobile"
@@ -206,7 +215,7 @@ export function FilterBar({
                 onClick={(e) => e.stopPropagation()}
               />
               <div className="max-h-48 overflow-y-auto space-y-0.5">
-                {filteredBrands.slice(0, 30).map((brand) => (
+                {filteredBrands.map((brand) => (
                   <button
                     key={brand}
                     onClick={() => {
