@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import type { InventoryListing, ProductFilters } from "@/lib/types"
 import { ProductCard, EAGER_IMAGE_COUNT } from "./product-card"
 import { ProductFiltersPanel } from "./product-filters"
@@ -18,6 +18,12 @@ interface ProductGridProps {
   dropBadges?: Map<string, { label: string; className: string }>
   /** Forwarded to each ProductCard; false on single-dispensary pages. */
   showDispensary?: boolean
+  /**
+   * Reports the filters after every user change (never for the initial
+   * state), so a host can mirror them elsewhere — MenuClient writes them
+   * into the URL.
+   */
+  onFiltersChange?: (filters: ProductFilters) => void
 }
 
 export function ProductGrid({
@@ -27,9 +33,19 @@ export function ProductGrid({
   pageSize = 50,
   dropBadges,
   showDispensary = true,
+  onFiltersChange,
 }: ProductGridProps) {
   const [filters, setFilters] = useState<ProductFilters>(initialFilters)
   const [displayCount, setDisplayCount] = useState(pageSize)
+
+  // Mirror filter state up — but never the untouched initial state (reference
+  // check): on first mount MenuClient hasn't read the URL params yet, and a
+  // mount-time report would overwrite them with the empty defaults. Also
+  // holds across StrictMode re-runs and the host's remount-by-key.
+  useEffect(() => {
+    if (filters === initialFilters) return
+    onFiltersChange?.(filters)
+  }, [filters, initialFilters, onFiltersChange])
 
   const filtered = useMemo(() => applyFilters(listings, filters), [listings, filters])
   const displayed = filtered.slice(0, displayCount)
