@@ -7,6 +7,12 @@ vi.mock("@/lib/supabase/service-client", () => ({
   createServiceClient: vi.fn(),
 }))
 
+// CategoryNavLink calls useRouter, which needs an app-router context that
+// jsdom renders don't have.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}))
+
 import { CategoryNav } from "./category-nav"
 
 describe("CategoryNav", () => {
