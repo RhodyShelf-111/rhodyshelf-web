@@ -13,6 +13,7 @@ import type {
   SearchPage,
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
+import { brandNamesFromIndex, type CatalogIndexRow } from "@/lib/filter-utils"
 
 export const SEARCH_PAGE_SIZE = 96
 
@@ -72,23 +73,23 @@ function assertNoError(error: { message: string } | null, context: string) {
 }
 
 /**
- * The light catalog index: id + category + brand for every fresh listing.
- * One cached fetch powers homepage sampling, category counts, the brand
- * autocomplete list, and the search filter options — without ever shipping
- * the full catalog to the browser.
+ * The light catalog index: id + category + brand + dispensary slug for every
+ * fresh listing. One cached fetch powers homepage sampling, category counts,
+ * the brand autocomplete list, and the search filter options — without ever
+ * shipping the full catalog to the browser.
  */
 const getCatalogIndex = unstable_cache(
-  async (): Promise<{ id: string; category: string; brand: string }[]> => {
+  async (): Promise<CatalogIndexRow[]> => {
     const client = createServiceClient()
     const PAGE_SIZE = 1000
-    const rows: { id: string; category: string; brand: string }[] = []
+    const rows: CatalogIndexRow[] = []
     let from = 0
 
     while (true) {
       const { data, error } = await client
         .from("current_inventory")
         .select(
-          "id, product:product_id!inner(category, brand_name), dispensary:dispensary_id!inner(id)"
+          "id, product:product_id!inner(category, brand_name), dispensary:dispensary_id!inner(id, slug)"
         )
         .gt("last_seen_at", freshnessCutoff())
         .eq("dispensary.is_active", true)
@@ -101,10 +102,12 @@ const getCatalogIndex = unstable_cache(
           category: string
           brand_name: string
         }
+        const dispensary = row.dispensary as unknown as { slug: string }
         rows.push({
           id: row.id as string,
           category: product.category.toLowerCase(),
           brand: product.brand_name,
+          dispensary: dispensary.slug,
         })
       }
       if (data.length < PAGE_SIZE) break
@@ -113,14 +116,28 @@ const getCatalogIndex = unstable_cache(
 
     return rows
   },
-  ["catalog-index-v1"],
+  // v2: rows gained the dispensary slug — a new key so stale v1 entries
+  // (without it) can't serve the scoped brand facet.
+  ["catalog-index-v2"],
   { revalidate: 1800, tags: ["inventory"] }
 )
 
 /** Unique brand names with fresh inventory, sorted — for autocomplete and filters. */
 export async function getBrandNames(): Promise<string[]> {
+  return getBrandNamesFor({})
+}
+
+/**
+ * Brand names narrowed to a search scope: only brands with fresh inventory
+ * matching the given category/dispensary, so the search page's brand facet
+ * never offers a brand that would land on an empty result set.
+ */
+export async function getBrandNamesFor(scope: {
+  category?: string
+  dispensary?: string
+}): Promise<string[]> {
   const index = await getCatalogIndex()
-  return [...new Set(index.map((r) => r.brand))].sort()
+  return brandNamesFromIndex(index, scope)
 }
 
 /** Unique categories with fresh inventory, sorted — for filter chips. */

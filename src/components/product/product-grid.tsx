@@ -5,7 +5,7 @@ import type { InventoryListing, ProductFilters } from "@/lib/types"
 import { ProductCard, EAGER_IMAGE_COUNT } from "./product-card"
 import { ProductFiltersPanel } from "./product-filters"
 import { ProductSort } from "./product-sort"
-import { applyFilters } from "@/lib/filter-utils"
+import { applyFilters, deriveFacetOptions } from "@/lib/filter-utils"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { SlidersHorizontal } from "lucide-react"
@@ -35,27 +35,16 @@ export function ProductGrid({
   const displayed = filtered.slice(0, displayCount)
   const hasMore = displayCount < filtered.length
 
-  // Extract unique values for filter options
-  const categories = useMemo(
-    () => [...new Set(listings.map((l) => l.product.category))].sort(),
-    [listings]
+  // Filter options narrow to the listings matching the OTHER active filters
+  // (faceted): pick a dispensary and the brand list only shows brands it
+  // stocks. Section visibility keys off the page's full listing set so a
+  // narrowed one-option list doesn't make its whole section vanish.
+  const facets = useMemo(
+    () => deriveFacetOptions(listings, filters),
+    [listings, filters]
   )
-  const brands = useMemo(
-    () => [...new Set(listings.map((l) => l.product.brand_name))].sort(),
-    [listings]
-  )
-  const dispensaries = useMemo(
-    () =>
-      [...new Map(listings.map((l) => [l.dispensary.slug, l.dispensary])).values()].sort(
-        (a, b) => a.name.localeCompare(b.name)
-      ),
-    [listings]
-  )
-  const strainTypes = useMemo(
-    () =>
-      [...new Set(listings.map((l) => l.product.strain_type).filter(Boolean))].sort() as string[],
-    [listings]
-  )
+  const pageFacets = useMemo(() => deriveFacetOptions(listings, {}), [listings])
+  const { categories, brands, dispensaries, strainTypes } = facets
 
   const updateFilter = useCallback(
     (key: keyof ProductFilters, value: ProductFilters[keyof ProductFilters]) => {
@@ -81,6 +70,11 @@ export function ProductGrid({
       brands={brands}
       dispensaries={dispensaries}
       strainTypes={strainTypes}
+      visibleSections={{
+        category: pageFacets.categories.length > 1,
+        brand: pageFacets.brands.length > 1,
+        dispensary: pageFacets.dispensaries.length > 1,
+      }}
       onFilterChange={updateFilter}
       onClear={clearFilters}
     />

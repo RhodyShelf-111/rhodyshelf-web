@@ -112,4 +112,29 @@ describe("ProductGrid mobile filter sheet", () => {
 
     expect(radio).toBeChecked()
   })
+
+  it("narrows the brand options to what the selected dispensary stocks", () => {
+    render(<ProductGrid listings={listings} />)
+
+    const sheet = openFilterSheet()
+    // All three brands offered up front…
+    expect(within(sheet).getByRole("radio", { name: "Hi5" })).toBeInTheDocument()
+
+    fireEvent.click(
+      within(sheet).getByRole("radio", { name: "Sweetspot Exeter" })
+    )
+
+    // …then only Sweetspot Exeter's brands remain; Hi5 (Mother Earth only)
+    // would have produced an empty grid.
+    expect(within(sheet).queryByRole("radio", { name: "Hi5" })).toBeNull()
+    expect(
+      within(sheet).getByRole("radio", { name: "Lovewell Farms" })
+    ).toBeInTheDocument()
+    expect(
+      within(sheet).getByRole("radio", { name: "Sweetspot" })
+    ).toBeInTheDocument()
+    // The Brand section itself must not vanish even if narrowing left it
+    // with few options.
+    expect(within(sheet).getByText("Brand")).toBeInTheDocument()
+  })
 })

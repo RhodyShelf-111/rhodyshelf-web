@@ -21,7 +21,10 @@ interface SearchClientProps {
   initialListings: InventoryListing[]
   total: number
   pageSize: number
+  /** Full brand list — seeds the search box's instant suggestions. */
   brands: string[]
+  /** Brand facet narrowed to the active category/dispensary scope. */
+  brandOptions: string[]
   categories: string[]
   dispensaries: Dispensary[]
 }
@@ -37,6 +40,7 @@ export function SearchClient({
   total,
   pageSize,
   brands,
+  brandOptions,
   categories,
   dispensaries,
 }: SearchClientProps) {
@@ -195,7 +199,7 @@ export function SearchClient({
       <FilterBar
         filters={filters}
         categories={categories}
-        brands={brands}
+        brands={brandOptions}
         dispensaries={dispensaries}
         onFilterChange={updateFilter}
         onClear={clearFilters}

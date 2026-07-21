@@ -1,6 +1,7 @@
 import {
   searchListings,
   getBrandNames,
+  getBrandNamesFor,
   getCategories,
 } from "@/lib/queries/products"
 import { getDispensaries } from "@/lib/queries/dispensaries"
@@ -40,15 +41,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // /api/search with the same query shape. Each fetch degrades softly for
   // this one request on transient errors (the caches throw rather than
   // store degraded values).
-  const [page, brands, categories, dispensaries] = await Promise.all([
-    searchListings(query, 1).catch((e) => {
-      console.error(e)
-      return { listings: [], total: 0, pageSize: 96 }
-    }),
-    getBrandNames().catch(() => [] as string[]),
-    getCategories().catch(() => [] as string[]),
-    getDispensaries().catch(() => []),
-  ])
+  const [page, brands, brandOptions, categories, dispensaries] =
+    await Promise.all([
+      searchListings(query, 1).catch((e) => {
+        console.error(e)
+        return { listings: [], total: 0, pageSize: 96 }
+      }),
+      // Full brand list (autocomplete seed) and the facet list narrowed to
+      // the active category/dispensary — both read the same cached index.
+      getBrandNames().catch(() => [] as string[]),
+      getBrandNamesFor({
+        category: query.category,
+        dispensary: query.dispensary,
+      }).catch(() => [] as string[]),
+      getCategories().catch(() => [] as string[]),
+      getDispensaries().catch(() => []),
+    ])
 
   return (
     <PageContainer className="py-6 md:py-8">
@@ -68,6 +76,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         total={page.total}
         pageSize={page.pageSize}
         brands={brands}
+        brandOptions={brandOptions}
         categories={categories}
         dispensaries={dispensaries}
       />
