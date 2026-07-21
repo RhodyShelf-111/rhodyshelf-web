@@ -165,7 +165,20 @@ export function FilterSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          setOpen(true)
+        } else {
+          // Funnel EVERY close path — X, Escape, backdrop tap, swipe —
+          // through the same slide-out, so the sheet always leaves the way
+          // it can be flung. Without this, tap-closes got Base UI's short
+          // fade-rise while swipes slid the full height.
+          animateDismiss(0)
+        }
+      }}
+    >
       <SheetTrigger className={triggerClassName}>{trigger}</SheetTrigger>
       <SheetContent
         ref={popupRef}

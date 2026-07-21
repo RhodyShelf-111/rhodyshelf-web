@@ -112,11 +112,12 @@ describe("FilterSheet", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument()
   })
 
-  it("still closes from the header X", async () => {
-    const { dialog } = openSheet()
+  it("closes from the header X with the same slide-out as a swipe (one dismissal feel for every close path)", async () => {
+    const { dialog, popup } = openSheet()
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Close" }))
 
+    expect(popup.style.transform).toBe("translateY(100%)")
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 })
