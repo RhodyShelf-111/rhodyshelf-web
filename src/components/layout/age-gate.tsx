@@ -42,21 +42,41 @@ export function AgeGate() {
   // server-rendered markup stays hidden (opacity-0) and verified visitors
   // never see a flash. The cookie is read client-side (not in the layout)
   // to keep browse routes static/ISR-cacheable.
+  //
+  // Known tradeoff: this is a client-side cosmetic overlay, so the page
+  // content is always present in the SSR/ISR HTML. That's a deliberate choice
+  // for SEO/ISR cacheability (see the data-layer-architecture notes) and means
+  // the gate does not block JS-disabled or non-browser fetches. The gate is a
+  // UX/compliance affordance for real browsers, not a hard content wall.
   const [status, setStatus] = useState<"pending" | "show" | "hidden">("pending")
   const yesRef = useRef<HTMLButtonElement>(null)
   const noRef = useRef<HTMLButtonElement>(null)
   const leaveRef = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
-    if (document.cookie.split("; ").includes("rhodyshelf_age_verified=true")) {
-      // Cookie can only be read on the client; hiding here (post-mount) is what
-      // keeps verified visitors from seeing a flash. Not a render loop.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStatus("hidden")
-      return
+    let verified = false
+    try {
+      verified = document.cookie
+        .split("; ")
+        .includes("rhodyshelf_age_verified=true")
+    } catch {
+      // document.cookie can throw SecurityError in a sandboxed iframe without
+      // allow-same-origin, and there's no error boundary above this component.
+      // Fail closed: if the cookie can't be read, treat the visitor as
+      // unverified and show the gate rather than let content through.
+      verified = false
     }
-    const frame = requestAnimationFrame(() => setStatus("show"))
-    return () => cancelAnimationFrame(frame)
+    // Reveal directly here (post-mount) instead of via requestAnimationFrame:
+    // rAF callbacks are paused/throttled in hidden/background tabs, so an rAF
+    // reveal fails open — the gate would stay opacity-0/pointer-events-none on
+    // a background-tab load until the tab is foregrounded. A plain setState
+    // isn't throttled, and the opacity-0 initial paint still lets the CSS
+    // transition-opacity animate the fade-in. Verified visitors take the
+    // "hidden" branch and unmount before painting, so they never flash.
+    // Cookie can only be read on the client; setting state here (post-mount) is
+    // intentional and doesn't loop.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStatus(verified ? "hidden" : "show")
   }, [])
 
   useEffect(() => {
@@ -99,8 +119,16 @@ export function AgeGate() {
   if (status === "hidden") return null
 
   function handleAccept() {
-    document.cookie =
-      "rhodyshelf_age_verified=true; path=/; max-age=2592000; SameSite=Lax"
+    try {
+      document.cookie =
+        "rhodyshelf_age_verified=true; path=/; max-age=2592000; SameSite=Lax"
+    } catch {
+      // Same sandboxed-iframe SecurityError the read guard handles. The write
+      // failing means the affirmation won't persist (the visitor re-gates on
+      // the next load), but it must NOT throw past this point — otherwise the
+      // fade-out/unmount below never runs and the affirmed visitor is trapped
+      // behind an undismissable overlay.
+    }
     // fade out, then unmount through React so the document-level key
     // listener is detached (raw el.remove() would leak it and keep
     // hijacking Tab/Escape sitewide)
