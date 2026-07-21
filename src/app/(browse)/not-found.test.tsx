@@ -2,19 +2,17 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import BrowseNotFound, { metadata } from "./not-found"
 
-// For the composed test below, the (browse) layout drags in a client SiteHeader,
-// an async Supabase-querying SiteFooter, and the AgeGate — none render in jsdom.
-// Stub each with the single landmark (or nothing) it contributes so we can render
-// the REAL layout + not-found together and count the chrome. These mocks don't
-// touch the isolation test: BrowseNotFound imports none of them.
+// For the composed test below, the (browse) layout drags in a client SiteHeader
+// and an async Supabase-querying SiteFooter — neither renders in jsdom. Stub each
+// with the single landmark it contributes so we can render the REAL layout +
+// not-found together and count the chrome. (AgeGate lives in the ROOT layout, not
+// this one, so it isn't involved here.) These mocks don't touch the isolation
+// test: BrowseNotFound imports neither.
 vi.mock("@/components/layout/site-header", () => ({
   SiteHeader: () => <header data-testid="site-header" />,
 }))
 vi.mock("@/components/layout/site-footer", () => ({
   SiteFooter: () => <footer data-testid="site-footer" />,
-}))
-vi.mock("@/components/layout/age-gate", () => ({
-  AgeGate: () => null,
 }))
 
 import BrowseLayout from "./layout"

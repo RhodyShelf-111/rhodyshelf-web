@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { SearchX } from "lucide-react"
+import { NotFoundTitle } from "./not-found-title"
 
 // The 404 message body only — icon, heading, and the two "escape hatch" links.
 // It renders NO SiteHeader/SiteFooter/<main> of its own so the surrounding
@@ -12,6 +13,7 @@ import { SearchX } from "lucide-react"
 export function NotFoundContent() {
   return (
     <div className="flex items-start justify-center px-4 pt-24 pb-16">
+      <NotFoundTitle />
       <div className="text-center max-w-md">
         <div className="flex justify-center mb-5">
           <SearchX className="w-12 h-12 text-muted-foreground" aria-hidden="true" />
