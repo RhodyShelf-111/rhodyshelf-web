@@ -177,7 +177,9 @@ export function FilterSheet({
             can't scroll the page underneath). */}
         <div
           data-testid="filter-sheet-drag-zone"
-          className="shrink-0 touch-none select-none"
+          // border-b grounds the pinned header: without it the filter list
+          // scrolls straight into the title row with no visual separation.
+          className="shrink-0 touch-none select-none border-b border-border"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -209,7 +211,7 @@ export function FilterSheet({
         {/* The filter list owns the scrolling; the header above stays put.
             min-h-0 lets this flex child shrink below its content height so
             overflow-y-auto can actually engage under max-h-[85dvh]. */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3 pb-[max(2rem,env(safe-area-inset-bottom))]">
           {children}
         </div>
       </SheetContent>
