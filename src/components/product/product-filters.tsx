@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
 import type { ProductFilters, Dispensary } from "@/lib/types"
-import { useState } from "react"
+import { useId, useState } from "react"
 
 interface ProductFiltersPanelProps {
   filters: ProductFilters
@@ -12,6 +12,18 @@ interface ProductFiltersPanelProps {
   brands: string[]
   dispensaries: Dispensary[]
   strainTypes: string[]
+  /**
+   * Which single-value sections to render, decided by the host from the
+   * page's FULL listing set. Without it, visibility falls back to the
+   * option-list lengths — but with faceted (cross-narrowed) option lists a
+   * section could then blink out whenever the other filters leave it one
+   * option, so hosts passing narrowed lists should pass this too.
+   */
+  visibleSections?: {
+    category: boolean
+    brand: boolean
+    dispensary: boolean
+  }
   onFilterChange: (
     key: keyof ProductFilters,
     value: ProductFilters[keyof ProductFilters]
@@ -25,9 +37,19 @@ export function ProductFiltersPanel({
   brands,
   dispensaries,
   strainTypes,
+  visibleSections,
   onFilterChange,
 }: ProductFiltersPanelProps) {
+  const showCategory = visibleSections?.category ?? categories.length > 1
+  const showBrand = visibleSections?.brand ?? brands.length > 1
+  const showDispensary = visibleSections?.dispensary ?? dispensaries.length > 1
   const [brandSearch, setBrandSearch] = useState("")
+  // Radio-group names must be unique PER PANEL INSTANCE: the grid mounts this
+  // panel twice at once (CSS-hidden desktop sidebar + mobile sheet). With a
+  // shared name, checking a radio in the sheet makes React's controlled-input
+  // restore re-check the sidebar twin, which natively unchecks the radio the
+  // user just tapped — the sheet then shows no selection until reopened.
+  const uid = useId()
 
   const filteredBrands = brandSearch
     ? brands.filter((b) =>
@@ -40,12 +62,12 @@ export function ProductFiltersPanel({
       {/* Category — hidden when the listing set is a single category (e.g. a
           /category/[slug] page), where it's a one-option, no-op control. Those
           pages use the CategoryNav chips to switch categories instead. */}
-      {categories.length > 1 && (
+      {showCategory && (
         <FilterSection title="Category">
           {categories.map((cat) => (
             <FilterRadio
               key={cat}
-              name="category"
+              name={`${uid}category`}
               checked={filters.category === cat}
               onChange={() =>
                 onFilterChange("category", filters.category === cat ? undefined : cat)
@@ -59,9 +81,9 @@ export function ProductFiltersPanel({
 
       {/* Brand — hidden when the listing set is a single brand (e.g. a brand
           page), where filtering by brand is dead UI. */}
-      {brands.length > 1 && (
+      {showBrand && (
         <>
-          {categories.length > 1 && <Separator />}
+          {showCategory && <Separator />}
 
           <FilterSection title="Brand">
             {/* No text-sm override: the Input's base is text-base (16px) on
@@ -73,10 +95,10 @@ export function ProductFiltersPanel({
               className="mb-2 h-11"
             />
             <div className="max-h-64 overflow-y-auto overscroll-contain space-y-1">
-              {filteredBrands.slice(0, 20).map((brand) => (
+              {filteredBrands.map((brand) => (
                 <FilterRadio
                   key={brand}
-                  name="brand"
+                  name={`${uid}brand`}
                   checked={filters.brand === brand}
                   onChange={() =>
                     onFilterChange(
@@ -95,15 +117,15 @@ export function ProductFiltersPanel({
 
       {/* Dispensary — hidden on single-dispensary pages (e.g. a dispensary
           detail page), where it's a one-option, no-op control. */}
-      {dispensaries.length > 1 && (
+      {showDispensary && (
         <>
-          {(categories.length > 1 || brands.length > 1) && <Separator />}
+          {(showCategory || showBrand) && <Separator />}
 
           <FilterSection title="Dispensary">
             {dispensaries.map((d) => (
               <FilterRadio
                 key={d.slug}
-                name="dispensary"
+                name={`${uid}dispensary`}
                 checked={filters.dispensary === d.slug}
                 onChange={() =>
                   onFilterChange(
@@ -125,7 +147,7 @@ export function ProductFiltersPanel({
         {strainTypes.map((st) => (
           <FilterRadio
             key={st}
-            name="strainType"
+            name={`${uid}strainType`}
             checked={filters.strainType === st}
             onChange={() =>
               onFilterChange(

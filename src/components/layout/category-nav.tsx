@@ -1,5 +1,5 @@
-import Link from "next/link"
 import { HOMEPAGE_CATEGORIES } from "@/lib/queries/products"
+import { CategoryNavLink } from "@/components/layout/category-nav-link"
 import { cn, getCategoryIcon } from "@/lib/utils"
 
 /**
@@ -8,10 +8,13 @@ import { cn, getCategoryIcon } from "@/lib/utils"
  * Without this, switching categories means going back to the homepage: the
  * grid's own Category filter derives its options from the listings on screen,
  * which on a category page are all one category. Chips keep the swap to a
- * single tap and double as category-to-category internal linking.
+ * single tap and double as category-to-category internal linking — and they
+ * carry the active filter params across the switch (CategoryNavLink), so a
+ * brand/dispensary filter survives flipping categories.
  *
- * prefetch={false} to match the homepage chips — category routes carry the
- * site's largest payloads and all 7 sit in the viewport together.
+ * prefetch={false} (inside CategoryNavLink) to match the homepage chips —
+ * category routes carry the site's largest payloads and all 7 sit in the
+ * viewport together.
  */
 export function CategoryNav({ activeSlug }: { activeSlug?: string }) {
   return (
@@ -22,11 +25,10 @@ export function CategoryNav({ activeSlug }: { activeSlug?: string }) {
       {HOMEPAGE_CATEGORIES.map((c) => {
         const active = c.key === activeSlug
         return (
-          <Link
+          <CategoryNavLink
             key={c.key}
             href={`/category/${c.key}`}
-            prefetch={false}
-            aria-current={active ? "page" : undefined}
+            ariaCurrent={active ? "page" : undefined}
             className={cn(
               "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               active
@@ -36,7 +38,7 @@ export function CategoryNav({ activeSlug }: { activeSlug?: string }) {
           >
             <span aria-hidden="true">{getCategoryIcon(c.key)}</span>
             {c.label}
-          </Link>
+          </CategoryNavLink>
         )
       })}
     </nav>

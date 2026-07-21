@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import type { InventoryListing, ProductFilters } from "@/lib/types"
 import { ProductCard, EAGER_IMAGE_COUNT } from "./product-card"
 import { ProductFiltersPanel } from "./product-filters"
 import { ProductSort } from "./product-sort"
-import { applyFilters } from "@/lib/filter-utils"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import { applyFilters, deriveFacetOptions } from "@/lib/filter-utils"
+import { FilterSheet } from "@/components/filters/filter-sheet"
 import { Button } from "@/components/ui/button"
 import { SlidersHorizontal } from "lucide-react"
 
@@ -18,6 +18,12 @@ interface ProductGridProps {
   dropBadges?: Map<string, { label: string; className: string }>
   /** Forwarded to each ProductCard; false on single-dispensary pages. */
   showDispensary?: boolean
+  /**
+   * Reports the filters after every user change (never for the initial
+   * state), so a host can mirror them elsewhere — MenuClient writes them
+   * into the URL.
+   */
+  onFiltersChange?: (filters: ProductFilters) => void
 }
 
 export function ProductGrid({
@@ -27,35 +33,34 @@ export function ProductGrid({
   pageSize = 50,
   dropBadges,
   showDispensary = true,
+  onFiltersChange,
 }: ProductGridProps) {
   const [filters, setFilters] = useState<ProductFilters>(initialFilters)
   const [displayCount, setDisplayCount] = useState(pageSize)
+
+  // Mirror filter state up — but never the untouched initial state (reference
+  // check): on first mount MenuClient hasn't read the URL params yet, and a
+  // mount-time report would overwrite them with the empty defaults. Also
+  // holds across StrictMode re-runs and the host's remount-by-key.
+  useEffect(() => {
+    if (filters === initialFilters) return
+    onFiltersChange?.(filters)
+  }, [filters, initialFilters, onFiltersChange])
 
   const filtered = useMemo(() => applyFilters(listings, filters), [listings, filters])
   const displayed = filtered.slice(0, displayCount)
   const hasMore = displayCount < filtered.length
 
-  // Extract unique values for filter options
-  const categories = useMemo(
-    () => [...new Set(listings.map((l) => l.product.category))].sort(),
-    [listings]
+  // Filter options narrow to the listings matching the OTHER active filters
+  // (faceted): pick a dispensary and the brand list only shows brands it
+  // stocks. Section visibility keys off the page's full listing set so a
+  // narrowed one-option list doesn't make its whole section vanish.
+  const facets = useMemo(
+    () => deriveFacetOptions(listings, filters),
+    [listings, filters]
   )
-  const brands = useMemo(
-    () => [...new Set(listings.map((l) => l.product.brand_name))].sort(),
-    [listings]
-  )
-  const dispensaries = useMemo(
-    () =>
-      [...new Map(listings.map((l) => [l.dispensary.slug, l.dispensary])).values()].sort(
-        (a, b) => a.name.localeCompare(b.name)
-      ),
-    [listings]
-  )
-  const strainTypes = useMemo(
-    () =>
-      [...new Set(listings.map((l) => l.product.strain_type).filter(Boolean))].sort() as string[],
-    [listings]
-  )
+  const pageFacets = useMemo(() => deriveFacetOptions(listings, {}), [listings])
+  const { categories, brands, dispensaries, strainTypes } = facets
 
   const updateFilter = useCallback(
     (key: keyof ProductFilters, value: ProductFilters[keyof ProductFilters]) => {
@@ -81,6 +86,11 @@ export function ProductGrid({
       brands={brands}
       dispensaries={dispensaries}
       strainTypes={strainTypes}
+      visibleSections={{
+        category: pageFacets.categories.length > 1,
+        brand: pageFacets.brands.length > 1,
+        dispensary: pageFacets.dispensaries.length > 1,
+      }}
       onFilterChange={updateFilter}
       onClear={clearFilters}
     />
@@ -113,33 +123,26 @@ export function ProductGrid({
               onChange={(sort) => updateFilter("sort", sort)}
             />
 
-            {/* Mobile filter button */}
+            {/* Mobile filter button — FilterSheet is the one bottom-sheet
+                chrome (handle, aligned header, swipe-to-dismiss) shared with
+                the search page. */}
             {showFilters && (
-              <Sheet>
-                <SheetTrigger
-                  className="lg:hidden inline-flex items-center gap-1.5 px-3 h-11 text-sm font-medium rounded-[min(var(--radius-md),12px)] border border-border bg-background hover:bg-muted transition-all"
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </SheetTrigger>
-                {/* Bottom sheet to match the search filter UX (was a left
-                    drawer) — one consistent mobile filter pattern across the
-                    deals/drops grid and search. */}
-                <SheetContent
-                  side="bottom"
-                  className="max-h-[85dvh] overflow-y-auto overscroll-contain px-4 pb-[max(2rem,env(safe-area-inset-bottom))]"
-                >
-                  <SheetTitle className="font-heading text-lg font-bold mb-4">
+              <FilterSheet
+                triggerClassName="lg:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                trigger={
+                  <>
+                    <SlidersHorizontal className="w-4 h-4" />
                     Filters
-                  </SheetTitle>
-                  {filterPanel}
-                </SheetContent>
-              </Sheet>
+                    {activeFilterCount > 0 && (
+                      <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </>
+                }
+              >
+                {filterPanel}
+              </FilterSheet>
             )}
           </div>
         </div>
