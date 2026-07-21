@@ -91,6 +91,18 @@ describe("ProductGrid mobile filter sheet", () => {
     for (const r of allHi5) expect(r).toBeChecked()
   })
 
+  it("clears a filter when its radio is re-tapped", () => {
+    render(<ProductGrid listings={listings} />)
+
+    const sheet = openFilterSheet()
+    const radio = within(sheet).getByRole("radio", { name: "Hi5" })
+    fireEvent.click(radio)
+    expect(radio).toBeChecked()
+
+    fireEvent.click(radio)
+    expect(radio).not.toBeChecked()
+  })
+
   it("shows a dispensary tapped in the sheet as selected immediately", () => {
     render(<ProductGrid listings={listings} />)
 
