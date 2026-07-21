@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { PageContainer } from "@/components/layout/page-container"
 import { pageOpenGraph } from "@/lib/seo/og"
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/social"
 import type { Metadata } from "next"
 
 // ISR so the footer (async, fetches dispensaries) can self-heal instead of
@@ -67,7 +68,16 @@ export default function AboutPage() {
           >
             hello@rhodyshelf.com
           </a>
-          .
+          . You can also follow us on{" "}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="me noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Instagram @{INSTAGRAM_HANDLE}
+          </a>{" "}
+          for new drops and deals.
         </p>
         <p className="pt-2">
           <Link href="/dispensary" className="text-primary hover:underline">

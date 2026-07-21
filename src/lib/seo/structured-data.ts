@@ -1,4 +1,5 @@
 import type { Dispensary, InventoryListing } from "@/lib/types"
+import { SOCIAL_PROFILE_URLS } from "@/lib/social"
 
 /**
  * schema.org structured-data builders. Each returns a plain JSON-LD object to
@@ -30,6 +31,10 @@ export function organizationJsonLd(): Record<string, unknown> {
     url: BASE_URL,
     logo: abs("/icon.png"),
     description: SITE_DESCRIPTION,
+    // Official profiles — how Google ties the site to the social accounts for
+    // the brand knowledge panel. Same URLs the footer links. Copied so callers
+    // get a mutable array of their own and can't write through to the constant.
+    sameAs: [...SOCIAL_PROFILE_URLS],
     // Aggregator serving the whole state — reinforces the geographic scope.
     areaServed: { "@type": "State", name: "Rhode Island" },
     knowsAbout: [

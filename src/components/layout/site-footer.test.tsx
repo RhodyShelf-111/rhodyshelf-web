@@ -79,6 +79,27 @@ describe("SiteFooter", () => {
     ).toHaveAttribute("href", "/dispensary")
   })
 
+  it("links the Instagram profile with safe external-link attributes", async () => {
+    mockedGetDispensaries.mockResolvedValue([])
+
+    render(await SiteFooter())
+
+    const instagram = screen.getByRole("link", { name: "Instagram" })
+    expect(instagram).toHaveAttribute(
+      "href",
+      "https://www.instagram.com/rhodyshelf"
+    )
+    expect(instagram).toHaveAttribute("target", "_blank")
+    // noopener guards the opener. rel="me" is an optional one-way identity
+    // hint (microformats/IndieAuth, e.g. Mastodon verification) — it is NOT
+    // what backs the sameAs claim; Google doesn't read rel="me" at all, and
+    // Instagram emits no reciprocal link. The sameAs/href URL-match test in
+    // social-links.test.tsx is what actually protects that association.
+    // Tokenized because a substring check for "me" also matches rel="home".
+    const rel = instagram.getAttribute("rel")!.split(/\s+/)
+    expect(rel).toEqual(expect.arrayContaining(["me", "noopener", "noreferrer"]))
+  })
+
   it("still renders navigation when the dispensary query fails", async () => {
     mockedGetDispensaries.mockRejectedValue(new Error("db down"))
 
