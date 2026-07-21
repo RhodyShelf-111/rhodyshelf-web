@@ -128,7 +128,7 @@ export function ProductGrid({
                 the search page. */}
             {showFilters && (
               <FilterSheet
-                triggerClassName="lg:hidden inline-flex items-center gap-1.5 px-3 h-11 text-sm font-medium rounded-[min(var(--radius-md),12px)] border border-border bg-background hover:bg-muted transition-all"
+                triggerClassName="lg:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
                 trigger={
                   <>
                     <SlidersHorizontal className="w-4 h-4" />
