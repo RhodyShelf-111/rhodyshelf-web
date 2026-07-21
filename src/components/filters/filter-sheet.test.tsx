@@ -28,9 +28,13 @@ beforeAll(() => {
   } as unknown as typeof window.ResizeObserver
 })
 
-function openSheet() {
+function openSheet(resultCount?: number) {
   render(
-    <FilterSheet trigger="Filters" triggerClassName="trigger">
+    <FilterSheet
+      trigger="Filters"
+      triggerClassName="trigger"
+      resultCount={resultCount}
+    >
       <p>Body content</p>
     </FilterSheet>
   )
@@ -110,6 +114,38 @@ describe("FilterSheet", () => {
     // Give a would-be dismissal time to fire; the sheet must still be up.
     await new Promise((r) => setTimeout(r, 350))
     expect(screen.getByRole("dialog")).toBeInTheDocument()
+  })
+
+  it("shows no results footer unless a count is provided", () => {
+    const { dialog } = openSheet()
+    expect(
+      within(dialog).queryByRole("button", { name: /Show .* result/ })
+    ).toBeNull()
+  })
+
+  it("pins a 'Show N results' footer when given a count, pluralized and localized", () => {
+    const { dialog } = openSheet(1234)
+    expect(
+      within(dialog).getByRole("button", { name: "Show 1,234 results" })
+    ).toBeInTheDocument()
+  })
+
+  it("says 'result' for exactly one match", () => {
+    const { dialog } = openSheet(1)
+    expect(
+      within(dialog).getByRole("button", { name: "Show 1 result" })
+    ).toBeInTheDocument()
+  })
+
+  it("closes through the shared slide-out when the footer is tapped", async () => {
+    const { dialog, popup } = openSheet(7)
+
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Show 7 results" })
+    )
+
+    expect(popup.style.transform).toBe("translateY(100%)")
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 
   it("closes from the header X with the same slide-out as a swipe (one dismissal feel for every close path)", async () => {

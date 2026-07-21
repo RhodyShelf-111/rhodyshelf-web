@@ -91,6 +91,21 @@ describe("ProductGrid mobile filter sheet", () => {
     for (const r of allHi5) expect(r).toBeChecked()
   })
 
+  it("keeps the sheet's Show-results footer count live as filters change", () => {
+    render(<ProductGrid listings={listings} />)
+
+    const sheet = openFilterSheet()
+    expect(
+      within(sheet).getByRole("button", { name: "Show 3 results" })
+    ).toBeInTheDocument()
+
+    fireEvent.click(within(sheet).getByRole("radio", { name: "Hi5" }))
+
+    expect(
+      within(sheet).getByRole("button", { name: "Show 1 result" })
+    ).toBeInTheDocument()
+  })
+
   it("clears a filter when its radio is re-tapped", () => {
     render(<ProductGrid listings={listings} />)
 
