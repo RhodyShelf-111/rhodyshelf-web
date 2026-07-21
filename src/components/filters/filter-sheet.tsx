@@ -16,6 +16,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 const EXIT_MS = 260
 const SPRING_MS = 220
@@ -41,11 +42,18 @@ export function FilterSheet({
   trigger,
   triggerClassName,
   title = "Filters",
+  resultCount,
   children,
 }: {
   trigger: ReactNode
   triggerClassName?: string
   title?: string
+  /**
+   * When set, a bar pinned under the filter list offers "Show N results" as
+   * the sheet's primary exit — the count updates live as filters change, so
+   * the shopper knows what they'll land on before closing.
+   */
+  resultCount?: number
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -223,10 +231,35 @@ export function FilterSheet({
 
         {/* The filter list owns the scrolling; the header above stays put.
             min-h-0 lets this flex child shrink below its content height so
-            overflow-y-auto can actually engage under max-h-[85dvh]. */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3 pb-[max(2rem,env(safe-area-inset-bottom))]">
+            overflow-y-auto can actually engage under max-h-[85dvh]. The
+            safe-area padding lives here only when no footer sits below to
+            carry it. */}
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3",
+            resultCount !== undefined
+              ? "pb-4"
+              : "pb-[max(2rem,env(safe-area-inset-bottom))]"
+          )}
+        >
           {children}
         </div>
+
+        {resultCount !== undefined && (
+          // Same pinned-bar treatment as the product sheet's Buy bar: the
+          // apply-and-see action stays reachable through any filter
+          // scrolling, padded clear of the phone's home indicator.
+          <div className="shrink-0 border-t border-border bg-popover/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-popover/80">
+            <SheetClose
+              render={
+                <Button className="h-12 w-full rounded-lg text-sm font-semibold" />
+              }
+            >
+              Show {resultCount.toLocaleString()}{" "}
+              {resultCount === 1 ? "result" : "results"}
+            </SheetClose>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   )

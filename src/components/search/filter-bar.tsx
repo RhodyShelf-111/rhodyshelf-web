@@ -364,6 +364,7 @@ export function FilterBar({
         {/* Mobile filter sheet — shared FilterSheet chrome (handle, aligned
             header, swipe-to-dismiss), same as the grid pages. */}
         <FilterSheet
+          resultCount={resultCount}
           triggerClassName="md:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
           trigger={
             <>
