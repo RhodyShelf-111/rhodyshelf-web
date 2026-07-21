@@ -4,6 +4,8 @@ import { useState } from "react"
 import { SlidersHorizontal, ChevronDown, X } from "lucide-react"
 import { FilterSheet } from "@/components/filters/filter-sheet"
 import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
 import { cn, getCategoryIcon } from "@/lib/utils"
 import type { ProductFilters, Dispensary } from "@/lib/types"
 
@@ -76,14 +78,16 @@ export function FilterBar({
         </div>
       </FilterSection>
 
-      {/* Brand */}
+      <Separator />
+
+      {/* Brand — the shared Input primitive, same control as the grid
+          sheet's brand search (16px base so iOS doesn't zoom on focus). */}
       <FilterSection title="Brand">
-        <input
-          type="text"
+        <Input
           placeholder="Search brands..."
           value={brandSearch}
           onChange={(e) => setBrandSearch(e.target.value)}
-          className="w-full h-11 px-3 text-base rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+          className="h-11"
         />
         <div className="max-h-64 overflow-y-auto overscroll-contain space-y-1 mt-2">
           {filteredBrands.map((brand) => (
@@ -100,6 +104,8 @@ export function FilterBar({
           ))}
         </div>
       </FilterSection>
+
+      <Separator />
 
       {/* Dispensary */}
       <FilterSection title="Dispensary">
@@ -119,6 +125,8 @@ export function FilterBar({
         ))}
       </FilterSection>
 
+      <Separator />
+
       {/* Sort */}
       <FilterSection title="Sort">
         {SORT_OPTIONS.map((opt) => (
@@ -131,6 +139,8 @@ export function FilterBar({
           />
         ))}
       </FilterSection>
+
+      <Separator />
 
       {/* On Sale */}
       <OnSaleToggle
