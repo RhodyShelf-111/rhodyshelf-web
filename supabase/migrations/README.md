@@ -11,7 +11,7 @@ re-run them).
 
 ## What's captured here
 
-The brand de-duplication work and later data-hygiene fixes (2026-07-11) are mirrored in this folder:
+The brand de-duplication work and later data-hygiene fixes (2026-07-11, plus a 2026-07-18 durability fix) are mirrored in this folder:
 
 | Version | File | What it does |
 |---|---|---|
@@ -21,6 +21,7 @@ The brand de-duplication work and later data-hygiene fixes (2026-07-11) are mirr
 | `20260711152339` | `brand_dedup_candidates_view.sql` | `brand_dedup_candidates` view (trigram similarity) — a re-scan queue for future dupes |
 | `20260711164352` | `backfill_dispensary_cities.sql` | populate `dispensaries.city` (8/9 were null) for local-SEO `Store` markup + page display |
 | `20260711171133` | `normalize_product_names.sql` | `normalize_product_name()` fn + `BEFORE INSERT/UPDATE` trigger on `products` that strips a trailing `" -"` from `name`/`strain_name` on every write; one-time backfill of 578 names (+1 strain) |
+| `20260718182204` | `dispensary_city_trigger.sql` | `dispensary_city_map` table (curated slug → city) + `BEFORE INSERT/UPDATE` trigger on `dispensaries` (`apply_dispensary_city()`) that fills a missing `city` from the map on every write, so cities survive WeedShelf re-syncs (which carry no city and wiped the one-time `20260711164352` backfill); re-applies to currently-null rows |
 
 Earlier migrations (`create_pending_posts`, `create_system_config`,
 `product_drops_trigger`, `address_security_and_perf_advisories`) exist only in the
