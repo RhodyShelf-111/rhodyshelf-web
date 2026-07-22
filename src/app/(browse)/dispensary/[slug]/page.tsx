@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation"
 import { MapPin, ExternalLink } from "lucide-react"
 import { getDispensaryBySlug, getDispensaries } from "@/lib/queries/dispensaries"
-import { getInventoryByDispensary } from "@/lib/queries/products"
+import {
+  getInventoryByDispensary,
+  INITIAL_LISTINGS,
+} from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
 import { storeJsonLd } from "@/lib/seo/structured-data"
@@ -54,11 +57,17 @@ export default async function DispensaryDetailPage({
   const dispensary = await getDispensaryBySlug(slug)
   if (!dispensary) notFound()
 
-  const dispensaryListings = await getInventoryByDispensary(dispensary.id)
+  // The full menu is fetched (cached) by dispensary id — robust to a null slug
+  // — for the count + SEO, but only the first slice ships in the payload; the
+  // grid fetches the rest from /api/listings (same source, one snapshot) so a
+  // big store's ~900 listings aren't shipped up front.
+  const all = await getInventoryByDispensary(dispensary.id)
+  const total = all.length
+  const dispensaryListings = all.slice(0, INITIAL_LISTINGS)
 
   return (
     <PageContainer className="py-6 md:py-8">
-      <JsonLd data={storeJsonLd(dispensary, dispensaryListings.length)} />
+      <JsonLd data={storeJsonLd(dispensary, total)} />
       <Breadcrumbs
         items={[
           { name: "Dispensaries", href: "/dispensary" },
@@ -78,7 +87,7 @@ export default async function DispensaryDetailPage({
               </span>
             )}
             <span className="block text-sm">
-              {dispensaryListings.length} products available
+              {total.toLocaleString()} products available
             </span>
           </div>
         }
@@ -99,7 +108,7 @@ export default async function DispensaryDetailPage({
 
       {/* Keyword intro only when there IS a live menu — otherwise it would
           contradict the empty state below and get ISR-cached that way. */}
-      {dispensaryListings.length > 0 && (
+      {total > 0 && (
         <p className="text-muted-foreground max-w-2xl mb-6 -mt-2">
           Full recreational cannabis menu for {dispensary.name}
           {dispensary.city ? ` in ${dispensary.city}, RI` : " in Rhode Island"} —
@@ -108,11 +117,12 @@ export default async function DispensaryDetailPage({
         </p>
       )}
 
-      {dispensaryListings.length > 0 ? (
+      {total > 0 ? (
         <MenuClient
           listings={dispensaryListings}
           showDispensary={false}
           headingLabel={`${dispensary.name} menu`}
+          loadRest={{ total, scope: "dispensary", value: dispensary.slug }}
         />
       ) : (
         <div className="text-center py-16">

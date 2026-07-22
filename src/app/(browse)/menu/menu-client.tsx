@@ -18,6 +18,9 @@ interface MenuClientProps {
   /** Screen-reader label for the results section — keeps the heading outline
    *  H1 → H2 → H3 (cards are H3) instead of skipping a level. */
   headingLabel?: string
+  /** Forwarded to ProductGrid: when set, `listings` is only the first slice and
+   *  the full category/dispensary set is fetched once from /api/listings. */
+  loadRest?: { total: number; scope: "category" | "dispensary"; value: string }
 }
 
 export function MenuClient({
@@ -25,6 +28,7 @@ export function MenuClient({
   showDispensary = true,
   defaultSort,
   headingLabel = "Products",
+  loadRest,
 }: MenuClientProps) {
   const [initialFilters, setInitialFilters] = useState<ProductFilters>(
     defaultSort ? { sort: defaultSort } : {}
@@ -83,6 +87,7 @@ export function MenuClient({
         initialFilters={initialFilters}
         showDispensary={showDispensary}
         onFiltersChange={handleFiltersChange}
+        loadRest={loadRest}
       />
     </>
   )
