@@ -8,6 +8,7 @@ import type { ProductFilters } from "@/lib/types"
 interface CapturedGridProps {
   initialFilters: ProductFilters
   onFiltersChange?: (filters: ProductFilters) => void
+  loadRest?: { total: number; scope: "category" | "dispensary"; value: string }
 }
 let gridProps: CapturedGridProps | undefined
 vi.mock("@/components/product/product-grid", () => ({
@@ -92,5 +93,26 @@ describe("MenuClient URL filter sync", () => {
 
     gridProps!.onFiltersChange!({ sort: "discount-desc", brand: "Hi5" })
     expect(window.location.search).toBe("?brand=Hi5")
+  })
+})
+
+describe("MenuClient progressive loading", () => {
+  it("forwards loadRest to the grid so it can fetch the rest of the set", () => {
+    render(
+      <MenuClient
+        listings={[]}
+        loadRest={{ total: 500, scope: "category", value: "flower" }}
+      />
+    )
+    expect(gridProps?.loadRest).toEqual({
+      total: 500,
+      scope: "category",
+      value: "flower",
+    })
+  })
+
+  it("leaves loadRest undefined when the host doesn't opt in", () => {
+    render(<MenuClient listings={[]} />)
+    expect(gridProps?.loadRest).toBeUndefined()
   })
 })

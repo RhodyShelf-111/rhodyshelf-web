@@ -1,0 +1,26 @@
+import { PageContainer } from "@/components/layout/page-container"
+import { ProductGridSkeleton } from "@/components/product/product-grid-skeleton"
+import { Skeleton } from "@/components/ui/skeleton"
+
+export default function BrandLoading() {
+  return (
+    <PageContainer className="py-6 md:py-8">
+      {/* Breadcrumbs */}
+      <Skeleton className="mb-4 h-4 w-36" />
+
+      {/* Heading + description */}
+      <div className="mb-6 space-y-2">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-4 w-56 max-w-full" />
+      </div>
+
+      {/* Results top bar: count + sort/filter */}
+      <div className="mb-4 flex items-center justify-between">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-9 w-28 rounded-lg" />
+      </div>
+
+      <ProductGridSkeleton />
+    </PageContainer>
+  )
+}

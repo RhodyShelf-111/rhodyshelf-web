@@ -17,6 +17,10 @@ import { brandNamesFromIndex, type CatalogIndexRow } from "@/lib/filter-utils"
 
 export const SEARCH_PAGE_SIZE = 96
 
+/** How many listings the category/dispensary pages serialize into the initial
+ *  payload for fast first paint; the grid fetches the full set client-side. */
+export const INITIAL_LISTINGS = 96
+
 /**
  * Shared embedded select for inventory listings.
  * The service-role key bypasses RLS, so the 24h freshness window and
@@ -631,7 +635,9 @@ export const getInventoryByBrand = unstable_cache(
   { revalidate: 1800, tags: ["inventory"] }
 )
 
-/** All fresh listings in one category (DB category value, e.g. "flower"). */
+/** All fresh listings in one category (DB category value, e.g. "flower").
+ *  Powers the category page's server render (first slice) and the /api/listings
+ *  full-set fetch — one cached source, so both see one consistent snapshot. */
 export const getInventoryByCategory = unstable_cache(
   async (category: string): Promise<InventoryListing[]> => {
     const client = createServiceClient()
@@ -651,7 +657,9 @@ export const getInventoryByCategory = unstable_cache(
   { revalidate: 1800, tags: ["inventory"] }
 )
 
-/** All fresh listings at one dispensary (the largest store is ~925 rows and growing). */
+/** All fresh listings at one dispensary (the largest store is ~925 rows and
+ *  growing). Filters by dispensary_id, so it's robust to rows with a null slug
+ *  (unlike a slug-based query). */
 export const getInventoryByDispensary = unstable_cache(
   async (dispensaryId: string): Promise<InventoryListing[]> => {
     const client = createServiceClient()

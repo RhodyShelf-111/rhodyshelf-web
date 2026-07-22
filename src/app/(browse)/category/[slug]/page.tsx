@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import {
   getInventoryByCategory,
   HOMEPAGE_CATEGORIES,
+  INITIAL_LISTINGS,
 } from "@/lib/queries/products"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { CategoryNav } from "@/components/layout/category-nav"
@@ -59,7 +60,14 @@ export default async function CategoryPage({
   const category = categoryFor(slug)
   if (!category) notFound()
 
-  const listings = await getInventoryByCategory(slug)
+  // The full category is fetched (cached) for the count + SEO, but only the
+  // first slice is serialized into the payload; the grid fetches the rest from
+  // /api/listings (same getInventoryByCategory source, one snapshot). Shipping
+  // the whole category up front is what made these pages slow to first paint on
+  // cellular — flower alone is ~1,100 listings / ~1 MB.
+  const all = await getInventoryByCategory(slug)
+  const total = all.length
+  const listings = all.slice(0, INITIAL_LISTINGS)
 
   return (
     <PageContainer className="py-6 md:py-8">
@@ -68,7 +76,8 @@ export default async function CategoryPage({
           name: `${category.label} — Rhode Island Cannabis`,
           description: `${category.label} available across Rhode Island dispensaries.`,
           path: `/category/${slug}`,
-          itemCount: listings.length,
+          itemCount: total,
+          // ITEM_LIST_MAX (25) ≤ one page, so page 1 covers the JSON-LD list.
           itemPaths: listings
             .slice(0, ITEM_LIST_MAX)
             .map((l) => `/product/${l.id}`),
@@ -80,7 +89,7 @@ export default async function CategoryPage({
 
       <PageHeading
         title={category.label}
-        description={`${listings.length.toLocaleString()} ${category.label.toLowerCase()} across Rhode Island dispensaries`}
+        description={`${total.toLocaleString()} ${category.label.toLowerCase()} across Rhode Island dispensaries`}
       />
 
       <p className="text-muted-foreground max-w-2xl mb-4 -mt-2">
@@ -91,8 +100,18 @@ export default async function CategoryPage({
 
       <CategoryNav activeSlug={slug} />
 
-      {listings.length > 0 ? (
-        <MenuClient listings={listings} headingLabel={category.label} />
+      {total > 0 ? (
+        <MenuClient
+          listings={listings}
+          headingLabel={category.label}
+          // Only fetch the rest when there IS a rest — if the whole category
+          // fits in the first slice, the grid already has everything.
+          loadRest={
+            total > INITIAL_LISTINGS
+              ? { total, scope: "category", value: slug }
+              : undefined
+          }
+        />
       ) : (
         <div className="text-center py-16">
           <p className="text-lg font-medium text-foreground mb-2">
