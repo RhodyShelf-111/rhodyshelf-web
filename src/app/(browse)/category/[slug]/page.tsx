@@ -104,7 +104,13 @@ export default async function CategoryPage({
         <MenuClient
           listings={listings}
           headingLabel={category.label}
-          loadRest={{ total, scope: "category", value: slug }}
+          // Only fetch the rest when there IS a rest — if the whole category
+          // fits in the first slice, the grid already has everything.
+          loadRest={
+            total > INITIAL_LISTINGS
+              ? { total, scope: "category", value: slug }
+              : undefined
+          }
         />
       ) : (
         <div className="text-center py-16">

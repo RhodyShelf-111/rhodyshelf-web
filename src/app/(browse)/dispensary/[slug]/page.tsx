@@ -122,7 +122,12 @@ export default async function DispensaryDetailPage({
           listings={dispensaryListings}
           showDispensary={false}
           headingLabel={`${dispensary.name} menu`}
-          loadRest={{ total, scope: "dispensary", value: dispensary.slug }}
+          // Only fetch the rest when the menu is larger than the first slice.
+          loadRest={
+            total > INITIAL_LISTINGS
+              ? { total, scope: "dispensary", value: dispensary.slug }
+              : undefined
+          }
         />
       ) : (
         <div className="text-center py-16">

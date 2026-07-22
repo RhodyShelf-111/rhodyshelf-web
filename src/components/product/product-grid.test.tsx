@@ -253,7 +253,7 @@ describe("ProductGrid progressive loading", () => {
     expect(screen.queryByText(/of\s+3\s+products/)).toBeNull()
   })
 
-  it("keeps the first slice when the full-set fetch returns a non-ok response", async () => {
+  it("surfaces a retry and the honest total when the full-set fetch fails (never a silent truncation)", async () => {
     const fetchMock = vi.fn(async () => ({ ok: false, json: async () => ({}) }))
     vi.stubGlobal("fetch", fetchMock)
 
@@ -264,12 +264,65 @@ describe("ProductGrid progressive loading", () => {
       />
     )
 
-    // Retries, then gives up; the slice stays usable, no perpetual loading row.
-    await waitFor(() => expect(screen.queryByText(/Loading/)).toBeNull(), {
-      timeout: 4000,
-    })
+    // Retries, then gives up — but does NOT silently cap the menu: the slice
+    // stays usable, a Retry appears, and the count still shows the true total
+    // (of 3) so the shopper knows more products exist.
+    await waitFor(
+      () => expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument(),
+      { timeout: 4000 }
+    )
     expect(screen.getByText("Product l1")).toBeInTheDocument()
+    expect(screen.getByText(/of\s+3\s+products/)).toBeInTheDocument()
+    expect(screen.queryByText(/Loading/)).toBeNull()
     expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it("recovers when the shopper taps Retry after a failed full-set fetch", async () => {
+    let fail = true
+    const fetchMock = vi.fn(async () => {
+      if (fail) return { ok: false, json: async () => ({}) }
+      return ok([
+        makeListing("l1", "Hi5", "Mother Earth"),
+        makeListing("l2", "Aster", "Solar"),
+        makeListing("l3", "Bloom", "Solar"),
+      ])
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        loadRest={{ total: 3, scope: "category", value: "flower" }}
+      />
+    )
+
+    const retry = await screen.findByRole("button", { name: "Retry" }, { timeout: 4000 })
+    fail = false // next fetch succeeds
+    fireEvent.click(retry)
+
+    await waitFor(() =>
+      expect(screen.getByText("Product l3")).toBeInTheDocument()
+    )
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull()
+  })
+
+  it("replaces the slice with an empty set when the category sold out (no stale rows)", async () => {
+    const fetchMock = vi.fn(async () => ok([]))
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        loadRest={{ total: 3, scope: "category", value: "flower" }}
+      />
+    )
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    // The stale slice row must not linger once the authoritative (empty) set
+    // arrives.
+    await waitFor(() =>
+      expect(screen.queryByText("Product l1")).toBeNull()
+    )
   })
 
   it("recovers on retry after a transient failure", async () => {
@@ -298,7 +351,7 @@ describe("ProductGrid progressive loading", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
-  it("keeps the first slice when the full-set fetch throws every time", async () => {
+  it("surfaces a retry when the full-set fetch throws every time", async () => {
     const fetchMock = vi.fn(async () => {
       throw new Error("network down")
     })
@@ -311,9 +364,10 @@ describe("ProductGrid progressive loading", () => {
       />
     )
 
-    await waitFor(() => expect(screen.queryByText(/Loading/)).toBeNull(), {
-      timeout: 4000,
-    })
+    await waitFor(
+      () => expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument(),
+      { timeout: 4000 }
+    )
     expect(screen.getByText("Product l1")).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })

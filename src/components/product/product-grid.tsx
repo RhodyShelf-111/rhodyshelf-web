@@ -9,6 +9,7 @@ import { applyFilters, deriveFacetOptions } from "@/lib/filter-utils"
 import { FilterSheet } from "@/components/filters/filter-sheet"
 import { Button } from "@/components/ui/button"
 import { Loader2, SlidersHorizontal } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface ProductGridProps {
   listings: InventoryListing[]
@@ -48,9 +49,14 @@ export function ProductGrid({
 }: ProductGridProps) {
   const [filters, setFilters] = useState<ProductFilters>(initialFilters)
   const [displayCount, setDisplayCount] = useState(pageSize)
-  // Pages fetched in the background for a progressive list (see loadRest).
-  const [rest, setRest] = useState<InventoryListing[]>([])
+  // The full set fetched in the background for a progressive list (see
+  // loadRest). null = not loaded yet (or the fetch failed); an array (even
+  // empty) = the authoritative full set has arrived.
+  const [rest, setRest] = useState<InventoryListing[] | null>(null)
   const [loadingRest, setLoadingRest] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  // Bumped by the retry button to re-run the fetch effect.
+  const [retryTick, setRetryTick] = useState(0)
 
   // Mirror filter state up — but never the untouched initial state (reference
   // check): on first mount MenuClient hasn't read the URL params yet, and a
@@ -78,6 +84,7 @@ export function ProductGrid({
     const controller = new AbortController()
     let cancelled = false
     setLoadingRest(true)
+    setLoadError(false)
     ;(async () => {
       const url = `/api/listings?scope=${restScope}&value=${encodeURIComponent(
         restValue
@@ -91,26 +98,36 @@ export function ProductGrid({
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           const data = (await res.json()) as { listings: InventoryListing[] }
           if (cancelled) return
-          if (data.listings?.length) setRest(data.listings)
-          break // success (or a legitimately empty set)
+          // Replace the slice with the full set — even when empty (a genuinely
+          // sold-out category) — so the grid reflects reality, not stale rows.
+          setRest(data.listings ?? [])
+          setLoadingRest(false)
+          return
         } catch (err) {
           if (cancelled || (err as Error)?.name === "AbortError") return
-          if (attempt === 2) break // exhausted retries — keep the first slice
+          if (attempt === 2) {
+            // Exhausted retries. Keep the first slice, but flag the failure so
+            // the UI surfaces the true total + a retry — never a silently
+            // truncated menu that claims the full count in the heading.
+            setLoadError(true)
+            setLoadingRest(false)
+            return
+          }
           await new Promise((r) => setTimeout(r, 400 * (attempt + 1)))
         }
       }
-      if (!cancelled) setLoadingRest(false)
     })()
     return () => {
       cancelled = true
       controller.abort()
     }
-  }, [restScope, restValue])
+  }, [restScope, restValue, retryTick])
 
-  // Once the full set has loaded it IS the working set (one consistent
-  // snapshot that supersets the slice); before that, the server-rendered first
-  // slice. No merge/dedup needed — the fetched set is authoritative.
-  const allListings = rest.length > 0 ? rest : listings
+  // Once the full set has loaded it IS the working set (one consistent snapshot
+  // that supersets the slice), even if empty; until then (loading, or the fetch
+  // failed and we're degraded to the partial slice) use the server slice.
+  const fullyLoaded = rest !== null
+  const allListings = rest ?? listings
 
   const filtered = useMemo(
     () => applyFilters(allListings, filters),
@@ -146,16 +163,20 @@ export function ProductGrid({
     setDisplayCount(pageSize)
   }, [pageSize])
 
+  const retryLoadRest = useCallback(() => setRetryTick((t) => t + 1), [])
+
   const activeFilterCount = Object.values(filters).filter(
     (v) => v != null && v !== "" && v !== false
   ).length
 
-  // While the full set is still loading, show the server's count as a stable
-  // estimate (so the denominator doesn't sit at the slice size). Once the load
-  // finishes — or fails and we're on the partial slice — show the actual
-  // count, so "Showing X of Y" never claims more than is really on screen.
+  // Until the full set has actually loaded — while loading, or after a failed
+  // fetch that left us on the partial slice — show the server's true total, so
+  // an unfiltered heading never undercounts to the slice size (which would hide
+  // that more products exist). Once loaded, show the real count. A jumpy but
+  // honest denominator beats a silent truncation. Only stabilizes to the total
+  // when unfiltered; a filter shows how many loaded rows match.
   const resultTotal =
-    activeFilterCount === 0 && loadingRest && restTotal != null
+    activeFilterCount === 0 && restTotal != null && !fullyLoaded
       ? restTotal
       : filtered.length
 
@@ -299,10 +320,15 @@ export function ProductGrid({
 
             {loadingRest ? (
               // The rest of the category/dispensary is still streaming in from
-              // /api/search — surface it so the shopper knows more (and more
+              // /api/listings — surface it so the shopper knows more (and more
               // filter options) are on the way, and so an in-progress filter
               // that matches nothing loaded yet doesn't read as a dead end.
               <LoadingMore total={restTotal ?? filtered.length} />
+            ) : loadError ? (
+              // The full-set fetch failed after retries — we're showing only
+              // the first slice. Say so and offer a retry instead of silently
+              // capping the menu.
+              <RetryLoad total={restTotal} onRetry={retryLoadRest} />
             ) : (
               hasMore && (
                 <div className="flex justify-center mt-8">
@@ -321,6 +347,11 @@ export function ProductGrid({
           // Nothing matches the loaded rows yet, but more are still arriving —
           // show progress instead of a premature "no products" state.
           <LoadingMore total={restTotal ?? 0} />
+        ) : loadError ? (
+          // Filter matched nothing in the loaded slice AND the full set failed
+          // to load — the match may be in the un-fetched rows, so offer a retry
+          // rather than a misleading "no products match."
+          <RetryLoad total={restTotal} onRetry={retryLoadRest} empty />
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-lg font-medium text-foreground mb-2">
@@ -350,6 +381,38 @@ function LoadingMore({ total }: { total: number }) {
       {total > 0
         ? `Loading all ${total.toLocaleString()} products…`
         : "Loading products…"}
+    </div>
+  )
+}
+
+// Shown when the full-set fetch failed after its retries: the grid is capped at
+// the first slice, so tell the shopper the rest didn't load and give them a way
+// to get them (instead of a silently truncated menu).
+function RetryLoad({
+  total,
+  onRetry,
+  empty = false,
+}: {
+  total?: number
+  onRetry: () => void
+  empty?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center gap-3 text-center",
+        empty ? "py-16" : "py-8"
+      )}
+      role="status"
+    >
+      <p className="text-sm text-muted-foreground">
+        {total != null
+          ? `Couldn't load all ${total.toLocaleString()} products.`
+          : "Couldn't load all products."}
+      </p>
+      <Button variant="outline" onClick={onRetry}>
+        Retry
+      </Button>
     </div>
   )
 }

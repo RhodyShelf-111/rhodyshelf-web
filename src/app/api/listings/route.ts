@@ -2,8 +2,11 @@ import { NextResponse, type NextRequest } from "next/server"
 import {
   getInventoryByCategory,
   getInventoryByDispensary,
+  HOMEPAGE_CATEGORIES,
 } from "@/lib/queries/products"
 import { getDispensaryBySlug } from "@/lib/queries/dispensaries"
+
+const VALID_CATEGORIES = new Set<string>(HOMEPAGE_CATEGORIES.map((c) => c.key))
 
 /**
  * Full listing set for one category or dispensary, from a single cached source
@@ -29,6 +32,16 @@ export async function GET(request: NextRequest) {
 
   try {
     if (scope === "category") {
+      // Allowlist the category so an arbitrary-`value` flood can't pump the
+      // CDN and the getInventoryByCategory data cache full of empty results
+      // (same guard the codebase applies to getListingById). no-store so the
+      // rejection itself is never cached.
+      if (!VALID_CATEGORIES.has(value)) {
+        return NextResponse.json(
+          { listings: [] },
+          { status: 400, headers: { "Cache-Control": "no-store" } }
+        )
+      }
       const listings = await getInventoryByCategory(value)
       return NextResponse.json(
         { listings },
