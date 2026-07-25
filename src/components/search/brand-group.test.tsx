@@ -1,7 +1,13 @@
 import { describe, it, expect } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { BrandGroup } from "./brand-group"
+import { EAGER_IMAGE_COUNT } from "@/lib/image-priority"
 import type { InventoryListing } from "@/lib/types"
+
+/** Give a listing an image so ProductCard renders an <img> to inspect. */
+function withImage(listing: InventoryListing): InventoryListing {
+  return { ...listing, image_url: `https://images.dutchie.com/${listing.id}` }
+}
 
 function makeListing(id: string, brand: string, price: number | null): InventoryListing {
   return {
@@ -47,6 +53,31 @@ function railFor(brand: string): HTMLElement {
 }
 
 describe("BrandGroup", () => {
+  it("hints its leading cards eager only when it is the first group", () => {
+    const listings = Array.from({ length: 8 }, (_, i) =>
+      // A real image URL: the loading hints only exist on a rendered <img>.
+      withImage(makeListing(String(i), "Acme Farms", 20 + i))
+    )
+
+    const { unmount } = render(
+      <BrandGroup brandName="Acme Farms" listings={listings} eager />
+    )
+    const hinted = screen
+      .getAllByRole("img")
+      .filter((img) => img.getAttribute("loading") === "eager")
+    expect(hinted).toHaveLength(EAGER_IMAGE_COUNT)
+    for (const img of hinted) {
+      expect(img).toHaveAttribute("fetchpriority", "high")
+    }
+    unmount()
+
+    // Every later group stays lazy so it can't compete with the LCP image.
+    render(<BrandGroup brandName="Acme Farms" listings={listings} />)
+    for (const img of screen.getAllByRole("img")) {
+      expect(img).toHaveAttribute("loading", "lazy")
+    }
+  })
+
   it("renders the brand name, lowest price, and product count", () => {
     render(
       <BrandGroup

@@ -2,7 +2,7 @@ import Link from "next/link"
 import { getHomepageSections, getBrandNames } from "@/lib/queries/products"
 import { HeroSearch } from "@/components/search/hero-search"
 import { PageContainer } from "@/components/layout/page-container"
-import { HomepageClient } from "./homepage-client"
+import { CategoryRails } from "./category-rails"
 import { getCategoryIcon } from "@/lib/utils"
 import { JsonLd } from "@/components/seo/json-ld"
 import { organizationJsonLd, websiteJsonLd } from "@/lib/seo/structured-data"
@@ -69,7 +69,7 @@ export default async function HomePage() {
       </div>
 
       {/* Category sections */}
-      <HomepageClient sections={sections} />
+      <CategoryRails sections={sections} />
     </PageContainer>
   )
 }

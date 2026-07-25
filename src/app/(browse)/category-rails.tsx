@@ -1,58 +1,37 @@
-"use client"
-
-import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import Link from "next/link"
-import type { CategorySection, InventoryListing } from "@/lib/types"
+import type { CategorySection } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
+import { EAGER_IMAGE_COUNT } from "@/lib/image-priority"
 import { getCategoryIcon } from "@/lib/utils"
 
-interface HomepageClientProps {
+interface CategoryRailsProps {
   sections: CategorySection[]
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const copy = [...arr]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
+/** Cards rendered per rail, out of the larger random sample the server draws
+ *  for each category (re-drawn every revalidation, so the rails still rotate). */
+export const CARDS_PER_RAIL = 6
 
-export function HomepageClient({ sections }: HomepageClientProps) {
-  const [shuffled, setShuffled] = useState<Map<string, InventoryListing[]>>(
-    () => new Map(sections.map((s) => [s.key, s.listings.slice(0, 6)]))
-  )
-  const railRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
-
-  // Shuffle on mount so each page load shows different cards. Intentionally a
-  // post-mount setState: shuffling during render would cause an SSR/client
-  // hydration mismatch.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShuffled(
-      new Map(sections.map((s) => [s.key, shuffle(s.listings).slice(0, 6)]))
-    )
-  }, [sections])
-
-  // Swapping every card out from under a scroll-snap container makes the
-  // browser re-snap: the element it had snapped to is gone, so it picks the
-  // nearest remaining snap target and silently scrolls the rail forward — the
-  // homepage then paints with a random subset of rails one card in, first card
-  // clipped off the left edge. (overflow-anchor:none does NOT prevent this;
-  // it's snap re-targeting, not scroll anchoring.) Re-pin each rail to the
-  // start in a layout effect, so it happens after the shuffled cards commit
-  // but before the browser paints them.
-  useLayoutEffect(() => {
-    for (const rail of railRefs.current.values()) {
-      if (rail) rail.scrollLeft = 0
-    }
-  }, [shuffled])
-
+/**
+ * The homepage category rails.
+ *
+ * A server component on purpose. This used to re-pick all 42 cards in a mount
+ * effect so every load showed different products, which meant the browser
+ * started fetching the server-rendered images, then threw them away
+ * milliseconds later — ~29 of ~73 image requests on every homepage load were
+ * for cards that never made it to paint. It also made the LCP image
+ * unprioritizable (any eager hint would be spent on a discarded card) and
+ * re-snapped the scroll rails mid-load.
+ *
+ * Variety now comes from the server instead: getHomepageSections draws a fresh
+ * random sample per category on each revalidation, so the rails still change —
+ * every 30 minutes rather than every load, and for free.
+ */
+export function CategoryRails({ sections }: CategoryRailsProps) {
   return (
     <div className="space-y-4">
-        {sections.map((section) => {
-          const cards = shuffled.get(section.key) ?? section.listings.slice(0, 6)
+        {sections.map((section, sectionIndex) => {
+          const cards = section.listings.slice(0, CARDS_PER_RAIL)
           return (
             <section key={section.key} className="rounded-xl bg-card border border-border overflow-hidden">
               {/* Section header */}
@@ -81,18 +60,21 @@ export function HomepageClient({ sections }: HomepageClientProps) {
                   the rail padding so a snapped card isn't flush to the edge;
                   overscroll-x-contain stops an iOS edge swipe from triggering
                   back-navigation off the homepage. */}
-              <div
-                ref={(el) => {
-                  railRefs.current.set(section.key, el)
-                }}
-                className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto overscroll-x-contain scroll-px-3 sm:scroll-px-4 scrollbar-subtle items-stretch snap-x snap-proximity"
-              >
-                {cards.map((listing) => (
+              <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto overscroll-x-contain scroll-px-3 sm:scroll-px-4 scrollbar-subtle items-stretch snap-x snap-proximity">
+                {cards.map((listing, cardIndex) => (
                   <div
                     key={listing.id}
                     className="w-[46vw] sm:w-56 max-w-[15rem] shrink-0 snap-start"
                   >
-                    <ProductCard listing={listing} />
+                    {/* Only the first rail is above the fold, and it holds the
+                        LCP candidate. Hinting its cards eager/high-priority has
+                        them requested while the HTML is still parsing, instead
+                        of after layout runs the lazy-load observer. Every later
+                        rail stays lazy. */}
+                    <ProductCard
+                      listing={listing}
+                      eager={sectionIndex === 0 && cardIndex < EAGER_IMAGE_COUNT}
+                    />
                   </div>
                 ))}
               </div>
