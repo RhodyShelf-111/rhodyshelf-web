@@ -36,8 +36,16 @@ export function BrandGroup({ brandName, listings }: BrandGroupProps) {
         </Link>
       </div>
 
-      {/* Horizontal scroll row */}
-      <div className="flex gap-4 overflow-x-auto overscroll-x-contain scrollbar-subtle snap-x -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
+      {/* Horizontal scroll row. The negative margin + matching padding bleeds
+          the scrollport to the viewport edge while keeping the first card
+          aligned to the page gutter. scroll-px MUST match that padding: a
+          snap-start card aligns to the snapport, which is the scrollport inset
+          by scroll-padding — leave it at the default 0 and the browser scrolls
+          the rail by exactly padding-left on load to satisfy the snap, landing
+          the first card flush to the viewport edge instead of under the brand
+          heading. Only overflowing rails could scroll, so the misalignment hit
+          the long brand rows and not the short ones. */}
+      <div className="flex gap-4 overflow-x-auto overscroll-x-contain scrollbar-subtle snap-x scroll-px-4 sm:scroll-px-6 lg:scroll-px-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
         {listings.slice(0, 10).map((listing) => (
           <div key={listing.id} className="w-52 shrink-0 snap-start">
             <ProductCard listing={listing} />

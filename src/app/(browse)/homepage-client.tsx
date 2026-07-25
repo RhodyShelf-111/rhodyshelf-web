@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import Link from "next/link"
 import type { CategorySection, InventoryListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
@@ -23,6 +23,7 @@ export function HomepageClient({ sections }: HomepageClientProps) {
   const [shuffled, setShuffled] = useState<Map<string, InventoryListing[]>>(
     () => new Map(sections.map((s) => [s.key, s.listings.slice(0, 6)]))
   )
+  const railRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
 
   // Shuffle on mount so each page load shows different cards. Intentionally a
   // post-mount setState: shuffling during render would cause an SSR/client
@@ -33,6 +34,20 @@ export function HomepageClient({ sections }: HomepageClientProps) {
       new Map(sections.map((s) => [s.key, shuffle(s.listings).slice(0, 6)]))
     )
   }, [sections])
+
+  // Swapping every card out from under a scroll-snap container makes the
+  // browser re-snap: the element it had snapped to is gone, so it picks the
+  // nearest remaining snap target and silently scrolls the rail forward — the
+  // homepage then paints with a random subset of rails one card in, first card
+  // clipped off the left edge. (overflow-anchor:none does NOT prevent this;
+  // it's snap re-targeting, not scroll anchoring.) Re-pin each rail to the
+  // start in a layout effect, so it happens after the shuffled cards commit
+  // but before the browser paints them.
+  useLayoutEffect(() => {
+    for (const rail of railRefs.current.values()) {
+      if (rail) rail.scrollLeft = 0
+    }
+  }, [shuffled])
 
   return (
     <div className="space-y-4">
@@ -66,7 +81,12 @@ export function HomepageClient({ sections }: HomepageClientProps) {
                   the rail padding so a snapped card isn't flush to the edge;
                   overscroll-x-contain stops an iOS edge swipe from triggering
                   back-navigation off the homepage. */}
-              <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto overscroll-x-contain scroll-px-3 sm:scroll-px-4 scrollbar-subtle items-stretch snap-x snap-proximity">
+              <div
+                ref={(el) => {
+                  railRefs.current.set(section.key, el)
+                }}
+                className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto overscroll-x-contain scroll-px-3 sm:scroll-px-4 scrollbar-subtle items-stretch snap-x snap-proximity"
+              >
                 {cards.map((listing) => (
                   <div
                     key={listing.id}
