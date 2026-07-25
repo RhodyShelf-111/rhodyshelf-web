@@ -32,8 +32,18 @@ export function formatRelativeTime(iso: string): string {
   return `${wks}w ago`
 }
 
+/** How far back /drops looks. Mirrors the window getDrops() queries. */
+export const DROP_WINDOW_DAYS = 14
+
 /**
- * Get freshness badge for a drop based on days since it appeared.
+ * Freshness badge for a drop.
+ *
+ * The label states the actual age rather than a mood word. "Just Dropped"
+ * covered days 0–3 and "New" covered days 8–14, so a card never said when its
+ * product actually landed — and because /drops sorts newest-first, every card
+ * in the opening screens read "Just Dropped", making the badge pure decoration
+ * exactly where a shopper is looking. The colour still tiers by recency; only
+ * the wording carries the date now.
  */
 export function getFreshnessBadge(droppedAt: string): {
   label: string
@@ -42,28 +52,28 @@ export function getFreshnessBadge(droppedAt: string): {
   const days = Math.floor(
     (Date.now() - new Date(droppedAt).getTime()) / (1000 * 60 * 60 * 24)
   )
+  if (days < 0 || days > DROP_WINDOW_DAYS) return null
+
+  const label =
+    days === 0
+      ? "Dropped today"
+      : days === 1
+        ? "Dropped yesterday"
+        : `Dropped ${days}d ago`
 
   if (days <= 3) {
     return {
-      label: "Just Dropped",
+      label,
       className: "bg-emerald-950/70 text-emerald-300 border border-emerald-900/60",
     }
   }
   if (days <= 7) {
     return {
-      label: "Fresh",
+      label,
       className: "bg-emerald-950/50 text-emerald-400 border border-emerald-900/50",
     }
   }
-  if (days <= 14) {
-    return {
-      // 8–14 days: "This Week" would be inaccurate, so use a window-accurate
-      // label that matches the page's "last 14 days" framing.
-      label: "New",
-      className: "bg-muted text-muted-foreground border-border",
-    }
-  }
-  return null
+  return { label, className: "bg-muted text-muted-foreground border-border" }
 }
 
 /**

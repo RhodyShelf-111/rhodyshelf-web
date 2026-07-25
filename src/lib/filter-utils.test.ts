@@ -4,7 +4,7 @@ import {
   brandNamesFromIndex,
   deriveFacetOptions,
 } from "./filter-utils"
-import type { InventoryListing } from "@/lib/types"
+import type { DropListing, InventoryListing } from "@/lib/types"
 
 let seq = 0
 function makeListing(
@@ -213,5 +213,66 @@ describe("brandNamesFromIndex", () => {
     expect(
       brandNamesFromIndex(rows, { category: "flower", dispensary: "sweetspot" })
     ).toEqual(["Sweetspot"])
+  })
+})
+
+describe("applyFilters — newest sort", () => {
+  /** A drop: an inventory listing that also knows when it hit the shelf. */
+  function makeDrop(
+    lastSeen: string,
+    droppedAt?: string
+  ): InventoryListing | DropListing {
+    const listing: InventoryListing = {
+      ...makeListing(),
+      last_seen_at: lastSeen,
+    }
+    return droppedAt ? { ...listing, dropped_at: droppedAt } : listing
+  }
+
+  const sorted = (listings: InventoryListing[]) =>
+    applyFilters(listings, { sort: "newest" }).map((l) => l.id)
+
+  it("falls back to last_seen_at for a plain listing", () => {
+    const older = makeDrop("2026-07-10T12:00:00.000Z")
+    const newer = makeDrop("2026-07-20T12:00:00.000Z")
+    expect(sorted([older, newer])).toEqual([newer.id, older.id])
+  })
+
+  // Regression: "Newest" ranked by last_seen_at — when the scraper last
+  // confirmed a listing, not when the product arrived. Every fresh listing
+  // carries one of a couple of batch timestamps (827 drops spanned 2 distinct
+  // hours; correlation with the real drop date was -0.009), so on /drops it was
+  // sorting by scrape batch. It only stayed in drop order by luck: a
+  // near-constant key plus a stable sort left the server's order untouched.
+  it("ranks drops by when they dropped, not when they were last scraped", () => {
+    // Same scrape batch, as production actually looks.
+    const batch = "2026-07-25T04:00:00.000Z"
+    const old = makeDrop(batch, "2026-07-12T09:00:00.000Z")
+    const fresh = makeDrop(batch, "2026-07-25T09:00:00.000Z")
+    const mid = makeDrop(batch, "2026-07-19T09:00:00.000Z")
+
+    expect(sorted([old, fresh, mid])).toEqual([fresh.id, mid.id, old.id])
+  })
+
+  it("does not let a stale scrape outrank a newer drop", () => {
+    const staleScrapeNewDrop = makeDrop(
+      "2026-07-24T04:00:00.000Z",
+      "2026-07-25T09:00:00.000Z"
+    )
+    const freshScrapeOldDrop = makeDrop(
+      "2026-07-25T04:00:00.000Z",
+      "2026-07-11T09:00:00.000Z"
+    )
+    expect(sorted([freshScrapeOldDrop, staleScrapeNewDrop])).toEqual([
+      staleScrapeNewDrop.id,
+      freshScrapeOldDrop.id,
+    ])
+  })
+
+  it("sorts an unparseable timestamp last instead of scrambling the list", () => {
+    const good = makeDrop("2026-07-20T12:00:00.000Z")
+    const newer = makeDrop("2026-07-22T12:00:00.000Z")
+    const broken = makeDrop("not-a-date")
+    expect(sorted([good, broken, newer])).toEqual([newer.id, good.id, broken.id])
   })
 })
