@@ -137,4 +137,30 @@ describe("BrandGroup", () => {
       expect(cls.split(/\s+/)).toContain(scrollPad)
     }
   })
+
+  // --rail-gutter drives two things that both have to land on the rail's own
+  // content edge: the inset of the scrollbar track, and the ramp of the
+  // edge-fade mask. The mask is only self-disabling at the ends — first and
+  // last cards never dimmed — because that ramp is exactly the rail's padding,
+  // so a gutter step that drifts from its px-* step breaks both at once.
+  it("declares a --rail-gutter matching each padding step, and the fade that uses it", () => {
+    render(
+      <BrandGroup
+        brandName="Acme Farms"
+        listings={[makeListing("1", "Acme Farms", 20)]}
+      />
+    )
+    const cls = railFor("Acme Farms").className.split(/\s+/)
+
+    expect(cls).toContain("rail-fade")
+    expect(cls).toContain("scrollbar-subtle")
+    for (const [pad, gutter] of [
+      ["px-4", "[--rail-gutter:1rem]"],
+      ["sm:px-6", "sm:[--rail-gutter:1.5rem]"],
+      ["lg:px-8", "lg:[--rail-gutter:2rem]"],
+    ]) {
+      expect(cls).toContain(pad)
+      expect(cls).toContain(gutter)
+    }
+  })
 })
