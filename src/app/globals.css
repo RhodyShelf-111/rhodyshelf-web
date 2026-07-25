@@ -84,18 +84,38 @@
     display: none;
   }
 
-  /* Thin, subtle themed scrollbar — used on horizontal card rows */
-  .scrollbar-subtle {
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent) transparent;
+  /* Thin, subtle themed scrollbar — used on horizontal card rows.
+
+     Chrome ignores EVERY ::-webkit-scrollbar-* rule on an element that also
+     sets scrollbar-width or scrollbar-color, so declaring both meant the whole
+     block below — the 8px height, the rounded themed thumb, the hover/active
+     colours, the track inset — was silently dead there, and the rails fell back
+     to the default thin scrollbar. Scope the standard properties to engines
+     that have no webkit pseudo-elements (Firefox) so each engine gets the one
+     that actually works. Verified: with scrollbar-width present a rail reserved
+     11px (default thin) despite a webkit rule asking for 30px; without it, 8px. */
+  @supports not selector(::-webkit-scrollbar) {
+    .scrollbar-subtle {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent) transparent;
+    }
   }
   .scrollbar-subtle::-webkit-scrollbar {
     height: 8px;
     width: 8px;
   }
+  /* The track spans the whole scrollport, so on a rail that bleeds past the
+     page gutter (-mx-* px-*) it starts further left than the cards do and
+     reads as misaligned. Inset it to wherever that rail's content actually
+     begins: bleeding rails set --rail-gutter to match their px-* at each
+     breakpoint, and the 8px default suits a rail whose scrollport already
+     lines up with its content. */
   .scrollbar-subtle::-webkit-scrollbar-track {
     background: transparent;
-    margin: 0 8px;
+    /* Physical, not logical: ::-webkit-scrollbar-* are legacy pseudo-elements
+       and don't reliably honour margin-inline. */
+    margin-left: var(--rail-gutter, 8px);
+    margin-right: var(--rail-gutter, 8px);
   }
   .scrollbar-subtle::-webkit-scrollbar-thumb {
     background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
@@ -110,6 +130,35 @@
   }
   .scrollbar-subtle::-webkit-scrollbar-thumb:active {
     background: var(--primary);
+  }
+
+  /* Horizontal card rails: fade cards out as they cross the rail's content
+     edge, instead of hard-clipping them mid-card at the viewport.
+
+     The ramp spans exactly the rail's own padding (--rail-gutter). That's what
+     makes it self-disabling at both ends without any JS: the scroll container
+     is padded by that same amount, so at scrollLeft 0 the left ramp covers only
+     padding (the first card is never dimmed), and at full scroll the right ramp
+     covers only padding (nor is the last). In between, a card fades out right
+     where the content column ends — the line stays true, the cut doesn't.
+
+     It also leaves the scrollbar alone: the track is inset by the same
+     --rail-gutter, so it sits entirely inside the opaque band. */
+  .rail-fade {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--rail-gutter, 0px),
+      #000 calc(100% - var(--rail-gutter, 0px)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--rail-gutter, 0px),
+      #000 calc(100% - var(--rail-gutter, 0px)),
+      transparent 100%
+    );
   }
 }
 

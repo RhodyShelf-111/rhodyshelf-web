@@ -271,7 +271,7 @@ export default async function ProductPage({
           </div>
           {/* scroll-px matches the bleed padding so the first card snaps under
               the heading instead of flush to the viewport edge (see BrandGroup). */}
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-subtle snap-x scroll-px-4 sm:scroll-px-6 lg:scroll-px-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-subtle rail-fade snap-x scroll-px-4 sm:scroll-px-6 lg:scroll-px-8 [--rail-gutter:1rem] sm:[--rail-gutter:1.5rem] lg:[--rail-gutter:2rem] -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
             {brandListings.map((l) => (
               <div
                 key={l.id}

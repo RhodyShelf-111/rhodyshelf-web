@@ -60,7 +60,7 @@ export function CategoryRails({ sections }: CategoryRailsProps) {
                   the rail padding so a snapped card isn't flush to the edge;
                   overscroll-x-contain stops an iOS edge swipe from triggering
                   back-navigation off the homepage. */}
-              <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto overscroll-x-contain scroll-px-3 sm:scroll-px-4 scrollbar-subtle items-stretch snap-x snap-proximity">
+              <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 overflow-x-auto overscroll-x-contain scroll-px-3 sm:scroll-px-4 [--rail-gutter:0.75rem] sm:[--rail-gutter:1rem] scrollbar-subtle rail-fade items-stretch snap-x snap-proximity">
                 {cards.map((listing, cardIndex) => (
                   <div
                     key={listing.id}
