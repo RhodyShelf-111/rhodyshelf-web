@@ -17,6 +17,8 @@ import { DealBadge } from "@/components/product/deal-badge"
 import { ProductCard } from "@/components/product/product-card"
 import { ProductHeroImage } from "@/components/product/product-hero-image"
 import { UpvoteButton } from "@/components/product/upvote-button"
+import { PriceComparisonPanel } from "@/components/product/price-comparison"
+import { buildPriceComparison } from "@/lib/price-comparison"
 import type { Metadata } from "next"
 
 export const revalidate = 1800
@@ -73,12 +75,19 @@ export default async function ProductPage({
   // the dispensary-level menu_url when a row has no product_url.
   const buyUrl = listing.product_url ?? dispensary.menu_url
 
-  // "More from this brand" rail (cached per brand). Exclude the current
-  // listing. Secondary content: degrade to no rail rather than 500 the page
-  // if the brand fetch fails.
-  const brandListings = (
-    await getInventoryByBrand(product.brand_name).catch(() => [])
+  // One cached fetch of the brand's fresh listings feeds both the price
+  // comparison and the "More from this brand" rail — no extra DB round-trip
+  // for the comparison. Secondary content: degrade to neither rather than
+  // 500 the page if the brand fetch fails.
+  const allBrandListings = await getInventoryByBrand(product.brand_name).catch(
+    () => []
   )
+
+  // Every other dispensary carrying this exact product and size. Null when
+  // nobody else does, which is the common case — the panel is then omitted.
+  const comparison = buildPriceComparison(listing, allBrandListings)
+
+  const brandListings = allBrandListings
     .filter((l) => l.id !== listing.id)
     .slice(0, 12)
 
@@ -217,6 +226,11 @@ export default async function ProductPage({
               </p>
             )}
           </Link>
+
+          {/* Where this price sits against every other shop carrying it.
+              Rendered right below "Available at" so the reading order is
+              price → this shop → how this shop compares. */}
+          {comparison && <PriceComparisonPanel comparison={comparison} />}
 
           {/* Desktop actions — inline beside the image. On mobile these move to
               a sticky bar pinned to the bottom of the page (below). */}
