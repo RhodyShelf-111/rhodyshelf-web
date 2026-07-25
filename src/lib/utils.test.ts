@@ -3,6 +3,7 @@ import {
   formatPrice,
   formatRelativeTime,
   getFreshnessBadge,
+  DROP_WINDOW_DAYS,
   slugify,
   getCategoryIcon,
 } from "./utils"
@@ -34,22 +35,44 @@ describe("formatRelativeTime", () => {
 
 describe("getFreshnessBadge", () => {
   const daysAgo = (d: number) =>
-    new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString()
+    // Half a day in, so floor() lands on d regardless of when the test runs.
+    new Date(Date.now() - (d + 0.5) * 24 * 60 * 60 * 1000).toISOString()
 
-  it("maps drop age to the right badge window", () => {
-    expect(getFreshnessBadge(daysAgo(1))?.label).toBe("Just Dropped")
-    expect(getFreshnessBadge(daysAgo(5))?.label).toBe("Fresh")
-    expect(getFreshnessBadge(daysAgo(10))?.label).toBe("New")
-    expect(getFreshnessBadge(daysAgo(20))).toBeNull()
+  // The label used to be a mood word covering a multi-day span ("Just Dropped"
+  // = days 0–3, "New" = days 8–14), so a card never said when its product
+  // actually landed. Since /drops sorts newest-first, every card in the opening
+  // screens read "Just Dropped" and the badge said nothing at all.
+  it("states the actual age instead of a vague window", () => {
+    expect(getFreshnessBadge(daysAgo(0))?.label).toBe("Dropped today")
+    expect(getFreshnessBadge(daysAgo(1))?.label).toBe("Dropped yesterday")
+    expect(getFreshnessBadge(daysAgo(2))?.label).toBe("Dropped 2d ago")
+    expect(getFreshnessBadge(daysAgo(5))?.label).toBe("Dropped 5d ago")
+    expect(getFreshnessBadge(daysAgo(13))?.label).toBe("Dropped 13d ago")
   })
 
-  it("uses inclusive boundaries at 3, 7, and 14 days", () => {
-    expect(getFreshnessBadge(daysAgo(3))?.label).toBe("Just Dropped")
-    expect(getFreshnessBadge(daysAgo(4))?.label).toBe("Fresh")
-    expect(getFreshnessBadge(daysAgo(7))?.label).toBe("Fresh")
-    expect(getFreshnessBadge(daysAgo(8))?.label).toBe("New")
-    expect(getFreshnessBadge(daysAgo(14))?.label).toBe("New")
-    expect(getFreshnessBadge(daysAgo(15))).toBeNull()
+  it("distinguishes every day inside the window", () => {
+    const labels = Array.from(
+      { length: DROP_WINDOW_DAYS + 1 },
+      (_, d) => getFreshnessBadge(daysAgo(d))?.label
+    )
+    expect(labels.every(Boolean)).toBe(true)
+    expect(new Set(labels).size).toBe(labels.length)
+  })
+
+  it("still tiers the colour by recency at 3 and 7 days", () => {
+    const tier = (d: number) => getFreshnessBadge(daysAgo(d))!.className
+    expect(tier(0)).toBe(tier(3))
+    expect(tier(4)).toBe(tier(7))
+    expect(tier(8)).toBe(tier(DROP_WINDOW_DAYS))
+    expect(new Set([tier(3), tier(4), tier(8)]).size).toBe(3)
+  })
+
+  it("returns no badge outside the drop window", () => {
+    expect(getFreshnessBadge(daysAgo(DROP_WINDOW_DAYS))).not.toBeNull()
+    expect(getFreshnessBadge(daysAgo(DROP_WINDOW_DAYS + 1))).toBeNull()
+    expect(getFreshnessBadge(daysAgo(20))).toBeNull()
+    // A future timestamp is bad data, not a drop.
+    expect(getFreshnessBadge(daysAgo(-3))).toBeNull()
   })
 })
 

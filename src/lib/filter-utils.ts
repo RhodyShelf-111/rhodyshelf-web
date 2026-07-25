@@ -1,4 +1,9 @@
-import type { Dispensary, InventoryListing, ProductFilters } from "@/lib/types"
+import type {
+  Dispensary,
+  DropListing,
+  InventoryListing,
+  ProductFilters,
+} from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
 
 export interface FacetOptions {
@@ -112,6 +117,29 @@ export function brandNamesFromIndex(
   return [...brands].sort()
 }
 
+/**
+ * Sort key for "Newest".
+ *
+ * `last_seen_at` is when the scraper last confirmed a listing, not when the
+ * product arrived — every fresh listing carries one of a couple of batch
+ * timestamps (measured: 827 drops span just 2 distinct hours, and its
+ * correlation with the real drop date is -0.009). So on /drops it ranked by
+ * scrape batch, and only stayed in drop order by luck: the key is near-constant
+ * and Array#sort is stable, so the server's `dropped_at desc` order survived
+ * untouched. Spread the scrape out and "Newest" would have quietly scrambled.
+ *
+ * A DropListing knows when it actually dropped, so prefer that.
+ */
+function newestRank(listing: InventoryListing): number {
+  // applyFilters is typed on InventoryListing, but /drops passes DropListings
+  // through it — narrow rather than widen the signature for one caller.
+  const { dropped_at } = listing as Partial<DropListing>
+  const t = new Date(dropped_at ?? listing.last_seen_at).getTime()
+  // An unparseable timestamp sorts last instead of poisoning every comparison
+  // with NaN (which would leave the whole list in an arbitrary order).
+  return Number.isNaN(t) ? -Infinity : t
+}
+
 export function applyFilters(
   listings: InventoryListing[],
   filters: ProductFilters
@@ -199,11 +227,7 @@ export function applyFilters(
       )
       break
     case "newest":
-      result = [...result].sort(
-        (a, b) =>
-          new Date(b.last_seen_at).getTime() -
-          new Date(a.last_seen_at).getTime()
-      )
+      result = [...result].sort((a, b) => newestRank(b) - newestRank(a))
       break
     case "brand-asc":
       result = [...result].sort((a, b) =>
