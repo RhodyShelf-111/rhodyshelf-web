@@ -14,6 +14,7 @@ import type {
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
 import { brandNamesFromIndex, type CatalogIndexRow } from "@/lib/filter-utils"
+import { SEARCH_FIELDS, searchTokens } from "@/lib/search-terms"
 
 export const SEARCH_PAGE_SIZE = 96
 
@@ -304,19 +305,25 @@ export const searchListings = unstable_cache(
     if (query.q) {
       const term = query.q.trim()
       const alias = resolveAlias(query.q)
-      // Match product name, brand, and strain name so strain-led searches
-      // (e.g. an autocomplete pick of "Blue Dream") still land on products whose
-      // name doesn't spell out the strain.
       if (alias) {
+        // A brand nickname resolves as a whole; don't tokenize it apart.
         q = q.or(
           `brand_name.ilike.${orIlikePattern(alias)},name.ilike.${orIlikePattern(term)},strain_name.ilike.${orIlikePattern(term)}`,
           { referencedTable: "product" }
         )
       } else if (term) {
-        q = q.or(
-          `name.ilike.${orIlikePattern(term)},brand_name.ilike.${orIlikePattern(term)},strain_name.ilike.${orIlikePattern(term)}`,
-          { referencedTable: "product" }
-        )
+        // One .or() per token, and PostgREST ANDs successive filters — so every
+        // word must match somewhere, each against any SEARCH_FIELD. That covers
+        // the vocabulary shoppers actually type ("indica", "sativa vape",
+        // "hybrid pre-roll"), which a single whole-query substring match missed
+        // entirely.
+        for (const token of searchTokens(term)) {
+          const pattern = orIlikePattern(token)
+          q = q.or(
+            SEARCH_FIELDS.map((f) => `${f}.ilike.${pattern}`).join(","),
+            { referencedTable: "product" }
+          )
+        }
       }
     }
 

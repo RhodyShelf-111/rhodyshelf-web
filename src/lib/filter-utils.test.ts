@@ -276,3 +276,42 @@ describe("applyFilters — newest sort", () => {
     expect(sorted([good, broken, newer])).toEqual([newer.id, good.id, broken.id])
   })
 })
+
+describe("applyFilters — free-text search", () => {
+  // Regression: search matched only name and brand, as one whole-query
+  // substring. So "indica" (a strain_type on 590 fresh listings but in only 14
+  // product names) returned almost nothing, and any two-word query found
+  // nothing unless that exact phrase sat in a product name.
+  const catalog = [
+    makeListing({ name: "Joker Z", brand: "Appalachian", category: "vape", strainType: "indica" }),
+    makeListing({ name: "Garlic Jam", brand: "Fire Ganja", category: "vape", strainType: "sativa" }),
+    makeListing({ name: "Mothballs", brand: "&Shine", category: "pre-roll", strainType: "indica" }),
+    makeListing({ name: "Blue Dream", brand: "BrandC", category: "flower", strainType: "hybrid" }),
+  ]
+  const names = (search: string) =>
+    applyFilters(catalog, { search }).map((l) => l.product.name)
+
+  it("matches a strain type, not just names and brands", () => {
+    expect(names("indica").sort()).toEqual(["Joker Z", "Mothballs"])
+  })
+
+  it("matches a category", () => {
+    expect(names("vape").sort()).toEqual(["Garlic Jam", "Joker Z"])
+  })
+
+  it("requires every word of a multi-word query to match somewhere", () => {
+    expect(names("sativa vape")).toEqual(["Garlic Jam"])
+    expect(names("indica pre-roll")).toEqual(["Mothballs"])
+    // Both words must land — "sativa" and "pre-roll" never co-occur.
+    expect(names("sativa pre-roll")).toEqual([])
+  })
+
+  it("still matches a plain name or brand", () => {
+    expect(names("blue dream")).toEqual(["Blue Dream"])
+    expect(names("fire ganja")).toEqual(["Garlic Jam"])
+  })
+
+  it("is case-insensitive across fields", () => {
+    expect(names("INDICA").sort()).toEqual(["Joker Z", "Mothballs"])
+  })
+})
