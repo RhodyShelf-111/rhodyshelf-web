@@ -7,6 +7,16 @@ import { formatPrice } from "@/lib/utils"
 interface BrandGroupProps {
   brandName: string
   listings: InventoryListing[]
+  /**
+   * How many listings this brand actually has under the page's active filters.
+   * `listings` is only the loaded page (96 rows), so counting it undercounts
+   * any brand with a bigger share. Falls back to the loaded count when the
+   * server couldn't supply one.
+   */
+  totalCount?: number
+  /** Where "View all" goes — the current filters plus this brand, so the
+   *  destination is the set the count describes. */
+  href: string
   /** Set on the first group only: its leading cards are the page's above-the-fold
    *  row and hold the LCP candidate, so they take the eager/high-priority image
    *  hint instead of waiting on the lazy-load observer. */
@@ -16,11 +26,13 @@ interface BrandGroupProps {
 export function BrandGroup({
   brandName,
   listings,
+  totalCount,
+  href,
   eager = false,
 }: BrandGroupProps) {
   const prices = listings.map((l) => l.price).filter((p): p is number => p != null)
   const minPrice = prices.length > 0 ? Math.min(...prices) : null
-  const brandSlug = encodeURIComponent(brandName)
+  const count = totalCount ?? listings.length
 
   return (
     <div className="py-4 border-b border-border last:border-0">
@@ -34,14 +46,14 @@ export function BrandGroup({
           </h3>
           <span className="shrink-0 text-[13px] text-muted-foreground">
             {minPrice != null ? `From ${formatPrice(minPrice)} · ` : ""}
-            {listings.length} product{listings.length !== 1 ? "s" : ""}
+            {count.toLocaleString()} product{count !== 1 ? "s" : ""}
           </span>
         </div>
         <Link
-          href={`/search?brand=${brandSlug}`}
+          href={href}
           className="text-sm text-primary hover:underline shrink-0"
         >
-          View all {listings.length} →
+          View all {count.toLocaleString()} →
         </Link>
       </div>
 

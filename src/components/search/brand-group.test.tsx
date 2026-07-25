@@ -60,7 +60,7 @@ describe("BrandGroup", () => {
     )
 
     const { unmount } = render(
-      <BrandGroup brandName="Acme Farms" listings={listings} eager />
+      <BrandGroup brandName="Acme Farms" listings={listings} href="/search?brand=Acme+Farms" eager />
     )
     const hinted = screen
       .getAllByRole("img")
@@ -72,7 +72,7 @@ describe("BrandGroup", () => {
     unmount()
 
     // Every later group stays lazy so it can't compete with the LCP image.
-    render(<BrandGroup brandName="Acme Farms" listings={listings} />)
+    render(<BrandGroup brandName="Acme Farms" listings={listings} href="/search?brand=Acme+Farms" />)
     for (const img of screen.getAllByRole("img")) {
       expect(img).toHaveAttribute("loading", "lazy")
     }
@@ -83,6 +83,7 @@ describe("BrandGroup", () => {
       <BrandGroup
         brandName="Acme Farms"
         listings={[makeListing("1", "Acme Farms", 30), makeListing("2", "Acme Farms", 22)]}
+        href="/search?brand=Acme+Farms"
       />
     )
     expect(screen.getByRole("heading", { name: "Acme Farms" })).toBeInTheDocument()
@@ -94,17 +95,71 @@ describe("BrandGroup", () => {
       <BrandGroup
         brandName="Acme Farms"
         listings={[makeListing("1", "Acme Farms", null)]}
+        href="/search?brand=Acme+Farms"
       />
     )
     expect(screen.getByText("1 product")).toBeInTheDocument()
     expect(screen.queryByText(/From \$/)).not.toBeInTheDocument()
   })
 
+  // Regression: the group labelled itself by counting the listings it was
+  // handed — but that's one loaded page (96 rows), so any brand with a bigger
+  // share was undercounted. Under a Concentrate filter, a brand showing
+  // "9 products" really had 36.
+  it("labels itself with the server's true count, not the loaded page", () => {
+    const loadedPage = Array.from({ length: 9 }, (_, i) =>
+      makeListing(String(i), "Mother Earth Wellness", 35)
+    )
+    render(
+      <BrandGroup
+        brandName="Mother Earth Wellness"
+        listings={loadedPage}
+        totalCount={36}
+        href="/search?category=concentrate&brand=Mother+Earth+Wellness"
+      />
+    )
+    expect(screen.getByText(/36 products/)).toBeInTheDocument()
+    expect(screen.queryByText(/9 products/)).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: /View all 36/ })
+    ).toBeInTheDocument()
+  })
+
+  // Regression: "View all" hardcoded /search?brand=X, dropping the active
+  // category — so the destination held every product of that brand, not the
+  // set the count described.
+  it("sends View all to the href it was given, filters and all", () => {
+    render(
+      <BrandGroup
+        brandName="Mother Earth Wellness"
+        listings={[makeListing("1", "Mother Earth Wellness", 35)]}
+        totalCount={36}
+        href="/search?category=concentrate&brand=Mother+Earth+Wellness"
+      />
+    )
+    expect(screen.getByRole("link", { name: /View all/ })).toHaveAttribute(
+      "href",
+      "/search?category=concentrate&brand=Mother+Earth+Wellness"
+    )
+  })
+
+  it("thousands-separates a large count", () => {
+    render(
+      <BrandGroup
+        brandName="Acme Farms"
+        listings={[makeListing("1", "Acme Farms", 20)]}
+        totalCount={1234}
+        href="/search?brand=Acme+Farms"
+      />
+    )
+    expect(screen.getByText(/1,234 products/)).toBeInTheDocument()
+  })
+
   it("caps the rail at 10 cards but counts the full set", () => {
     const listings = Array.from({ length: 14 }, (_, i) =>
       makeListing(String(i), "Acme Farms", 20 + i)
     )
-    render(<BrandGroup brandName="Acme Farms" listings={listings} />)
+    render(<BrandGroup brandName="Acme Farms" listings={listings} href="/search?brand=Acme+Farms" />)
     expect(railFor("Acme Farms").children).toHaveLength(10)
     expect(screen.getByText(/14 products/)).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /View all 14/ })).toBeInTheDocument()
@@ -123,6 +178,7 @@ describe("BrandGroup", () => {
       <BrandGroup
         brandName="Acme Farms"
         listings={[makeListing("1", "Acme Farms", 20)]}
+        href="/search?brand=Acme+Farms"
       />
     )
     const cls = railFor("Acme Farms").className
@@ -148,6 +204,7 @@ describe("BrandGroup", () => {
       <BrandGroup
         brandName="Acme Farms"
         listings={[makeListing("1", "Acme Farms", 20)]}
+        href="/search?brand=Acme+Farms"
       />
     )
     const cls = railFor("Acme Farms").className.split(/\s+/)

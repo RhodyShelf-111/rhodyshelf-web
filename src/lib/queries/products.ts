@@ -13,7 +13,12 @@ import type {
   SearchPage,
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
-import { brandNamesFromIndex, type CatalogIndexRow } from "@/lib/filter-utils"
+import {
+  brandCountsFromIndex,
+  brandNamesFromIndex,
+  type CatalogIndexRow,
+  type CatalogScope,
+} from "@/lib/filter-utils"
 import { SEARCH_FIELDS, searchTokens } from "@/lib/search-terms"
 
 export const SEARCH_PAGE_SIZE = 96
@@ -94,7 +99,7 @@ const getCatalogIndex = unstable_cache(
       const { data, error } = await client
         .from("current_inventory")
         .select(
-          "id, product:product_id!inner(category, brand_name), dispensary:dispensary_id!inner(id, slug)"
+          "id, discount_amount, product:product_id!inner(category, brand_name), dispensary:dispensary_id!inner(id, slug)"
         )
         .gt("last_seen_at", freshnessCutoff())
         .eq("dispensary.is_active", true)
@@ -113,6 +118,7 @@ const getCatalogIndex = unstable_cache(
           category: product.category.toLowerCase(),
           brand: product.brand_name,
           dispensary: dispensary.slug,
+          onSale: Number(row.discount_amount ?? 0) > 0,
         })
       }
       if (data.length < PAGE_SIZE) break
@@ -121,11 +127,23 @@ const getCatalogIndex = unstable_cache(
 
     return rows
   },
-  // v2: rows gained the dispensary slug — a new key so stale v1 entries
-  // (without it) can't serve the scoped brand facet.
-  ["catalog-index-v2"],
+  // v3: rows gained the sale flag — a new key so stale v2 entries (without it)
+  // can't serve brand counts that ignore the On Sale filter.
+  ["catalog-index-v3"],
   { revalidate: 1800, tags: ["inventory"] }
 )
+
+/**
+ * True per-brand listing counts under the active browse filters — what the
+ * brand-grouped search rows label themselves with. Reads the same cached index
+ * as the brand facet, so it costs no extra query.
+ */
+export async function getBrandCountsFor(
+  scope: CatalogScope
+): Promise<Record<string, number>> {
+  const index = await getCatalogIndex()
+  return brandCountsFromIndex(index, scope)
+}
 
 /** Unique brand names with fresh inventory, sorted — for autocomplete and filters. */
 export async function getBrandNames(): Promise<string[]> {
