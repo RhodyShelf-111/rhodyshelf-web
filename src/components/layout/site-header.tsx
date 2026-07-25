@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { SearchBar } from "./search-bar"
 import { PageContainer } from "./page-container"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
+import { useSwipeDismiss } from "@/hooks/use-swipe-dismiss"
 import { useEffect, useRef, useState } from "react"
 
 type NavLink = {
@@ -170,7 +171,19 @@ export function SiteHeader() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const isActive = (href: string) => pathname?.startsWith(href) ?? false
-  const closeNav = () => setMobileNavOpen(false)
+
+  // The menu shows a grab handle, so it has to honour the gesture that handle
+  // advertises. Base UI's Dialog has none of its own — same shared hook the
+  // filter sheet uses, so both bottom sheets dismiss identically.
+  const {
+    popupRef: navPopupRef,
+    dragHandlers: navDragHandlers,
+    onOpenChange: onNavOpenChange,
+  } = useSwipeDismiss({ open: mobileNavOpen, setOpen: setMobileNavOpen })
+
+  // Route link taps through the same slide-out as a swipe, so the menu never
+  // leaves two different ways.
+  const closeNav = () => onNavOpenChange(false)
 
   // Lock body scroll while the mobile search overlay is open, matching the
   // hamburger Sheet — otherwise the page scrolls behind the focused scrim.
@@ -266,7 +279,7 @@ export function SiteHeader() {
 
           {/* Mobile menu — a bottom sheet that rises into the thumb zone, matching
               the app's product quick-look and filter sheets. */}
-          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <Sheet open={mobileNavOpen} onOpenChange={onNavOpenChange}>
             <SheetTrigger
               className="inline-flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
               aria-label="Menu"
@@ -274,17 +287,26 @@ export function SiteHeader() {
               <Menu className="w-5 h-5 text-muted-foreground" />
             </SheetTrigger>
             <SheetContent
+              ref={navPopupRef}
               side="bottom"
               className="rounded-t-2xl gap-0 px-0 pt-0 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[85dvh] overflow-y-auto overscroll-contain"
             >
-              {/* Grab handle — signals "swipe / drag" and matches the product sheet. */}
+              {/* Grab handle + section label — the swipe's drag zone. touch-none
+                  so the browser doesn't claim a downward drag for scrolling
+                  first; the nav rows below keep scrolling normally. */}
               <div
-                aria-hidden="true"
-                className="mx-auto mt-2.5 mb-1 h-1.5 w-9 rounded-full bg-border"
-              />
-              <SheetTitle className="px-5 pt-1 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Browse
-              </SheetTitle>
+                data-testid="nav-sheet-drag-zone"
+                className="shrink-0 touch-none select-none"
+                {...navDragHandlers}
+              >
+                <div
+                  aria-hidden="true"
+                  className="mx-auto mt-2.5 mb-1 h-1.5 w-9 cursor-grab rounded-full bg-border active:cursor-grabbing"
+                />
+                <SheetTitle className="px-5 pt-1 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Browse
+                </SheetTitle>
+              </div>
               <nav className="px-3 pb-1 flex flex-col gap-1">
                 {NAV_LINKS.map((link) => (
                   <MobileMenuRow
