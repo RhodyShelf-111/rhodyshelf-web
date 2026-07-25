@@ -13,7 +13,8 @@ import { buildSearchParams } from "@/lib/search-params"
 import { FilterBar } from "@/components/search/filter-bar"
 import { BrandGroup } from "@/components/search/brand-group"
 import { HeroSearch } from "@/components/search/hero-search"
-import { ProductCard, EAGER_IMAGE_COUNT } from "@/components/product/product-card"
+import { ProductCard } from "@/components/product/product-card"
+import { EAGER_IMAGE_COUNT } from "@/lib/image-priority"
 import { resolveAlias } from "@/lib/brand-aliases"
 
 interface SearchClientProps {
@@ -233,8 +234,13 @@ export function SearchClient({
             ))}
           </div>
         ) : (
-          brandGroups.map(({ brand, items }) => (
-            <BrandGroup key={brand} brandName={brand} listings={items} />
+          brandGroups.map(({ brand, items }, groupIndex) => (
+            <BrandGroup
+              key={brand}
+              brandName={brand}
+              listings={items}
+              eager={groupIndex === 0}
+            />
           ))
         )}
 

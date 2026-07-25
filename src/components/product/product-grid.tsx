@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react"
 import type { InventoryListing, ProductFilters } from "@/lib/types"
-import { ProductCard, EAGER_IMAGE_COUNT } from "./product-card"
+import { ProductCard } from "./product-card"
+import { EAGER_IMAGE_COUNT } from "@/lib/image-priority"
 import { ProductFiltersPanel } from "./product-filters"
 import { ProductSort } from "./product-sort"
 import { applyFilters, deriveFacetOptions } from "@/lib/filter-utils"
