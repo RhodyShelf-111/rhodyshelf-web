@@ -5,6 +5,7 @@ import type {
   ProductFilters,
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
+import { searchHaystack, searchTokens } from "@/lib/search-terms"
 
 export interface FacetOptions {
   categories: string[]
@@ -194,14 +195,23 @@ export function applyFilters(
   if (filters.search) {
     const term = filters.search.toLowerCase()
     const aliasResolved = resolveAlias(term)
-    result = result.filter((l) => {
-      const name = l.product.name.toLowerCase()
-      const brand = l.product.brand_name.toLowerCase()
-      if (aliasResolved) {
-        return brand.includes(aliasResolved.toLowerCase()) || name.includes(term)
-      }
-      return name.includes(term) || brand.includes(term)
-    })
+    if (aliasResolved) {
+      // A brand nickname resolves as a whole; don't tokenize it apart.
+      const alias = aliasResolved.toLowerCase()
+      result = result.filter(
+        (l) =>
+          l.product.brand_name.toLowerCase().includes(alias) ||
+          l.product.name.toLowerCase().includes(term)
+      )
+    } else {
+      // Same rule as the server-side search: every word must match somewhere,
+      // each against any searchable field.
+      const tokens = searchTokens(term)
+      result = result.filter((l) => {
+        const haystack = searchHaystack(l.product)
+        return tokens.every((t) => haystack.includes(t))
+      })
+    }
   }
 
   // Sort
