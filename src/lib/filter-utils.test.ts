@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   applyFilters,
+  brandCountsFromIndex,
   brandNamesFromIndex,
   deriveFacetOptions,
 } from "./filter-utils"
@@ -191,10 +192,10 @@ describe("deriveFacetOptions", () => {
 
 describe("brandNamesFromIndex", () => {
   const rows = [
-    { id: "1", category: "flower", brand: "Hi5", dispensary: "mother-earth" },
-    { id: "2", category: "edible", brand: "Hi5", dispensary: "sweetspot" },
-    { id: "3", category: "flower", brand: "Sweetspot", dispensary: "sweetspot" },
-    { id: "4", category: "flower", brand: "Hi5", dispensary: "mother-earth" },
+    { id: "1", category: "flower", brand: "Hi5", dispensary: "mother-earth", onSale: false },
+    { id: "2", category: "edible", brand: "Hi5", dispensary: "sweetspot", onSale: true },
+    { id: "3", category: "flower", brand: "Sweetspot", dispensary: "sweetspot", onSale: false },
+    { id: "4", category: "flower", brand: "Hi5", dispensary: "mother-earth", onSale: true },
   ]
 
   it("unscoped: unique brands, sorted", () => {
@@ -313,5 +314,50 @@ describe("applyFilters — free-text search", () => {
 
   it("is case-insensitive across fields", () => {
     expect(names("INDICA").sort()).toEqual(["Joker Z", "Mothballs"])
+  })
+})
+
+describe("brandCountsFromIndex", () => {
+  // Regression: the brand-grouped rows labelled themselves by counting the
+  // cards they'd rendered, but that's one loaded page (96 rows) — so a brand
+  // with a bigger share was undercounted. Under a Concentrate filter "Mother
+  // Earth Wellness · 9 products" was really 36, and "View all 9" then dropped
+  // the category and landed on all 265 of their products.
+  const rows = [
+    { id: "1", category: "concentrate", brand: "MEW", dispensary: "mother-earth", onSale: false },
+    { id: "2", category: "concentrate", brand: "MEW", dispensary: "mother-earth", onSale: true },
+    { id: "3", category: "concentrate", brand: "MEW", dispensary: "sweetspot", onSale: false },
+    { id: "4", category: "flower", brand: "MEW", dispensary: "mother-earth", onSale: false },
+    { id: "5", category: "concentrate", brand: "Evergreen", dispensary: "mother-earth", onSale: false },
+  ]
+
+  it("counts every listing per brand when unscoped", () => {
+    expect(brandCountsFromIndex(rows)).toEqual({ MEW: 4, Evergreen: 1 })
+  })
+
+  it("counts within the active category, not the whole catalog", () => {
+    expect(brandCountsFromIndex(rows, { category: "concentrate" })).toEqual({
+      MEW: 3,
+      Evergreen: 1,
+    })
+  })
+
+  it("matches the category case-insensitively (the index stores lowercase)", () => {
+    expect(brandCountsFromIndex(rows, { category: "Concentrate" })).toEqual({
+      MEW: 3,
+      Evergreen: 1,
+    })
+  })
+
+  it("narrows by dispensary and by sale, and compounds them with category", () => {
+    expect(brandCountsFromIndex(rows, { dispensary: "sweetspot" })).toEqual({ MEW: 1 })
+    expect(brandCountsFromIndex(rows, { onSale: true })).toEqual({ MEW: 1 })
+    expect(
+      brandCountsFromIndex(rows, { category: "concentrate", dispensary: "mother-earth" })
+    ).toEqual({ MEW: 2, Evergreen: 1 })
+  })
+
+  it("drops brands with nothing in scope rather than reporting zero", () => {
+    expect(brandCountsFromIndex(rows, { category: "flower" })).toEqual({ MEW: 1 })
   })
 })

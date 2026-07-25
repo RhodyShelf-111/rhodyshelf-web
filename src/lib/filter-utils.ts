@@ -97,6 +97,45 @@ export interface CatalogIndexRow {
   brand: string
   /** dispensary slug */
   dispensary: string
+  /** discounted right now — lets counts respect the On Sale filter */
+  onSale: boolean
+}
+
+/** The filters a brand-grouped browse can have active. Keyword and brand are
+ *  excluded on purpose: both switch the page to a flat grid, so no brand
+ *  grouping (and no per-brand count) is rendered for them. */
+export interface CatalogScope {
+  category?: string
+  dispensary?: string
+  onSale?: boolean
+}
+
+function inScope(row: CatalogIndexRow, scope: CatalogScope): boolean {
+  if (scope.category && row.category !== scope.category.toLowerCase()) return false
+  if (scope.dispensary && row.dispensary !== scope.dispensary) return false
+  if (scope.onSale && !row.onSale) return false
+  return true
+}
+
+/**
+ * How many fresh listings each brand has under the active filters.
+ *
+ * The brand-grouped results only ever hold one loaded page (96 rows), so
+ * counting the rendered cards undercounts every brand with more than that
+ * share — "Mother Earth Wellness · 9 products" when the real answer under a
+ * Concentrate filter was 36. Counting from the cached catalog index gives the
+ * true, scope-aware number without another query.
+ */
+export function brandCountsFromIndex(
+  rows: CatalogIndexRow[],
+  scope: CatalogScope = {}
+): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const row of rows) {
+    if (!inScope(row, scope)) continue
+    counts[row.brand] = (counts[row.brand] ?? 0) + 1
+  }
+  return counts
 }
 
 /**
@@ -108,11 +147,11 @@ export function brandNamesFromIndex(
   rows: CatalogIndexRow[],
   scope: { category?: string; dispensary?: string } = {}
 ): string[] {
-  const category = scope.category?.toLowerCase()
   const brands = new Set<string>()
   for (const row of rows) {
-    if (category && row.category !== category) continue
-    if (scope.dispensary && row.dispensary !== scope.dispensary) continue
+    // Deliberately ignores onSale: the facet lists brands you could switch to,
+    // and the sale toggle is applied on top of whichever you pick.
+    if (!inScope(row, { ...scope, onSale: undefined })) continue
     brands.add(row.brand)
   }
   return [...brands].sort()

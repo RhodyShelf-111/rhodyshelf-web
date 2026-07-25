@@ -28,6 +28,10 @@ interface SearchClientProps {
   brandOptions: string[]
   categories: string[]
   dispensaries: Dispensary[]
+  /** True per-brand listing counts under the active filters, keyed by brand.
+   *  Server-derived from the cached catalog index — the loaded page can't be
+   *  counted for this, it only holds 96 rows. */
+  brandCounts: Record<string, number>
 }
 
 /**
@@ -44,6 +48,7 @@ export function SearchClient({
   brandOptions,
   categories,
   dispensaries,
+  brandCounts,
 }: SearchClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -239,6 +244,11 @@ export function SearchClient({
               key={brand}
               brandName={brand}
               listings={items}
+              totalCount={brandCounts?.[brand]}
+              // Keep the active filters and add the brand, so "View all 36"
+              // under a Concentrate filter lands on that brand's 36
+              // concentrates — not on all 265 of their products.
+              href={`/search?${buildSearchParams({ ...query, brand }).toString()}`}
               eager={groupIndex === 0}
             />
           ))

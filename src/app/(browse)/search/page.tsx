@@ -2,6 +2,7 @@ import {
   searchListings,
   getBrandNames,
   getBrandNamesFor,
+  getBrandCountsFor,
   getCategories,
 } from "@/lib/queries/products"
 import { getDispensaries } from "@/lib/queries/dispensaries"
@@ -41,7 +42,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // /api/search with the same query shape. Each fetch degrades softly for
   // this one request on transient errors (the caches throw rather than
   // store degraded values).
-  const [page, brands, brandOptions, categories, dispensaries] =
+  const [page, brands, brandOptions, brandCounts, categories, dispensaries] =
     await Promise.all([
       searchListings(query, 1).catch((e) => {
         console.error(e)
@@ -54,6 +55,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         category: query.category,
         dispensary: query.dispensary,
       }).catch(() => [] as string[]),
+      // True per-brand counts for the brand-grouped rows. Same cached index as
+      // the facet above, so no extra round-trip.
+      getBrandCountsFor({
+        category: query.category,
+        dispensary: query.dispensary,
+        onSale: query.onSale,
+      }).catch(() => ({}) as Record<string, number>),
       getCategories().catch(() => [] as string[]),
       getDispensaries().catch(() => []),
     ])
@@ -77,6 +85,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         pageSize={page.pageSize}
         brands={brands}
         brandOptions={brandOptions}
+        brandCounts={brandCounts}
         categories={categories}
         dispensaries={dispensaries}
       />
