@@ -14,7 +14,9 @@ export function DealBadge({ className, percent }: DealBadgeProps) {
     <span
       className={cn(
         "inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md",
-        "bg-red-950/70 text-red-300 border border-red-900/60",
+        // Sits directly on the packshot, which is usually a white background,
+        // so the fill stays near-opaque to hold its text contrast there.
+        "bg-red-950/90 text-red-300 border border-red-900/60 backdrop-blur-sm",
         className
       )}
     >
@@ -36,8 +38,8 @@ export function StockBadge({ inStock, className }: StockBadgeProps) {
       className={cn(
         "inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md border backdrop-blur-sm",
         inStock
-          ? "bg-emerald-950/70 text-emerald-300 border-emerald-900/60"
-          : "bg-background/80 text-muted-foreground border-border",
+          ? "bg-emerald-950/90 text-emerald-300 border-emerald-900/60"
+          : "bg-background/90 text-muted-foreground border-border",
         className
       )}
     >
@@ -64,6 +66,8 @@ export function DropBadge({ label, badgeClassName, className }: DropBadgeProps) 
     <span
       className={cn(
         "inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-md border",
+        // Also overlays the packshot — see DealBadge.
+        "backdrop-blur-sm",
         badgeClassName,
         className
       )}

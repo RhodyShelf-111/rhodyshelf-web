@@ -64,13 +64,13 @@ export function getFreshnessBadge(droppedAt: string): {
   if (days <= 3) {
     return {
       label,
-      className: "bg-emerald-950/70 text-emerald-300 border border-emerald-900/60",
+      className: "bg-emerald-950/90 text-emerald-300 border border-emerald-900/60",
     }
   }
   if (days <= 7) {
     return {
       label,
-      className: "bg-emerald-950/50 text-emerald-400 border border-emerald-900/50",
+      className: "bg-emerald-950/80 text-emerald-400 border border-emerald-900/50",
     }
   }
   return { label, className: "bg-muted text-muted-foreground border-border" }
