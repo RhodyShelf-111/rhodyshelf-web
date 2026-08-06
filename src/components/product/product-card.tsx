@@ -91,8 +91,13 @@ export function ProductCard({
         />
       )}
 
-      {/* Image plate — object-contain + padding so mixed-background packshots
-          from different dispensary CDNs all sit on a consistent muted tile. */}
+      {/* Image plate. Packshots come from 7 dispensary CDNs and ~90% of them are
+          opaque rectangles (white, photo, or black backgrounds) rather than
+          transparent cutouts, so inset padding just draws a frame around an
+          image that already has its own edges. The image runs to the tile edge
+          instead; the muted tile only shows as letterbox bands behind the ~45%
+          of packshots that aren't square. object-contain (not cover) because
+          cropping a package makes the SKU harder to recognize. */}
       <div className="relative aspect-square bg-muted shrink-0 border-b border-border/60">
         {imageUrl ? (
           <Image
@@ -105,7 +110,7 @@ export function ProductCard({
             loading={eager ? "eager" : undefined}
             fetchPriority={eager ? "high" : "auto"}
             className={cn(
-              "object-contain p-3",
+              "object-contain",
               outOfStock && "grayscale opacity-50"
             )}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

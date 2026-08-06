@@ -38,6 +38,26 @@ function makeListing(): InventoryListing {
   }
 }
 
+describe("ProductCard image plate", () => {
+  // ~90% of dispensary-CDN packshots are opaque rectangles, not transparent
+  // cutouts, so inset padding drew a visible frame around an image that already
+  // had its own edges. The image fills the tile instead.
+  it("renders the packshot edge to edge, with no inset padding", () => {
+    render(<ProductCard listing={makeListing()} />)
+    const img = screen.getByRole("img", { name: "Blue Dream 3.5g" })
+    expect(img.className).not.toMatch(/(^|\s)p-\d/)
+  })
+
+  // Contain, never cover: cropping a package makes the SKU harder to recognize,
+  // and ~45% of packshots aren't square so cover would crop most of the grid.
+  it("scales the packshot to fit rather than cropping it", () => {
+    render(<ProductCard listing={makeListing()} />)
+    const img = screen.getByRole("img", { name: "Blue Dream 3.5g" })
+    expect(img).toHaveClass("object-contain")
+    expect(img).not.toHaveClass("object-cover")
+  })
+})
+
 describe("ProductCard eager (LCP hint)", () => {
   it("eager cards load the image eagerly with high fetch priority; default cards stay lazy", () => {
     const { unmount } = render(<ProductCard listing={makeListing()} eager />)
