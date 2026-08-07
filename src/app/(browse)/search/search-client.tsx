@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { CloudOff } from "lucide-react"
 import type {
   InventoryListing,
   ProductFilters,
@@ -22,11 +23,17 @@ interface SearchClientProps {
   initialListings: InventoryListing[]
   total: number
   pageSize: number
+  /** The results query failed on the server. `initialListings`/`total` are
+   *  placeholders, NOT a real zero-result — never render them as one. */
+  degraded: boolean
   /** Full brand list — seeds the search box's instant suggestions. */
   brands: string[]
   /** Brand facet narrowed to the active category/dispensary scope. */
   brandOptions: string[]
   categories: string[]
+  /** Curated, landing-page-backed categories for the no-results recovery
+   *  chips (HOMEPAGE_CATEGORIES — server-only module, so it arrives as a prop). */
+  browseCategories: readonly { key: string; label: string }[]
   dispensaries: Dispensary[]
   /** True per-brand listing counts under the active filters, keyed by brand.
    *  Server-derived from the cached catalog index — the loaded page can't be
@@ -44,9 +51,11 @@ export function SearchClient({
   initialListings,
   total,
   pageSize,
+  degraded,
   brands,
   brandOptions,
   categories,
+  browseCategories,
   dispensaries,
   brandCounts,
 }: SearchClientProps) {
@@ -56,6 +65,7 @@ export function SearchClient({
   const [nextPage, setNextPage] = useState(2)
   const [exhausted, setExhausted] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [loadMoreError, setLoadMoreError] = useState(false)
 
   // Render-time reset when the server delivers a new query (no remount, so
   // FilterBar's sheet/dropdown state survives filter changes).
@@ -66,6 +76,7 @@ export function SearchClient({
     setExtraListings([])
     setNextPage(2)
     setExhausted(false)
+    setLoadMoreError(false)
   }
 
   const listings = useMemo(() => {
@@ -141,17 +152,24 @@ export function SearchClient({
 
   const loadMore = useCallback(async () => {
     setLoadingMore(true)
+    setLoadMoreError(false)
     try {
       const params = buildSearchParams(query)
       params.set("page", String(nextPage))
       const res = await fetch(`/api/search?${params.toString()}`)
-      if (!res.ok) return
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data: SearchPage = await res.json()
       setExtraListings((prev) => [...prev, ...data.listings])
       setNextPage((p) => p + 1)
       // a short page means the result set shrank since page 1 was cached —
       // stop offering more rather than looping on empty fetches
       if (data.listings.length < pageSize) setExhausted(true)
+    } catch {
+      // /api/search answers 503 with an empty page on any query failure, so
+      // swallowing this looked exactly like "nothing loaded": the label went
+      // Load more → Loading… → Load more and the shopper concluded the
+      // remaining count was a lie. Say it failed and offer the retry.
+      setLoadMoreError(true)
     } finally {
       setLoadingMore(false)
     }
@@ -187,6 +205,12 @@ export function SearchClient({
 
   const remaining = total - listings.length
 
+  // Anything beyond the default sort — the degraded state only offers
+  // "Clear filters" when there is actually something to clear.
+  const hasFilters = Boolean(
+    query.q || query.category || query.brand || query.dispensary || query.onSale
+  )
+
   return (
     <div>
       {/* Search bar — keyed on q so the input resets when the query is
@@ -201,16 +225,22 @@ export function SearchClient({
         />
       </div>
 
-      {/* Filter bar */}
-      <FilterBar
-        filters={filters}
-        categories={categories}
-        brands={brandOptions}
-        dispensaries={dispensaries}
-        onFilterChange={updateFilter}
-        onClear={clearFilters}
-        resultCount={total}
-      />
+      {/* Filter bar. Hidden when the results query failed: it leads with
+          "{resultCount} products", and a hard-coded 0 next to "we couldn't
+          reach the data" is the same falsehood in a smaller font. There is
+          nothing to filter either — the degraded state offers Clear filters
+          itself. */}
+      {!degraded && (
+        <FilterBar
+          filters={filters}
+          categories={categories}
+          brands={brandOptions}
+          dispensaries={dispensaries}
+          onFilterChange={updateFilter}
+          onClear={clearFilters}
+          resultCount={total}
+        />
+      )}
 
       {/* Alias notice */}
       {aliasNotice && (
@@ -219,43 +249,64 @@ export function SearchClient({
 
       {/* Results */}
       <div className={isPending ? "opacity-50 transition-opacity" : undefined}>
-        {listings.length === 0 ? (
+        {degraded ? (
+          // The query failed — say so. Anything else here (an empty grid, "no
+          // products match") would state a falsehood about the catalog.
+          <DegradedState
+            hasFilters={hasFilters}
+            onRetry={() => router.refresh()}
+            onClear={clearFilters}
+          />
+        ) : listings.length === 0 ? (
           <EmptyState
             query={query.q}
             onClear={clearFilters}
-            categories={categories}
+            categories={browseCategories}
             onCategory={(cat) => navigate({ category: cat, sort: "brand-asc" })}
           />
-        ) : isFlatResults ? (
-          // Flat grid: keyword search or brand filter — show every match,
-          // dense and easy to scan, in the server's sort order.
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
-            {listings.map((listing, index) => (
-              <ProductCard
-                key={listing.id}
-                listing={listing}
-                eager={index < EAGER_IMAGE_COUNT}
-              />
-            ))}
-          </div>
         ) : (
-          brandGroups.map(({ brand, items }, groupIndex) => (
-            <BrandGroup
-              key={brand}
-              brandName={brand}
-              listings={items}
-              totalCount={brandCounts?.[brand]}
-              // Keep the active filters and add the brand, so "View all 36"
-              // under a Concentrate filter lands on that brand's 36
-              // concentrates — not on all 265 of their products.
-              href={`/search?${buildSearchParams({ ...query, brand }).toString()}`}
-              eager={groupIndex === 0}
-            />
-          ))
+          <>
+            {/* The cards render their own H3s, so without this the page went
+                H1 → H3 and screen-reader heading navigation skipped a level
+                (same fix MenuClient uses over ProductGrid). */}
+            <h2 className="sr-only">Search results</h2>
+            {isFlatResults ? (
+              // Flat grid: keyword search or brand filter — show every match,
+              // dense and easy to scan, in the server's sort order.
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
+                {listings.map((listing, index) => (
+                  <ProductCard
+                    key={listing.id}
+                    listing={listing}
+                    eager={index < EAGER_IMAGE_COUNT}
+                  />
+                ))}
+              </div>
+            ) : (
+              brandGroups.map(({ brand, items }, groupIndex) => (
+                <BrandGroup
+                  key={brand}
+                  brandName={brand}
+                  listings={items}
+                  totalCount={brandCounts?.[brand]}
+                  // Keep the active filters and add the brand, so "View all 36"
+                  // under a Concentrate filter lands on that brand's 36
+                  // concentrates — not on all 265 of their products.
+                  href={`/search?${buildSearchParams({ ...query, brand }).toString()}`}
+                  eager={groupIndex === 0}
+                />
+              ))
+            )}
+          </>
         )}
 
         {hasMore && listings.length > 0 && (
-          <div className="flex justify-center py-6">
+          <div className="flex flex-col items-center gap-3 py-6">
+            {loadMoreError && (
+              <p className="text-sm text-muted-foreground" role="status">
+                Couldn&apos;t load more results.
+              </p>
+            )}
             <button
               onClick={loadMore}
               disabled={loadingMore}
@@ -263,11 +314,61 @@ export function SearchClient({
             >
               {loadingMore
                 ? "Loading..."
-                : `Load more (${remaining.toLocaleString()} remaining)`}
+                : loadMoreError
+                  ? "Retry"
+                  : `Load more (${remaining.toLocaleString()} remaining)`}
             </button>
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Shown when the results query itself failed. Deliberately says nothing about
+ * what the catalog does or doesn't contain — during an outage the one thing we
+ * know is that we couldn't look.
+ */
+function DegradedState({
+  hasFilters,
+  onRetry,
+  onClear,
+}: {
+  hasFilters: boolean
+  onRetry: () => void
+  onClear: () => void
+}) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center py-20 text-center"
+      role="status"
+    >
+      <CloudOff
+        className="w-10 h-10 text-muted-foreground mb-4"
+        aria-hidden="true"
+      />
+      <p className="font-heading text-xl font-bold text-foreground mb-2">
+        We couldn&apos;t reach our menu data just now
+      </p>
+      <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+        Your search is fine — our end is having a moment. Try again and it
+        should come right back.
+      </p>
+      <button
+        onClick={onRetry}
+        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+      >
+        Try again
+      </button>
+      {hasFilters && (
+        <button
+          onClick={onClear}
+          className="mt-4 text-sm text-primary hover:underline"
+        >
+          Clear all filters
+        </button>
+      )}
     </div>
   )
 }
@@ -280,7 +381,7 @@ function EmptyState({
 }: {
   query?: string
   onClear: () => void
-  categories: string[]
+  categories: readonly { key: string; label: string }[]
   onCategory: (cat: string) => void
 }) {
   return (
@@ -292,13 +393,15 @@ function EmptyState({
         Try a different search or browse by category
       </p>
       <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {categories.slice(0, 6).map((cat) => (
+        {categories.map((cat) => (
           <button
-            key={cat}
-            onClick={() => onCategory(cat)}
-            className="px-3 py-1.5 text-sm rounded-full border border-border hover:bg-muted transition-colors capitalize"
+            key={cat.key}
+            onClick={() => onCategory(cat.key)}
+            // Same 44px-on-mobile chip as FilterBar's category row — this is
+            // the one screen where every tap has to land first time.
+            className="inline-flex items-center h-11 md:h-8 px-3 text-sm rounded-full border border-border hover:bg-muted transition-colors"
           >
-            {cat}
+            {cat.label}
           </button>
         ))}
       </div>

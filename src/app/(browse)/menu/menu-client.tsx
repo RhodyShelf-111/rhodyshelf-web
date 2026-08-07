@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react"
 import type { InventoryListing, ProductFilters } from "@/lib/types"
-import { ProductGrid } from "@/components/product/product-grid"
+import {
+  ProductGrid,
+  type LoadRestScope,
+} from "@/components/product/product-grid"
 import {
   FILTER_PARAM_KEYS,
   filtersToParams,
@@ -20,7 +23,7 @@ interface MenuClientProps {
   headingLabel?: string
   /** Forwarded to ProductGrid: when set, `listings` is only the first slice and
    *  the full category/dispensary set is fetched once from /api/listings. */
-  loadRest?: { total: number; scope: "category" | "dispensary"; value: string }
+  loadRest?: { total: number; scope: LoadRestScope; value?: string }
 }
 
 export function MenuClient({
@@ -50,7 +53,14 @@ export function MenuClient({
         Object.entries(parsed).filter(([, v]) => v !== undefined)
       ),
     }
-    if (Object.values(next).some(Boolean)) {
+    // Gate on what the URL actually carried, NOT on `next` — `next` always
+    // holds defaultSort, so on /deals (defaultSort="discount-desc") a bare URL
+    // looked like a deep link and remounted the grid every load. That remount
+    // aborted the in-flight full-set fetch and issued it a second time, which
+    // is both a doubled ~1 MB request and the exact opposite of the deferral
+    // it was added for. defaultSort is already in the useState initializer, so
+    // skipping the sync when the URL is empty loses nothing.
+    if (Object.values(parsed).some((v) => v !== undefined)) {
       // Post-mount URL read (kept out of render so host pages stay statically
       // prerenderable); a one-shot sync, not a render loop.
       // eslint-disable-next-line react-hooks/set-state-in-effect

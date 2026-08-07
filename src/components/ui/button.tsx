@@ -10,7 +10,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        // Plain `hover:`, not shadcn's `[a]:hover:` — that compiles to
+        // `:is(a):hover`, and Base UI's Button renders a <button>, so the
+        // default variant was the only one with no hover state at all
+        // (it's the filter sheet's "Show N results" CTA). /90 matches the
+        // hand-rolled primary CTAs elsewhere in the app.
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

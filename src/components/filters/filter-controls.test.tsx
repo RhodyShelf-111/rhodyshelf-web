@@ -25,6 +25,19 @@ describe("FilterRadio", () => {
 
     expect(onChange).toHaveBeenCalledTimes(1)
   })
+
+  it("draws the unchecked ring at a visible contrast — it is the only thing rendering an unselected option", () => {
+    render(
+      <FilterRadio name="g" checked={false} onChange={() => {}} label="Hi5" />
+    )
+
+    // The old muted-foreground/40 composited to 2.15:1 on --background and
+    // 2.13:1 on --popover, under WCAG 1.4.11's 3:1; /70 measures 4.26:1 and
+    // 3.85:1. Asserted on the class because jsdom computes no colors.
+    const ring = screen.getByRole("radio")
+    expect(ring.className).toContain("border-muted-foreground/70")
+    expect(ring.className).not.toContain("border-muted-foreground/40")
+  })
 })
 
 describe("OnSaleToggle", () => {

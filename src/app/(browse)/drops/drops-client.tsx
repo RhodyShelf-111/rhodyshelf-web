@@ -1,24 +1,30 @@
 "use client"
 
-import type { DropListing } from "@/lib/types"
+import type { DropListing, InventoryListing } from "@/lib/types"
 import { ProductGrid } from "@/components/product/product-grid"
 import { getFreshnessBadge } from "@/lib/utils"
 
 interface DropsClientProps {
   drops: DropListing[]
+  /** Total in the 14-day window, when it exceeds the slice rendered above. */
+  total?: number
 }
 
-export function DropsClient({ drops }: DropsClientProps) {
-  // Build drop badge map
-  const dropBadges = new Map<string, { label: string; className: string }>()
-  for (const drop of drops) {
-    const badge = getFreshnessBadge(drop.dropped_at)
-    if (badge) {
-      dropBadges.set(drop.id, badge)
-    }
+export function DropsClient({ drops, total }: DropsClientProps) {
+  // Resolved per card rather than prebuilt from `drops`, because the grid
+  // fetches the rest of the window itself — a map built here would badge only
+  // the first slice and leave everything after it looking undated.
+  const dropBadgeFor = (listing: InventoryListing) => {
+    const droppedAt = (listing as DropListing).dropped_at
+    return droppedAt ? getFreshnessBadge(droppedAt) : null
   }
 
   return (
-    <ProductGrid listings={drops} showFilters={true} dropBadges={dropBadges} />
+    <ProductGrid
+      listings={drops}
+      showFilters={true}
+      dropBadgeFor={dropBadgeFor}
+      loadRest={total ? { total, scope: "drops" } : undefined}
+    />
   )
 }

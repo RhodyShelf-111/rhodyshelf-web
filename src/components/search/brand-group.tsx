@@ -41,7 +41,11 @@ export function BrandGroup({
           scroll on narrow phones. */}
       <div className="flex items-baseline justify-between gap-2 mb-3">
         <div className="flex min-w-0 items-baseline gap-3">
-          <h3 className="truncate text-[17px] font-bold text-foreground">
+          {/* font-heading: this is the same rail header the homepage renders
+              (category-rails.tsx), and it was the one instance set in the body
+              face — so /search's rails read as a different product from the
+              homepage's at the identical size and weight. */}
+          <h3 className="truncate font-heading text-[17px] font-bold text-foreground">
             {brandName}
           </h3>
           <span className="shrink-0 text-[13px] text-muted-foreground">
@@ -69,9 +73,13 @@ export function BrandGroup({
       <div className="flex gap-4 overflow-x-auto overscroll-x-contain scrollbar-subtle rail-fade snap-x scroll-px-4 sm:scroll-px-6 lg:scroll-px-8 [--rail-gutter:1rem] sm:[--rail-gutter:1.5rem] lg:[--rail-gutter:2rem] -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
         {listings.slice(0, 10).map((listing, index) => (
           <div key={listing.id} className="w-52 shrink-0 snap-start">
+            {/* This rail is a FIXED 208px slot at every breakpoint (w-52), so
+                the card's responsive-grid default (50vw down to 25vw) would
+                have the browser pick a 640px source for it. */}
             <ProductCard
               listing={listing}
               eager={eager && index < EAGER_IMAGE_COUNT}
+              sizes="208px"
             />
           </div>
         ))}

@@ -1,13 +1,17 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from "vitest"
 import {
+  act,
   render,
   screen,
   fireEvent,
   within,
   waitFor,
 } from "@testing-library/react"
-import { ProductGrid } from "./product-grid"
+import { ProductGrid, countActiveFilters } from "./product-grid"
 import type { InventoryListing } from "@/lib/types"
+
+// Comfortably past FULL_SET_IDLE_MS (1s) in product-grid.tsx.
+const PAST_IDLE_MS = 1500
 
 beforeAll(() => {
   // Base UI's floating popup machinery expects these browser APIs; jsdom
@@ -77,8 +81,20 @@ const listings = [
 ]
 
 function openFilterSheet() {
-  fireEvent.click(screen.getByRole("button", { name: /filters/i }))
+  fireEvent.click(screen.getByRole("button", { name: /^filters/i }))
   return screen.getByRole("dialog")
+}
+
+/**
+ * The full-set fetch is deferred until there's a reason for it. Reaching for
+ * the Filters control is the earliest signal — and what every real filter
+ * change starts with — so most progressive-loading tests open with this.
+ */
+function reachForFilters() {
+  fireEvent.pointerDown(screen.getByRole("button", { name: /^filters/i }), {
+    button: 0,
+    pointerId: 1,
+  })
 }
 
 describe("ProductGrid mobile filter sheet", () => {
@@ -187,6 +203,8 @@ describe("ProductGrid progressive loading", () => {
     )
 
     expect(screen.getByText("Product l1")).toBeInTheDocument()
+    reachForFilters()
+
     await waitFor(() =>
       expect(screen.getByText("Product l3")).toBeInTheDocument()
     )
@@ -195,6 +213,67 @@ describe("ProductGrid progressive loading", () => {
       "/api/listings?scope=category&value=flower"
     )
     expect(screen.getByText(/of\s+3\s+products/)).toBeInTheDocument()
+  })
+
+  // Both branches of the KEYLESS_SCOPES guard. /drops and /deals have no key to
+  // send; requiring one would strand them on the server-rendered slice forever,
+  // which is precisely the truncated-filtering bug the slice was paired against.
+  it("fetches a keyless scope with no value in the URL", async () => {
+    const fetchMock = vi.fn(async () =>
+      ok([makeListing("l1", "Hi5", "Mother Earth"), makeListing("l2", "Aster", "Solar")])
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        loadRest={{ total: 2, scope: "drops" }}
+      />
+    )
+    reachForFilters()
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    const url = String((fetchMock.mock.calls[0] as unknown[])[0])
+    expect(url).toContain("/api/listings?scope=drops")
+    // No key means no value param at all — not an empty one the route would 400.
+    expect(url).not.toContain("value=")
+  })
+
+  it("never fetches a keyed scope that is missing its value", async () => {
+    const fetchMock = vi.fn(async () => ok([]))
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        // A keyed scope with no value can only produce a 400 — don't ask.
+        loadRest={{ total: 3, scope: "category" }}
+      />
+    )
+    reachForFilters()
+
+    await waitFor(() => expect(screen.getByText("Product l1")).toBeInTheDocument())
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  // A 400/404 means the scope or value is wrong; three tries get the same answer.
+  it("gives up immediately on a terminal 4xx instead of retrying", async () => {
+    const fetchMock = vi.fn(async () => new Response("{}", { status: 404 }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        loadRest={{ total: 3, scope: "brand", value: "nope" }}
+      />
+    )
+    reachForFilters()
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    // Outlive the retry backoff (400ms then 800ms) before asserting it never
+    // fired — a shorter wait passes whether or not the short-circuit exists.
+    await new Promise((r) => setTimeout(r, 1400))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it("does not fetch when no loadRest is given", async () => {
@@ -223,6 +302,7 @@ describe("ProductGrid progressive loading", () => {
         }}
       />
     )
+    reachForFilters()
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toContain(
@@ -263,6 +343,7 @@ describe("ProductGrid progressive loading", () => {
         loadRest={{ total: 3, scope: "category", value: "flower" }}
       />
     )
+    reachForFilters()
 
     // Retries, then gives up — but does NOT silently cap the menu: the slice
     // stays usable, a Retry appears, and the count still shows the true total
@@ -295,6 +376,7 @@ describe("ProductGrid progressive loading", () => {
         loadRest={{ total: 3, scope: "category", value: "flower" }}
       />
     )
+    reachForFilters()
 
     const retry = await screen.findByRole("button", { name: "Retry" }, { timeout: 4000 })
     fail = false // next fetch succeeds
@@ -316,6 +398,7 @@ describe("ProductGrid progressive loading", () => {
         loadRest={{ total: 3, scope: "category", value: "flower" }}
       />
     )
+    reachForFilters()
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     // The stale slice row must not linger once the authoritative (empty) set
@@ -343,6 +426,7 @@ describe("ProductGrid progressive loading", () => {
         loadRest={{ total: 2, scope: "category", value: "flower" }}
       />
     )
+    reachForFilters()
 
     await waitFor(
       () => expect(screen.getByText("Product l2")).toBeInTheDocument(),
@@ -363,6 +447,7 @@ describe("ProductGrid progressive loading", () => {
         loadRest={{ total: 3, scope: "category", value: "flower" }}
       />
     )
+    reachForFilters()
 
     await waitFor(
       () => expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument(),
@@ -406,10 +491,374 @@ describe("ProductGrid progressive loading", () => {
         loadRest={{ total: 3, scope: "category", value: "flower" }}
       />
     )
+    reachForFilters()
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     expect(capturedSignal?.aborted).toBe(false)
     unmount()
     expect(capturedSignal?.aborted).toBe(true)
+  })
+})
+
+describe("ProductGrid deferred full-set fetch", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  function ok(rows: InventoryListing[]) {
+    return { ok: true, json: async () => ({ listings: rows }) }
+  }
+
+  const slice = [makeListing("l1", "Hi5", "Mother Earth")]
+  const full = [
+    makeListing("l1", "Hi5", "Mother Earth"),
+    makeListing("l2", "Aster", "Solar"),
+  ]
+
+  function stubFetch() {
+    const fetchMock = vi.fn(async () => ok(full))
+    vi.stubGlobal("fetch", fetchMock)
+    return fetchMock
+  }
+
+  it("does not fetch the megabyte until the shopper needs it", async () => {
+    const fetchMock = stubFetch()
+
+    render(
+      <ProductGrid
+        listings={slice}
+        loadRest={{ total: 500, scope: "category", value: "flower" }}
+      />
+    )
+
+    // A shopper who lands, reads two rows and taps a card pays nothing for
+    // /api/listings — the slice is already on screen.
+    await Promise.resolve()
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(screen.getByText("Product l1")).toBeInTheDocument()
+  })
+
+  it("starts the fetch when the shopper reaches for the filter controls", async () => {
+    const fetchMock = stubFetch()
+
+    render(
+      <ProductGrid
+        listings={slice}
+        loadRest={{ total: 2, scope: "category", value: "flower" }}
+      />
+    )
+    reachForFilters()
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+  })
+
+  it("fetches up front when the page is deep-linked with a filter", async () => {
+    const fetchMock = stubFetch()
+
+    // The slice can't answer a filter about the whole category, so there's
+    // nothing to defer — no interaction here at all.
+    render(
+      <ProductGrid
+        listings={slice}
+        initialFilters={{ brand: "Hi5" }}
+        loadRest={{ total: 2, scope: "category", value: "flower" }}
+      />
+    )
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+  })
+
+  it("fetches up front when the page is deep-linked with a sort", async () => {
+    const fetchMock = stubFetch()
+
+    // Sorting the slice by price answers "cheapest in the slice", not
+    // "cheapest in the category".
+    render(
+      <ProductGrid
+        listings={slice}
+        initialFilters={{ sort: "price-asc" }}
+        loadRest={{ total: 2, scope: "category", value: "flower" }}
+      />
+    )
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+  })
+
+  it("fetches when the shopper pages past the server-rendered slice", async () => {
+    const fetchMock = stubFetch()
+
+    render(
+      <ProductGrid
+        listings={slice}
+        pageSize={1}
+        loadRest={{ total: 2, scope: "category", value: "flower" }}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /Load more/ }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+  })
+
+  it("fetches on desktop without waiting, where the filter sidebar is already on screen", async () => {
+    // Fake timers, and advance far short of FULL_SET_IDLE_MS: with real timers
+    // the idle warm-up lands at ~1s, inside waitFor's default window, so the
+    // assertion would pass even with the desktop branch gone.
+    vi.useFakeTimers()
+    const fetchMock = stubFetch()
+    vi.stubGlobal("matchMedia", ((query: string) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia)
+
+    render(
+      <ProductGrid
+        listings={slice}
+        loadRest={{ total: 2, scope: "category", value: "flower" }}
+      />
+    )
+
+    // The sidebar's brand list is visible from the first paint — an
+    // incomplete one there would be silently wrong.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50)
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("warms the full set in idle time for a shopper who lingers", async () => {
+    vi.useFakeTimers()
+    const fetchMock = stubFetch()
+
+    render(
+      <ProductGrid
+        listings={slice}
+        loadRest={{ total: 2, scope: "category", value: "flower" }}
+      />
+    )
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PAST_IDLE_MS)
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("holds the idle warm-up until the page's own load event", async () => {
+    vi.useFakeTimers()
+    const fetchMock = stubFetch()
+    // Still loading: the product images are the ones competing for the
+    // connection, so the warm-up must not jump the queue.
+    Object.defineProperty(document, "readyState", {
+      value: "loading",
+      configurable: true,
+    })
+
+    try {
+      render(
+        <ProductGrid
+          listings={slice}
+          loadRest={{ total: 2, scope: "category", value: "flower" }}
+        />
+      )
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(PAST_IDLE_MS * 3)
+      })
+      expect(fetchMock).not.toHaveBeenCalled()
+
+      await act(async () => {
+        window.dispatchEvent(new Event("load"))
+        await vi.advanceTimersByTimeAsync(PAST_IDLE_MS)
+      })
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    } finally {
+      delete (document as { readyState?: unknown }).readyState
+    }
+  })
+
+  it("uses requestIdleCallback for the warm-up where the browser has one", async () => {
+    const fetchMock = stubFetch()
+    let idleCallback: (() => void) | undefined
+    vi.stubGlobal("requestIdleCallback", (cb: () => void) => {
+      idleCallback = cb
+      return 7
+    })
+    vi.stubGlobal("cancelIdleCallback", vi.fn())
+
+    render(
+      <ProductGrid
+        listings={slice}
+        loadRest={{ total: 2, scope: "category", value: "flower" }}
+      />
+    )
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    await act(async () => {
+      idleCallback?.()
+    })
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+  })
+})
+
+describe("countActiveFilters", () => {
+  it("counts the filters that actually narrow the grid", () => {
+    expect(
+      countActiveFilters({ brand: "Hi5", dispensary: "solar", onSale: true })
+    ).toBe(3)
+  })
+
+  it("ignores unset, empty and false values", () => {
+    expect(
+      countActiveFilters({
+        brand: undefined,
+        search: "",
+        onSale: false,
+      })
+    ).toBe(0)
+  })
+
+  it("does not count sort — it reorders, it doesn't filter", () => {
+    expect(countActiveFilters({ sort: "price-asc" })).toBe(0)
+    expect(countActiveFilters({ sort: "price-asc", brand: "Hi5" })).toBe(1)
+  })
+})
+
+describe("ProductGrid result counts", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("announces the result count politely when a filter swaps the set", () => {
+    render(<ProductGrid listings={listings} />)
+
+    const status = screen.getByRole("status")
+    expect(status).toHaveTextContent("Showing 3 of 3 products")
+    expect(status).toHaveAttribute("aria-live", "polite")
+    expect(status).toHaveAttribute("aria-atomic", "true")
+
+    // Filter from the always-mounted sidebar panel rather than the sheet: an
+    // open modal aria-hides the page behind it, which would take the live
+    // region out of the accessibility tree for the assertion.
+    fireEvent.click(screen.getAllByRole("radio", { name: "Hi5" })[0])
+
+    // Same node, new text — a screen reader reads the change out.
+    expect(screen.getByRole("status")).toHaveTextContent("Showing 1 of 1 product")
+  })
+
+  it("counts 'Load more' against the server's total while the full set is outstanding", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<never>(() => {}))
+    )
+
+    render(
+      <ProductGrid
+        listings={listings}
+        pageSize={1}
+        loadRest={{ total: 500, scope: "category", value: "flower" }}
+      />
+    )
+
+    // The slice holds 3 rows, but 500 exist — "2 remaining" would send the
+    // shopper away thinking they'd seen the category.
+    expect(
+      screen.getByRole("button", { name: "Load more (499 remaining)" })
+    ).toBeInTheDocument()
+  })
+
+  it("drops 'Load more' once the full set lands short of the server's estimate", async () => {
+    // The count the server passed in is an estimate; paging off it must not
+    // outlive the real snapshot, or the shopper is left tapping a button for
+    // rows that don't exist.
+    const full = [
+      makeListing("l1", "Hi5", "Mother Earth"),
+      makeListing("l2", "Aster", "Solar"),
+    ]
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, json: async () => ({ listings: full }) }))
+    )
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        loadRest={{ total: 500, scope: "category", value: "flower" }}
+      />
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Load more (450 remaining)" })
+    ).toBeInTheDocument()
+
+    reachForFilters()
+
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: /Load more/ })).toBeNull()
+    )
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Showing 2 of 2 products"
+    )
+  })
+
+  it("does not treat a page's default sort as an active filter", () => {
+    render(
+      <ProductGrid listings={listings} initialFilters={{ sort: "price-asc" }} />
+    )
+
+    // No chip row, no badge on Filters: nothing has been filtered.
+    expect(screen.queryByRole("button", { name: "Clear all" })).toBeNull()
+    expect(
+      screen.getByRole("button", { name: /^filters$/i })
+    ).toBeInTheDocument()
+  })
+})
+
+describe("ProductGrid touch targets", () => {
+  it("removes the filter when the chip's label is tapped, not just its ×", () => {
+    render(<ProductGrid listings={listings} initialFilters={{ brand: "Hi5" }} />)
+
+    const chip = screen.getByRole("button", { name: "Remove Hi5 filter" })
+    // 44px tall on mobile, back to the compact chip from sm up.
+    expect(chip).toHaveClass("h-11", "sm:h-auto")
+
+    fireEvent.click(chip)
+    expect(screen.queryByRole("button", { name: "Remove Hi5 filter" })).toBeNull()
+  })
+
+  it("gives 'Clear all' and 'Load more' thumb-sized targets on mobile", () => {
+    // Sweetspot Exeter stocks two of the three listings, so with pageSize 1
+    // both the chip row and a "Load more" are on screen at once.
+    render(
+      <ProductGrid
+        listings={listings}
+        pageSize={1}
+        initialFilters={{ dispensary: "sweetspot-exeter" }}
+      />
+    )
+
+    expect(screen.getByRole("button", { name: "Clear all" })).toHaveClass(
+      "min-h-11"
+    )
+    // The size variant's h-8 must lose to the mobile override.
+    const loadMore = screen.getByRole("button", { name: /Load more/ })
+    expect(loadMore).toHaveClass("h-11", "sm:h-8")
+    expect(loadMore).not.toHaveClass("h-8")
+  })
+
+  it("keeps the controls row reachable with a sticky bar under the header", () => {
+    render(<ProductGrid listings={listings} />)
+
+    const row = screen.getByRole("status").parentElement
+    // top-16 clears the 64px site header; lg:static hands the job back to the
+    // desktop sidebar layout.
+    expect(row).toHaveClass("sticky", "top-16", "lg:static")
   })
 })

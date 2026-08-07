@@ -20,6 +20,7 @@ function makeListing(
     dispensarySlug?: string
     dispensaryName?: string
     strainType?: string | null
+    grams?: number | null
   } = {}
 ): InventoryListing {
   seq += 1
@@ -41,7 +42,7 @@ function makeListing(
       brand_name: overrides.brand ?? "BrandA",
       category: overrides.category ?? "flower",
       subcategory: null,
-      weight_grams: null,
+      weight_grams: overrides.grams ?? null,
       weight_display: null,
       strain_type: overrides.strainType ?? null,
       strain_name: null,
@@ -91,6 +92,31 @@ describe("applyFilters", () => {
       makeListing({ name: "OG Kush", brand: "BrandC" }),
     ]
     expect(applyFilters(listings, { search: "dream" })).toHaveLength(2)
+  })
+
+  // The headline of the whole comparison: raw price says a $6 gram beats an
+  // $88 ounce, when the ounce is $3.14/g — less than half the rate.
+  it("unit-price-asc ranks by $/g, not by sticker price", () => {
+    const ounce = makeListing({ price: 88, grams: 28 }) // $3.14/g
+    const gram = makeListing({ price: 6, grams: 1 }) // $6.00/g
+    const eighth = makeListing({ price: 28, grams: 3.5 }) // $8.00/g
+
+    const out = applyFilters([gram, eighth, ounce], { sort: "unit-price-asc" })
+    expect(out.map((l) => l.id)).toEqual([ounce.id, gram.id, eighth.id])
+  })
+
+  it("unit-price-asc sorts listings with no usable $/g last", () => {
+    const noWeight = makeListing({ price: 5, grams: null })
+    const zeroWeight = makeListing({ price: 5, grams: 0 })
+    const real = makeListing({ price: 40, grams: 7 }) // $5.71/g
+
+    const out = applyFilters([noWeight, zeroWeight, real], {
+      sort: "unit-price-asc",
+    })
+    expect(out[0].id).toBe(real.id)
+    expect(out.slice(1).map((l) => l.id).sort()).toEqual(
+      [noWeight.id, zeroWeight.id].sort()
+    )
   })
 
   it("price-asc sorts unknown prices last", () => {

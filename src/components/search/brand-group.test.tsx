@@ -78,6 +78,41 @@ describe("BrandGroup", () => {
     }
   })
 
+  // Regression: this heading is the same rail header the homepage renders, but
+  // it was the one instance missing font-heading — so /search's rails came out
+  // in the body face while the homepage's were in Space Grotesk, at an
+  // identical size and weight.
+  it("sets the rail heading in the display face, like the homepage rails", () => {
+    render(
+      <BrandGroup
+        brandName="Acme Farms"
+        listings={[makeListing("1", "Acme Farms", 20)]}
+        href="/search?brand=Acme+Farms"
+      />
+    )
+    const cls = screen
+      .getByRole("heading", { name: "Acme Farms" })
+      .className.split(/\s+/)
+    expect(cls).toContain("font-heading")
+    expect(cls).toContain("text-[17px]")
+    expect(cls).toContain("font-bold")
+  })
+
+  // The rail slot is a fixed 208px (w-52) at every breakpoint. Left on the
+  // card's responsive-grid default (50vw → 25vw) the browser resolves 25vw of a
+  // wide desktop and downloads a 640px source for a 208px card.
+  it("tells each card its real 208px slot width", () => {
+    const listings = Array.from({ length: 3 }, (_, i) =>
+      withImage(makeListing(String(i), "Acme Farms", 20 + i))
+    )
+    render(
+      <BrandGroup brandName="Acme Farms" listings={listings} href="/search?brand=Acme+Farms" />
+    )
+    for (const img of screen.getAllByRole("img")) {
+      expect(img).toHaveAttribute("sizes", "208px")
+    }
+  })
+
   it("renders the brand name, lowest price, and product count", () => {
     render(
       <BrandGroup

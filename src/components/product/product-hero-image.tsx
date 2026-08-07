@@ -23,9 +23,12 @@ export function ProductHeroImage({ imageUrl, alt, category }: ProductHeroImagePr
           src={imageUrl}
           alt={alt}
           fill
-          className="object-contain p-6"
+          className="object-contain"
           sizes="(max-width: 768px) 100vw, 50vw"
-          priority
+          // The hero is the product page's LCP element and there's only one
+          // candidate, so preloading it is right here. (`priority` is the
+          // deprecated Next 15 spelling of this.)
+          preload
           onError={(e) => {
             const target = e.currentTarget as HTMLImageElement
             target.style.display = "none"

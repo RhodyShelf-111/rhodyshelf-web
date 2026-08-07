@@ -5,11 +5,19 @@ import { NextRequest } from "next/server"
 // error paths) is what's under test — not the DB.
 const getInventoryByCategory = vi.fn()
 const getInventoryByDispensary = vi.fn()
+const getInventoryByBrand = vi.fn()
+const getBrandBySlug = vi.fn()
+const getDeals = vi.fn()
+const getDrops = vi.fn()
 const getDispensaryBySlug = vi.fn()
 
 vi.mock("@/lib/queries/products", () => ({
   getInventoryByCategory: (...a: unknown[]) => getInventoryByCategory(...a),
   getInventoryByDispensary: (...a: unknown[]) => getInventoryByDispensary(...a),
+  getInventoryByBrand: (...a: unknown[]) => getInventoryByBrand(...a),
+  getBrandBySlug: (...a: unknown[]) => getBrandBySlug(...a),
+  getDeals: (...a: unknown[]) => getDeals(...a),
+  getDrops: (...a: unknown[]) => getDrops(...a),
   // The route builds its category allowlist from this at import time.
   HOMEPAGE_CATEGORIES: [
     { key: "flower", label: "Flower" },
@@ -74,10 +82,55 @@ describe("/api/listings", () => {
     expect(getInventoryByDispensary).not.toHaveBeenCalled()
   })
 
+  it("resolves a brand slug to its canonical name and returns its listings", async () => {
+    getBrandBySlug.mockResolvedValue({
+      canonical_name: "Mother Earth Wellness",
+      slug: "mother-earth-wellness",
+    })
+    getInventoryByBrand.mockResolvedValue([{ id: "l1" }, { id: "l2" }])
+    const res = await GET(req("?scope=brand&value=mother-earth-wellness"))
+    expect(res.status).toBe(200)
+    expect(getBrandBySlug).toHaveBeenCalledWith("mother-earth-wellness")
+    // The inventory query is keyed on the canonical name, never the raw slug.
+    expect(getInventoryByBrand).toHaveBeenCalledWith("Mother Earth Wellness")
+    expect(res.headers.get("cache-control")).toMatch(/s-maxage/)
+    expect((await res.json()).listings).toHaveLength(2)
+  })
+
+  // The brands table is the allowlist for this scope: an unknown slug has to
+  // stop before the cached inventory query, or a random-slug flood pumps the
+  // data cache full of empty brands.
+  it("returns 404 no-store for an unknown brand slug WITHOUT hitting inventory", async () => {
+    getBrandBySlug.mockResolvedValue(null)
+    const res = await GET(req("?scope=brand&value=nope"))
+    expect(res.status).toBe(404)
+    expect(res.headers.get("cache-control")).toBe("no-store")
+    expect(getInventoryByBrand).not.toHaveBeenCalled()
+  })
+
+  // drops/deals are single cached sets with no caller-supplied key, so they
+  // take no `value` at all — the missing-value guard must not reject them.
+  it("serves the whole-site scopes without a value", async () => {
+    getDrops.mockResolvedValue([{ id: "d1" }, { id: "d2" }, { id: "d3" }])
+    getDeals.mockResolvedValue({ listings: [{ id: "x1" }], total: 412 })
+
+    const drops = await GET(req("?scope=drops"))
+    expect(drops.status).toBe(200)
+    expect(drops.headers.get("cache-control")).toMatch(/s-maxage/)
+    expect((await drops.json()).listings).toHaveLength(3)
+
+    const deals = await GET(req("?scope=deals"))
+    expect(deals.status).toBe(200)
+    // getDeals returns { listings, total } — only the listings go on the wire.
+    expect((await deals.json()).listings).toEqual([{ id: "x1" }])
+  })
+
   it("400s a missing value", async () => {
     const res = await GET(req("?scope=category"))
     expect(res.status).toBe(400)
     expect(res.headers.get("cache-control")).toBe("no-store")
+    // Missing value on a keyed scope must never fall through to a query.
+    expect(getInventoryByCategory).not.toHaveBeenCalled()
   })
 
   it("400s an unknown scope", async () => {

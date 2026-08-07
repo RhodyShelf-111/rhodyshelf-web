@@ -6,6 +6,8 @@ import {
   DROP_WINDOW_DAYS,
   slugify,
   getCategoryIcon,
+  pricePerGram,
+  formatPricePerGram,
 } from "./utils"
 
 describe("formatPrice", () => {
@@ -96,5 +98,66 @@ describe("getCategoryIcon", () => {
 
   it("falls back to the leaf for unknown categories", () => {
     expect(getCategoryIcon("beverage")).toBe("🌿")
+  })
+})
+
+describe("pricePerGram", () => {
+  it("normalizes pack prices to a rate", () => {
+    expect(pricePerGram(88, 28)).toBeCloseTo(3.142857)
+    expect(pricePerGram(6, 1)).toBe(6)
+    expect(pricePerGram(35, 14)).toBe(2.5)
+  })
+
+  // PostgREST hands `numeric` columns back as strings (see price-comparison.ts).
+  it("accepts numeric strings from PostgREST", () => {
+    expect(pricePerGram("35", "3.5")).toBe(10)
+  })
+
+  it("returns null for anything that can't be divided meaningfully", () => {
+    expect(pricePerGram(null, 3.5)).toBeNull()
+    expect(pricePerGram(35, null)).toBeNull()
+    // 0g would divide to Infinity; a negative weight/price is bad data.
+    expect(pricePerGram(35, 0)).toBeNull()
+    expect(pricePerGram(35, -3.5)).toBeNull()
+    expect(pricePerGram(0, 3.5)).toBeNull()
+    expect(pricePerGram(-35, 3.5)).toBeNull()
+    expect(pricePerGram("free", 3.5)).toBeNull()
+    expect(pricePerGram(35, "one eighth")).toBeNull()
+  })
+})
+
+describe("formatPricePerGram", () => {
+  it("labels gram-priced categories, including plural display aliases", () => {
+    expect(formatPricePerGram(88, 28, "flower")).toBe("$3.14/g")
+    expect(formatPricePerGram(50, 1, "concentrate")).toBe("$50.00/g")
+    expect(formatPricePerGram(50, 1, "Concentrates")).toBe("$50.00/g")
+    expect(formatPricePerGram(25, 0.5, "vape")).toBe("$50.00/g")
+  })
+
+  // An edible's weight_grams is its THC dose (100mg → 0.1g), so $/g would read
+  // "$180.00/g" on an $18 bag of gummies. Grams aren't the unit of value there.
+  it("says nothing for categories the gram doesn't price", () => {
+    expect(formatPricePerGram(18, 0.1, "edible")).toBeNull()
+    expect(formatPricePerGram(40, 30, "tincture")).toBeNull()
+    expect(formatPricePerGram(20, 0, "accessory")).toBeNull()
+    expect(formatPricePerGram(20, 1, "")).toBeNull()
+    expect(formatPricePerGram(20, 1, null)).toBeNull()
+  })
+
+  // Regression: pre-roll multipacks carry a per-unit weight against a pack
+  // price, inconsistently and often with no pack marker in the name. Live
+  // Slater Center rows: "King Sherb 10-pack 0.5g" is stored as 0.5g/$50, so a
+  // rate would read "$100.00/g" for flower that actually costs $10.00/g — while
+  // "Rollups 10-pack 0.5g" on the same menu is stored as 5.0g and would read
+  // right. Say nothing rather than pick one of the two answers at random.
+  it("says nothing for pre-rolls, whose pack weights can't be trusted", () => {
+    expect(formatPricePerGram(50, 0.5, "pre-roll")).toBeNull()
+    expect(formatPricePerGram(50, 5, "pre-roll")).toBeNull()
+    expect(formatPricePerGram(20, 0.5, "Pre-Rolls")).toBeNull()
+  })
+
+  it("says nothing when the listing has no price or no weight", () => {
+    expect(formatPricePerGram(null, 28, "flower")).toBeNull()
+    expect(formatPricePerGram(88, null, "flower")).toBeNull()
   })
 })

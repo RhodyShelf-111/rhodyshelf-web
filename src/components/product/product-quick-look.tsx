@@ -1,10 +1,18 @@
+"use client"
+
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { ExternalLink, MapPin } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
-import { formatPrice, formatRelativeTime } from "@/lib/utils"
+import { formatPrice, formatPricePerGram, formatRelativeTime } from "@/lib/utils"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductHeroImage } from "@/components/product/product-hero-image"
 import { UpvoteButton } from "@/components/product/upvote-button"
+import { PriceComparisonPanel } from "@/components/product/price-comparison"
+import {
+  buildPriceComparison,
+  type PriceComparison,
+} from "@/lib/price-comparison"
 import { SheetTitle, SheetDescription } from "@/components/ui/sheet"
 
 /**
@@ -15,7 +23,14 @@ import { SheetTitle, SheetDescription } from "@/components/ui/sheet"
  * shopper has scrolled. It reuses the same islands and helpers as the full
  * /product/[id] page so the two stay in sync. The full page remains the
  * canonical destination (shareable link, refresh, "View full page") and is where
- * the "More from this brand" rail lives; the sheet omits it to stay quick.
+ * the "More from this brand" rail lives; the sheet omits that rail to stay quick.
+ *
+ * What it does NOT omit is the cross-dispensary comparison. Tapping a card is
+ * the default path into a product, so leaving the comparison to the full page
+ * meant the common journey ended at a Buy button for a $32 listing whose twin
+ * two towns over was $15. The sheet renders from the in-memory listing and then
+ * asks /api/search for the same brand + product, so the comparison arrives a
+ * beat later without delaying the open.
  */
 export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
   const {
@@ -35,6 +50,14 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
   // Per-product deep-link into the dispensary menu (primary CTA); falls back to
   // the dispensary-level menu_url when a row has no product_url.
   const buyUrl = listing.product_url ?? dispensary.menu_url
+  // The rate, next to the price: a 28g jar and a 1g nug are otherwise not
+  // comparable numbers. Null for categories the gram doesn't price.
+  const unitPrice = formatPricePerGram(
+    price,
+    product.weight_grams,
+    product.category
+  )
+  const comparison = useCrossDispensaryPrices(listing)
 
   return (
     <>
@@ -44,7 +67,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
         {/* Image plate — a capped height on mobile so the title, price, and the
             sticky Buy bar are reachable without a long scroll; square on the
             narrower desktop drawer where the vertical budget is generous. */}
-        <div className="relative h-56 shrink-0 border-b border-border bg-muted sm:h-auto sm:aspect-square">
+        <div className="relative h-56 shrink-0 border-b border-border bg-product-plate sm:h-auto sm:aspect-square">
           <ProductHeroImage
             imageUrl={imageUrl}
             alt={product.name}
@@ -95,6 +118,11 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
                   Save {formatPrice((original_price ?? 0) - (price ?? 0))}
                 </span>
               )}
+              {unitPrice && (
+                <span className="text-base text-muted-foreground">
+                  {unitPrice}
+                </span>
+              )}
             </div>
             <p className="mt-1.5 text-xs text-muted-foreground">
               Price updated {formatRelativeTime(listing.last_seen_at)} · confirm at
@@ -135,6 +163,17 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
             )}
           </Link>
 
+          {/* Where this price sits against every other shop carrying it —
+              same panel and reading order as the full page (price → this shop →
+              how this shop compares). Absent until the check resolves, and for
+              the common case where nobody else carries it. */}
+          {comparison && (
+            <PriceComparisonPanel
+              comparison={comparison}
+              headingId="quick-look-price-comparison-heading"
+            />
+          )}
+
           {/* Hard link (not next/link) so it bypasses the interception and loads
               the full standalone page — the brand rail and the canonical URL. */}
           <a
@@ -170,4 +209,54 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
       </div>
     </>
   )
+}
+
+/**
+ * Every other dispensary carrying this exact product and size, or null.
+ *
+ * The full page gets this for free — it already fetches the brand's listings
+ * server-side for the "More from this brand" rail. The sheet has no server
+ * round-trip at all (it renders from the listing the grid left in memory), so it
+ * asks /api/search for this brand + product name instead: a handful of rows, on
+ * the same cached query the search page uses. Deliberately fired after paint —
+ * the comparison is worth a beat's wait, the sheet opening is not.
+ *
+ * A failure is silent: the panel simply doesn't appear, exactly as it doesn't
+ * for the common case where no other shop carries the product.
+ */
+function useCrossDispensaryPrices(
+  listing: InventoryListing
+): PriceComparison | null {
+  // Keyed by listing id rather than cleared on change, so a comparison built
+  // for the previous product can never be shown against this one — and so the
+  // effect never has to setState synchronously to reset itself.
+  const [result, setResult] = useState<{
+    id: string
+    comparison: PriceComparison | null
+  } | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const params = new URLSearchParams({
+      brand: listing.product.brand_name,
+      q: listing.product.name,
+      category: listing.product.category,
+    })
+    fetch(`/api/search?${params}`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: { listings?: InventoryListing[] } | null) => {
+        if (!body?.listings) return
+        setResult({
+          id: listing.id,
+          comparison: buildPriceComparison(listing, body.listings),
+        })
+      })
+      .catch(() => {
+        // Includes the AbortError from an unmount/listing change — nothing to
+        // show either way.
+      })
+    return () => controller.abort()
+  }, [listing])
+
+  return result?.id === listing.id ? result.comparison : null
 }

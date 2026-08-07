@@ -6,6 +6,12 @@ import { cn, formatPrice } from "@/lib/utils"
 interface PriceComparisonPanelProps {
   comparison: PriceComparison
   className?: string
+  /** Id for the heading this section is labelled by. Overridable because the
+   *  quick-look sheet can open OVER a product page that already renders this
+   *  panel, and two identical ids in one document would point both sections'
+   *  aria-labelledby at the first heading. A prop rather than useId() because
+   *  this is a server component on the product page. */
+  headingId?: string
 }
 
 /**
@@ -18,13 +24,14 @@ interface PriceComparisonPanelProps {
 export function PriceComparisonPanel({
   comparison,
   className,
+  headingId = "price-comparison-heading",
 }: PriceComparisonPanelProps) {
   const { rows, savings } = comparison
   const cheapest = rows.find((r) => r.isCheapest && !r.isCurrent)
 
   return (
     <section
-      aria-labelledby="price-comparison-heading"
+      aria-labelledby={headingId}
       className={cn(
         "rounded-xl border border-border bg-card overflow-hidden",
         className
@@ -32,7 +39,7 @@ export function PriceComparisonPanel({
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
         <h2
-          id="price-comparison-heading"
+          id={headingId}
           className="font-heading text-[15px] font-bold text-foreground"
         >
           At {rows.length} dispensaries

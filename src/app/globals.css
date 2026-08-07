@@ -22,6 +22,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-product-plate: var(--product-plate);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -60,6 +61,14 @@
   --input: #2d3d2d;
   --ring: oklch(0.792 0.209 151.711);
   --radius: 0.625rem;
+  /* The one deliberately light surface in a dark-only UI: the tile a product
+     packshot sits on. Sampled across the four live dispensary CDNs, 62% of
+     packshots are shot on white and another 8% are transparent cutouts drawn
+     for a white backdrop — and of the white ones, 12 of 15 are pure #ffffff,
+     the rest within 3/255. So the tile is pure white on purpose: any off-white
+     would draw a visible seam around the majority case, which is exactly the
+     framing effect we removed the padding to get rid of. */
+  --product-plate: #ffffff;
 }
 
 @layer base {
