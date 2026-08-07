@@ -71,9 +71,14 @@ export function CategoryRails({ sections }: CategoryRailsProps) {
                         them requested while the HTML is still parsing, instead
                         of after layout runs the lazy-load observer. Every later
                         rail stays lazy. */}
+                    {/* The rail slot is 46vw on phones and a fixed 224px (w-56)
+                        from sm up — not the responsive grid's 50/33/25vw, which
+                        would have the browser download a 640px source for a
+                        224px card on desktop. */}
                     <ProductCard
                       listing={listing}
                       eager={sectionIndex === 0 && cardIndex < EAGER_IMAGE_COUNT}
+                      sizes="(max-width: 640px) 46vw, 224px"
                     />
                   </div>
                 ))}

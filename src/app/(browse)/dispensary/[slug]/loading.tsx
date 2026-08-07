@@ -29,7 +29,10 @@ export default function DispensaryLoading() {
         <Skeleton className="h-9 w-28 rounded-lg" />
       </div>
 
-      <ProductGridSkeleton />
+      {/* This page renders its cards with showDispensary={false} (the store
+          name is already the page title), so the placeholder must drop that row
+          too or the grid jumps up ~26px per row when the real cards land. */}
+      <ProductGridSkeleton showDispensary={false} />
     </PageContainer>
   )
 }

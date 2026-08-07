@@ -18,6 +18,15 @@ import type { Metadata } from "next"
 
 export const revalidate = 3600
 
+/**
+ * How many of a brand's listings get serialized into the page.
+ *
+ * A big brand runs 240-260 listings (~720-840 KB of RSC payload) while the grid
+ * renders 50 at a time — so the shopper waited on 5x the data they could see.
+ * Same trade the /deals cap makes; the heading says when it's showing a slice.
+ */
+export const BRAND_LISTINGS_SHOWN = 150
+
 export async function generateStaticParams() {
   const brands = await getBrands()
   return brands
@@ -54,7 +63,13 @@ export default async function BrandPage({
   const brand = await getBrandBySlug(slug)
   if (!brand) notFound()
 
-  const brandListings = await getInventoryByBrand(brand.canonical_name)
+  const all = await getInventoryByBrand(brand.canonical_name)
+  const total = all.length
+  // Sorted A-Z by product name, so the slice is the front of the list the
+  // shopper is already reading. (/api/listings serves a `brand` scope for the
+  // progressive full-set fetch /category uses; wiring it needs ProductGrid's
+  // `loadRest` to accept the scope.)
+  const brandListings = all.slice(0, BRAND_LISTINGS_SHOWN)
 
   return (
     <PageContainer className="py-6 md:py-8">
@@ -63,7 +78,8 @@ export default async function BrandPage({
           name: `${brand.canonical_name} Products`,
           description: `${brand.canonical_name} cannabis products available across Rhode Island dispensaries.`,
           path: `/brand/${slug}`,
-          itemCount: brandListings.length,
+          // The brand's true catalog size, not the rendered slice.
+          itemCount: total,
           itemPaths: brandListings
             .slice(0, ITEM_LIST_MAX)
             .map((l) => `/product/${l.id}`),
@@ -75,13 +91,21 @@ export default async function BrandPage({
 
       <PageHeading
         title={brand.canonical_name}
-        description={`${brandListings.length} products across Rhode Island`}
+        description={`${total.toLocaleString()} products across Rhode Island`}
       />
 
       {brandListings.length > 0 ? (
         <MenuClient
           listings={brandListings}
           headingLabel={`${brand.canonical_name} products`}
+          // Only fetch the rest when there IS a rest. Without this a big brand
+          // would filter over its alphabetically-first slice only, so asking
+          // for its edibles could come back empty while they sat past "M".
+          loadRest={
+            total > brandListings.length
+              ? { total, scope: "brand", value: slug }
+              : undefined
+          }
         />
       ) : (
         <div className="text-center py-16">

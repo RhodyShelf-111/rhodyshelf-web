@@ -111,6 +111,16 @@ describe("CategoryRails", () => {
     }
   })
 
+  // The rail slot is 46vw on phones and a fixed 224px (w-56) from sm up — not
+  // the grid's 50/33/25vw. Left on the card default, 25vw of a wide desktop
+  // resolves to a 640px source for a 224px card, on every rail.
+  it("tells each card its real rail slot width", () => {
+    render(<CategoryRails sections={SECTIONS} />)
+    for (const img of screen.getAllByRole("img")) {
+      expect(img).toHaveAttribute("sizes", "(max-width: 640px) 46vw, 224px")
+    }
+  })
+
   // Regression: the cards used to be re-picked in a mount effect, so the browser
   // fetched the server-rendered images and then threw them away — ~29 of ~73
   // image requests per homepage load were wasted, and any eager hint landed on a

@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react"
 import type { InventoryListing, ProductFilters } from "@/lib/types"
-import { ProductGrid } from "@/components/product/product-grid"
+import {
+  ProductGrid,
+  type LoadRestScope,
+} from "@/components/product/product-grid"
 import {
   FILTER_PARAM_KEYS,
   filtersToParams,
@@ -20,7 +23,7 @@ interface MenuClientProps {
   headingLabel?: string
   /** Forwarded to ProductGrid: when set, `listings` is only the first slice and
    *  the full category/dispensary set is fetched once from /api/listings. */
-  loadRest?: { total: number; scope: "category" | "dispensary"; value: string }
+  loadRest?: { total: number; scope: LoadRestScope; value?: string }
 }
 
 export function MenuClient({
