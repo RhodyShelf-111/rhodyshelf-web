@@ -112,6 +112,7 @@ export interface ProductFilters {
   sort?:
     | "price-asc"
     | "price-desc"
+    | "unit-price-asc"
     | "thc-desc"
     | "name-asc"
     | "newest"

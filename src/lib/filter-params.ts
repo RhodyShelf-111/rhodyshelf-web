@@ -13,6 +13,7 @@ import type { ProductFilters } from "@/lib/types"
 const SORT_VALUES: NonNullable<ProductFilters["sort"]>[] = [
   "price-asc",
   "price-desc",
+  "unit-price-asc",
   "thc-desc",
   "name-asc",
   "newest",

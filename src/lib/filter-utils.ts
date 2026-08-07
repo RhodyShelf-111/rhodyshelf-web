@@ -6,6 +6,7 @@ import type {
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
 import { searchHaystack, searchTokens } from "@/lib/search-terms"
+import { pricePerGram } from "@/lib/utils"
 
 export interface FacetOptions {
   categories: string[]
@@ -264,6 +265,17 @@ export function applyFilters(
       result = [...result].sort(
         (a, b) => (b.price ?? 0) - (a.price ?? 0)
       )
+      break
+    // The only ordering that answers "which is actually the better deal".
+    // Sorting by raw price puts a $6 gram above an $88 ounce that costs $3.14
+    // a gram. Listings with no meaningful $/g (edibles, accessories) sort last
+    // rather than to the top, where an Infinity-free comparison would put them.
+    case "unit-price-asc":
+      result = [...result].sort((a, b) => {
+        const ua = pricePerGram(a.price, a.product.weight_grams)
+        const ub = pricePerGram(b.price, b.product.weight_grams)
+        return (ua ?? Infinity) - (ub ?? Infinity)
+      })
       break
     case "thc-desc":
       result = [...result].sort(

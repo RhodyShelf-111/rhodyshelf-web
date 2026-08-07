@@ -5,7 +5,13 @@ import Link from "next/link"
 import { useEffect } from "react"
 import { MapPin, ChevronUp, ExternalLink, Clock } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
-import { cn, formatPrice, formatRelativeTime, getCategoryIcon } from "@/lib/utils"
+import {
+  cn,
+  formatPrice,
+  formatPricePerGram,
+  formatRelativeTime,
+  getCategoryIcon,
+} from "@/lib/utils"
 import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { rememberListing } from "@/lib/listing-cache"
@@ -23,7 +29,14 @@ interface ProductCardProps {
   /** Above-the-fold cards on listing pages: load the image eagerly with high
    *  fetch priority so it can win LCP instead of being lazy-deferred. */
   eager?: boolean
+  /** Real rendered slot width, for hosts that aren't the responsive grid.
+   *  The fixed-width rails render this card at ~208-224px, so the grid's
+   *  default (25vw and up) would make the browser pick a 640px source for a
+   *  210px slot. Pass the actual width there instead. */
+  sizes?: string
 }
+
+const GRID_SIZES = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
 
 export function ProductCard({
   listing,
@@ -31,6 +44,7 @@ export function ProductCard({
   showDispensary = true,
   stock,
   eager = false,
+  sizes = GRID_SIZES,
 }: ProductCardProps) {
   const {
     product,
@@ -56,6 +70,25 @@ export function ProductCard({
     stock?.inStock && stock.dispensaryCount > 1
       ? `${stock.dispensaryCount} dispensaries`
       : dispensary.name
+  // The town answers half the shopper's question ("can I get there?") and is
+  // missing from most store names. Suppressed when the name already says it, so
+  // the row never reads "Newport Cannabis Co. · Newport", and when the label is
+  // a multi-shop count rather than one store.
+  const cityLabel =
+    dispensaryLabel === dispensary.name &&
+    dispensary.city &&
+    !dispensary.name.toLowerCase().includes(dispensary.city.toLowerCase())
+      ? dispensary.city
+      : null
+  // The one number that makes two pack sizes comparable. Rendered on the THC
+  // line — which already reserves its height — so the grid rows stay even.
+  const unitPrice = formatPricePerGram(
+    price,
+    product.weight_grams,
+    product.category
+  )
+  const thcLabel = thc_percent != null ? `THC: ${thc_percent.toFixed(1)}%` : null
+  const statLine = [unitPrice, thcLabel].filter(Boolean).join(" · ")
   // Out-of-stock cards show when the product was last on a menu (helps judge
   // whether it might return). Empty for products purged from inventory entirely.
   const lastSeenLabel =
@@ -113,7 +146,7 @@ export function ProductCard({
               "object-contain",
               outOfStock && "grayscale opacity-50"
             )}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            sizes={sizes}
             onError={(e) => {
               const target = e.currentTarget as HTMLImageElement
               target.style.display = "none"
@@ -197,18 +230,22 @@ export function ProductCard({
             )}
           </p>
 
-          {/* THC — always reserve one line */}
-          <p className="text-[13px] text-muted-foreground min-h-[1rem]">
-            {thc_percent != null ? `THC: ${thc_percent.toFixed(1)}%` : " "}
+          {/* Unit price + THC — always reserve exactly one line. truncate (not
+              wrap) so a card carrying both can never grow a second line and
+              knock its grid row out of alignment. */}
+          <p className="text-[13px] text-muted-foreground min-h-[1rem] truncate">
+            {statLine || " "}
           </p>
         </div>
 
         {/* Dispensary + actions (pinned to bottom).
-            Mobile: name on its own row, then a full-width action row with 44px
-            touch targets (WCAG 2.5.5 / Apple HIG) — this also gives the
-            dispensary name the full card width so it stops truncating.
-            sm+: a single compact inline row where a precise pointer is in use. */}
-        <div className="mt-auto pt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            The where-line keeps its own full-width row at every breakpoint:
+            sharing one row with the shrink-0 Buy + upvote controls left it ~76px
+            of a 200px card on desktop, so "Aura of Rhode Island - Central Falls"
+            rendered as "Aura of Rh…" on every card in the grid.
+            Mobile actions are 44px touch targets (WCAG 2.5.5 / Apple HIG);
+            sm+ they shrink back to the compact size and sit at the right. */}
+        <div className="mt-auto pt-2 flex flex-col gap-2">
           {outOfStock
             ? lastSeenLabel && (
                 <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
@@ -219,7 +256,12 @@ export function ProductCard({
             : showDispensary && (
                 <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
                   <MapPin className="w-3 h-3 shrink-0" />
+                  {/* The town never truncates — it's the part that decides
+                      whether the shop is reachable. The store name yields. */}
                   <span className="truncate">{dispensaryLabel}</span>
+                  {cityLabel && (
+                    <span className="shrink-0">· {cityLabel}</span>
+                  )}
                 </div>
               )}
           <div

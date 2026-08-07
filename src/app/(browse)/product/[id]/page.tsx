@@ -7,7 +7,11 @@ import {
   getBrands,
   HOMEPAGE_CATEGORIES,
 } from "@/lib/queries/products"
-import { formatPrice, formatRelativeTime } from "@/lib/utils"
+import {
+  formatPrice,
+  formatPricePerGram,
+  formatRelativeTime,
+} from "@/lib/utils"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
 import { JsonLd } from "@/components/seo/json-ld"
 import { productJsonLd } from "@/lib/seo/structured-data"
@@ -74,6 +78,13 @@ export default async function ProductPage({
   // Per-product deep-link into the dispensary menu (primary CTA); falls back to
   // the dispensary-level menu_url when a row has no product_url.
   const buyUrl = listing.product_url ?? dispensary.menu_url
+  // The rate, next to the price: a 28g jar and a 1g nug are otherwise not
+  // comparable numbers. Null for categories the gram doesn't price.
+  const unitPrice = formatPricePerGram(
+    price,
+    product.weight_grams,
+    product.category
+  )
 
   // One cached fetch of the brand's fresh listings feeds both the price
   // comparison and the "More from this brand" rail — no extra DB round-trip
@@ -183,6 +194,11 @@ export default async function ProductPage({
                   Save {formatPrice((original_price ?? 0) - (price ?? 0))}
                 </span>
               )}
+              {unitPrice && (
+                <span className="text-base text-muted-foreground">
+                  {unitPrice}
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1.5">
               Price updated {formatRelativeTime(listing.last_seen_at)} · confirm
@@ -270,8 +286,11 @@ export default async function ProductPage({
             </Link>
           </div>
           {/* scroll-px matches the bleed padding so the first card snaps under
-              the heading instead of flush to the viewport edge (see BrandGroup). */}
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-subtle rail-fade snap-x scroll-px-4 sm:scroll-px-6 lg:scroll-px-8 [--rail-gutter:1rem] sm:[--rail-gutter:1.5rem] lg:[--rail-gutter:2rem] -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
+              the heading instead of flush to the viewport edge (see BrandGroup).
+              overscroll-x-contain stops an iOS edge swipe on a rail that is
+              already at scrollLeft 0 from chaining out and triggering
+              back-navigation off the product page (see category-rails). */}
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain scrollbar-subtle rail-fade snap-x scroll-px-4 sm:scroll-px-6 lg:scroll-px-8 [--rail-gutter:1rem] sm:[--rail-gutter:1.5rem] lg:[--rail-gutter:2rem] -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2 items-stretch">
             {brandListings.map((l) => (
               <div
                 key={l.id}

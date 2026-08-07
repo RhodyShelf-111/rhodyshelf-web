@@ -12,6 +12,7 @@ export const SORT_OPTIONS: { value: SortValue; label: string }[] = [
   { value: "discount-desc", label: "Biggest discount" },
   { value: "price-asc", label: "Price: Low to High" },
   { value: "price-desc", label: "Price: High to Low" },
+  { value: "unit-price-asc", label: "Best value per gram" },
   { value: "thc-desc", label: "THC: High to Low" },
   { value: "name-asc", label: "Name: A to Z" },
   { value: "brand-asc", label: "Brand: A to Z" },
