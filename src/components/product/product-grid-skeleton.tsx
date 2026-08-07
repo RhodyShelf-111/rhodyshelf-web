@@ -37,7 +37,11 @@ function ProductCardSkeleton({
           height either way (box-sizing is border-box, so aspect-square resolves
           against the border box — measured 214x214 with the border present), so
           this is purely so the placeholder reads as the same card. */}
-      <Skeleton className="aspect-square rounded-none border-b border-border/60" />
+      {/* Tinted toward the real plate's white (--product-plate) rather than the
+          default dark Skeleton fill, so the swap to a loaded packshot isn't a
+          dark-to-white flash. Held at 70% so it still reads as "loading" and
+          not as an image that failed to draw. */}
+      <Skeleton className="aspect-square rounded-none border-b border-border/60 bg-product-plate/70" />
       <div className="flex flex-1 flex-col px-3 py-2.5">
         {/* space-y-1 (not 1.5) — the real card's stack gap. */}
         <div className="space-y-1">

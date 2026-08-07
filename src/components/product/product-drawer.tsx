@@ -376,7 +376,7 @@ function QuickLookSkeleton() {
     <div className="flex min-h-0 flex-1 flex-col">
       <SheetTitle className="sr-only">Loading product</SheetTitle>
       {/* Image plate */}
-      <div className="h-56 shrink-0 animate-pulse border-b border-border bg-muted sm:h-auto sm:aspect-square" />
+      <div className="h-56 shrink-0 animate-pulse border-b border-border bg-product-plate/70 sm:h-auto sm:aspect-square" />
       {/* Details */}
       <div className="flex flex-col gap-4 p-4">
         <div className="space-y-2">

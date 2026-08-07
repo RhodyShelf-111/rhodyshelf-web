@@ -56,6 +56,18 @@ describe("ProductCard image plate", () => {
     expect(img).toHaveClass("object-contain")
     expect(img).not.toHaveClass("object-cover")
   })
+
+  // The one light surface in a dark-only UI, and deliberate: 62% of packshots
+  // are shot on white and another 8% are cutouts drawn for white, so the muted
+  // tile boxed the majority case in a visible frame. Asserted because it reads
+  // as an oversight next to every other bg-muted surface.
+  it("stands the packshot on a white plate, not the dark muted tile", () => {
+    render(<ProductCard listing={makeListing()} />)
+    const plate = screen.getByRole("img", { name: "Blue Dream 3.5g" })
+      .parentElement!
+    expect(plate).toHaveClass("bg-product-plate")
+    expect(plate).not.toHaveClass("bg-muted")
+  })
 })
 
 function withProduct(

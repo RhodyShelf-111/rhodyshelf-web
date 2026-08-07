@@ -128,10 +128,12 @@ export function ProductCard({
           opaque rectangles (white, photo, or black backgrounds) rather than
           transparent cutouts, so inset padding just draws a frame around an
           image that already has its own edges. The image runs to the tile edge
-          instead; the muted tile only shows as letterbox bands behind the ~45%
-          of packshots that aren't square. object-contain (not cover) because
+          instead, and the tile is white (--product-plate) because that's what
+          70% of the catalog is either shot on or drawn for — so the letterbox
+          bands behind the ~45% of packshots that aren't square disappear into
+          the image instead of boxing it. object-contain (not cover) because
           cropping a package makes the SKU harder to recognize. */}
-      <div className="relative aspect-square bg-muted shrink-0 border-b border-border/60">
+      <div className="relative aspect-square bg-product-plate shrink-0 border-b border-border/60">
         {imageUrl ? (
           <Image
             src={imageUrl}

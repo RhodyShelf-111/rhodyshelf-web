@@ -143,7 +143,7 @@ export default async function ProductPage({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Image — shorter on mobile (single column) so the title, price, and
             key facts sit higher; square on md+ where it shares the row. */}
-        <div className="relative aspect-[4/3] md:aspect-square bg-muted rounded-xl overflow-hidden border border-border">
+        <div className="relative aspect-[4/3] md:aspect-square bg-product-plate rounded-xl overflow-hidden border border-border">
           <ProductHeroImage
             imageUrl={imageUrl}
             alt={product.name}

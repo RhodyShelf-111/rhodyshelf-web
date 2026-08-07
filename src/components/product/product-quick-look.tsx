@@ -67,7 +67,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
         {/* Image plate — a capped height on mobile so the title, price, and the
             sticky Buy bar are reachable without a long scroll; square on the
             narrower desktop drawer where the vertical budget is generous. */}
-        <div className="relative h-56 shrink-0 border-b border-border bg-muted sm:h-auto sm:aspect-square">
+        <div className="relative h-56 shrink-0 border-b border-border bg-product-plate sm:h-auto sm:aspect-square">
           <ProductHeroImage
             imageUrl={imageUrl}
             alt={product.name}
