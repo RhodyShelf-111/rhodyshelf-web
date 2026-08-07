@@ -96,9 +96,10 @@ describe("ProductGridSkeleton", () => {
     const [plate, ...rows] = bars()
 
     expect(classes(plate)).toContain("aspect-square")
-    // Matches the real plate's hairline. Appearance only — aspect-square
-    // resolves against the border box, so the border adds no height.
-    expect(classes(plate)).toContain("border-b")
+    // The hairline belongs to the text block below (border-t), not the plate —
+    // the real card can't carry a border-b here, because aspect-ratio sizes the
+    // border box and that 1px letterboxes square packshots in white slivers.
+    expect(classes(plate)).not.toContain("border-b")
 
     expect(rows.map(height)).toEqual([
       "h-[18px]", //   category · strain   (text-[12px])
@@ -142,19 +143,20 @@ describe("ProductGridSkeleton vs. the real ProductCard", () => {
     expect(classes(action)).toEqual(expect.arrayContaining(["h-11", "sm:h-7"]))
   })
 
-  // Regression: the skeleton went sm:flex-row and folded the dispensary line
-  // into the action row at sm+, but the real card keeps them stacked at every
-  // breakpoint — so the desktop skeleton was a whole row short.
-  it("keeps the dispensary line on its own row at every breakpoint", () => {
+  // Regression: the two drifted apart once — the skeleton folded the dispensary
+  // line into the action row at sm+ while the card still stacked it, leaving the
+  // desktop skeleton a whole row short. What matters is that they AGREE at both
+  // breakpoints, so assert the same footer shape on each rather than one shape.
+  it("stacks the dispensary line on mobile and folds it in at sm+, on both", () => {
     const { container: card } = render(<ProductCard listing={makeListing()} />)
     const cardBottom = card.querySelector(".mt-auto")!
     expect(classes(cardBottom)).toContain("flex-col")
-    expect(classes(cardBottom)).not.toContain("sm:flex-row")
+    expect(classes(cardBottom)).toContain("sm:flex-row")
 
     const { container: skeleton } = render(<ProductGridSkeleton count={1} />)
     const skeletonBottom = skeleton.querySelector(".mt-auto")!
     expect(classes(skeletonBottom)).toContain("flex-col")
-    expect(classes(skeletonBottom)).not.toContain("sm:flex-row")
+    expect(classes(skeletonBottom)).toContain("sm:flex-row")
     // Same pt-2 / gap-2 as the card's bottom block.
     expect(classes(skeletonBottom)).toEqual(
       expect.arrayContaining(["pt-2", "gap-2"])

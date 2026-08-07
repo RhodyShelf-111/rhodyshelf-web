@@ -8,7 +8,7 @@ import type { InventoryListing } from "@/lib/types"
 import {
   cn,
   formatPrice,
-  formatPricePerGram,
+  formatUnitPrice,
   formatRelativeTime,
   getCategoryIcon,
 } from "@/lib/utils"
@@ -80,13 +80,10 @@ export function ProductCard({
     !dispensary.name.toLowerCase().includes(dispensary.city.toLowerCase())
       ? dispensary.city
       : null
-  // The one number that makes two pack sizes comparable. Rendered on the THC
-  // line — which already reserves its height — so the grid rows stay even.
-  const unitPrice = formatPricePerGram(
-    price,
-    product.weight_grams,
-    product.category
-  )
+  // The one number that makes two pack sizes comparable — "$3.14/g" for the
+  // gram-priced categories, "$1.20/10mg" for the dose-priced ones. Rendered on
+  // the THC line, which already reserves its height, so grid rows stay even.
+  const unitPrice = formatUnitPrice(price, product)
   const thcLabel = thc_percent != null ? `THC: ${thc_percent.toFixed(1)}%` : null
   const statLine = [unitPrice, thcLabel].filter(Boolean).join(" · ")
   // Out-of-stock cards show when the product was last on a menu (helps judge
@@ -133,7 +130,13 @@ export function ProductCard({
           bands behind the ~45% of packshots that aren't square disappear into
           the image instead of boxing it. object-contain (not cover) because
           cropping a package makes the SKU harder to recognize. */}
-      <div className="relative aspect-square bg-product-plate shrink-0 border-b border-border/60">
+      {/* The divider below is drawn by the content block's border-t, NOT a
+          border-b here: aspect-ratio sizes the border box, so a 1px bottom
+          border left the fill image a 210.25x209.25 content box. object-contain
+          fitted the (square) packshot to 209.25 square and centered it, painting
+          0.5px of white plate down each side — invisible on a white packshot,
+          a white hairline around every dark one. */}
+      <div className="relative aspect-square bg-product-plate shrink-0">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -185,7 +188,7 @@ export function ProductCard({
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col px-3 py-2.5 min-h-0">
+      <div className="flex-1 flex flex-col px-3 py-2.5 min-h-0 border-t border-border/60">
         <div className="space-y-1">
           {/* Category + Strain */}
           <p className="text-[12px] text-muted-foreground truncate capitalize">
@@ -241,13 +244,13 @@ export function ProductCard({
         </div>
 
         {/* Dispensary + actions (pinned to bottom).
-            The where-line keeps its own full-width row at every breakpoint:
-            sharing one row with the shrink-0 Buy + upvote controls left it ~76px
-            of a 200px card on desktop, so "Aura of Rhode Island - Central Falls"
-            rendered as "Aura of Rh…" on every card in the grid.
-            Mobile actions are 44px touch targets (WCAG 2.5.5 / Apple HIG);
-            sm+ they shrink back to the compact size and sit at the right. */}
-        <div className="mt-auto pt-2 flex flex-col gap-2">
+            sm+: one inline row — where, Buy, upvote — where a precise pointer is
+            in use and the compact 28px controls leave the name room to breathe.
+            Mobile: the name takes its own full-width row first, because the
+            actions are 44px touch targets there (WCAG 2.5.5 / Apple HIG) and
+            three of them inline on a ~175px card leaves the shop name about 15px
+            — a single truncated character. */}
+        <div className="mt-auto pt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           {outOfStock
             ? lastSeenLabel && (
                 <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">

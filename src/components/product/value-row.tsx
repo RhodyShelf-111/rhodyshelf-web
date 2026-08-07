@@ -1,9 +1,14 @@
 import Image from "next/image"
 import Link from "next/link"
 import { MapPin } from "lucide-react"
-import type { ValueRow as ValueRowData, SizeBand } from "@/lib/value-ranking"
-import { formatPricePerMgThc, valueAnchor } from "@/lib/value-ranking"
-import { formatPrice, formatPricePerGram, getCategoryIcon } from "@/lib/utils"
+import type {
+  ValueRow as ValueRowData,
+  SizeBand,
+  ValueCategory,
+} from "@/lib/value-ranking"
+import { formatPricePerMgThc, valueAnchor, VALUE_UNIT } from "@/lib/value-ranking"
+import { DOSE_MG } from "@/lib/product-units"
+import { formatPrice, formatUnitPrice, getCategoryIcon } from "@/lib/utils"
 
 /**
  * One row on /best-value.
@@ -25,17 +30,17 @@ export function ValueRow({
   const { listing } = row
   const { product, dispensary } = listing
   const image = listing.image_url ?? product.image_url
-  // Shared helper, so this row prints the same rate the product card does.
-  const perGram = formatPricePerGram(
-    listing.price,
-    product.weight_grams,
-    product.category
-  )
+  // Shared helper, so this row prints the same rate the product card does —
+  // "$3.14/g" for a gram category, "$1.20/10mg" for an edible.
+  const perGram = formatUnitPrice(listing.price, product)
   const anchor = valueAnchor(row, band)
 
   // Screen readers say "$4.20/g" as "four twenty g". The row gets an explicit
   // label so the number is announced as money per unit.
-  const spokenPrice = `${row.pricePerGram.toFixed(2)} dollars per gram`
+  const isDose = VALUE_UNIT[product.category as ValueCategory] === "dose"
+  const spokenPrice = `${row.unitRate.toFixed(2)} dollars per ${
+    isDose ? `${DOSE_MG} milligrams of THC` : "gram"
+  }`
 
   return (
     <li>

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { ExternalLink, MapPin } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
-import { formatPrice, formatPricePerGram, formatRelativeTime } from "@/lib/utils"
+import { formatPrice, formatUnitPrice, formatRelativeTime } from "@/lib/utils"
 import { DealBadge } from "@/components/product/deal-badge"
 import { ProductHeroImage } from "@/components/product/product-hero-image"
 import { UpvoteButton } from "@/components/product/upvote-button"
@@ -51,12 +51,9 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
   // the dispensary-level menu_url when a row has no product_url.
   const buyUrl = listing.product_url ?? dispensary.menu_url
   // The rate, next to the price: a 28g jar and a 1g nug are otherwise not
-  // comparable numbers. Null for categories the gram doesn't price.
-  const unitPrice = formatPricePerGram(
-    price,
-    product.weight_grams,
-    product.category
-  )
+  // comparable numbers, and neither are a 100mg 10-pack and a 200mg bar.
+  // "$3.14/g" for gram-priced categories, "$1.20/10mg" for dose-priced ones.
+  const unitPrice = formatUnitPrice(price, product)
   const comparison = useCrossDispensaryPrices(listing)
 
   return (
@@ -67,7 +64,10 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
         {/* Image plate — a capped height on mobile so the title, price, and the
             sticky Buy bar are reachable without a long scroll; square on the
             narrower desktop drawer where the vertical budget is generous. */}
-        <div className="relative h-56 shrink-0 border-b border-border bg-product-plate sm:h-auto sm:aspect-square">
+        {/* Divider lives on the details block's border-t — a border-b here would
+            eat 1px off the sm+ aspect-square content box and letterbox every
+            square packshot in white slivers (see product-card.tsx). */}
+        <div className="relative h-56 shrink-0 bg-product-plate sm:h-auto sm:aspect-square">
           <ProductHeroImage
             imageUrl={imageUrl}
             alt={product.name}
@@ -81,7 +81,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
         </div>
 
         {/* Details */}
-        <div className="flex flex-col gap-4 p-4">
+        <div className="flex flex-col gap-4 border-t border-border p-4">
           <div>
             <SheetDescription className="capitalize">
               {product.category}

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+import type { Product } from "./types"
 import {
   formatPrice,
   formatRelativeTime,
@@ -8,6 +9,7 @@ import {
   getCategoryIcon,
   pricePerGram,
   formatPricePerGram,
+  formatUnitPrice,
 } from "./utils"
 
 describe("formatPrice", () => {
@@ -126,22 +128,53 @@ describe("pricePerGram", () => {
   })
 })
 
+/** Minimal Product for the unit-price helpers, which read the whole row now. */
+function p(patch: Partial<Product> = {}): Product {
+  return {
+    id: "p1",
+    name: "Test",
+    brand_id: null,
+    brand_name: "Brand",
+    category: "flower",
+    subcategory: null,
+    weight_grams: null,
+    weight_display: null,
+    strain_type: null,
+    strain_name: null,
+    image_url: null,
+    ...patch,
+  }
+}
+
 describe("formatPricePerGram", () => {
   it("labels gram-priced categories, including plural display aliases", () => {
-    expect(formatPricePerGram(88, 28, "flower")).toBe("$3.14/g")
-    expect(formatPricePerGram(50, 1, "concentrate")).toBe("$50.00/g")
-    expect(formatPricePerGram(50, 1, "Concentrates")).toBe("$50.00/g")
-    expect(formatPricePerGram(25, 0.5, "vape")).toBe("$50.00/g")
+    expect(
+      formatPricePerGram(88, p({ category: "flower", weight_display: "28g" }))
+    ).toBe("$3.14/g")
+    expect(
+      formatPricePerGram(50, p({ category: "concentrate", weight_display: "1g" }))
+    ).toBe("$50.00/g")
+    expect(
+      formatPricePerGram(50, p({ category: "Concentrates", weight_display: "1g" }))
+    ).toBe("$50.00/g")
+    expect(
+      formatPricePerGram(25, p({ category: "vape", weight_display: "0.5g" }))
+    ).toBe("$50.00/g")
   })
 
   // An edible's weight_grams is its THC dose (100mg → 0.1g), so $/g would read
   // "$180.00/g" on an $18 bag of gummies. Grams aren't the unit of value there.
   it("says nothing for categories the gram doesn't price", () => {
-    expect(formatPricePerGram(18, 0.1, "edible")).toBeNull()
-    expect(formatPricePerGram(40, 30, "tincture")).toBeNull()
-    expect(formatPricePerGram(20, 0, "accessory")).toBeNull()
-    expect(formatPricePerGram(20, 1, "")).toBeNull()
-    expect(formatPricePerGram(20, 1, null)).toBeNull()
+    expect(
+      formatPricePerGram(18, p({ category: "edible", weight_display: "100mg" }))
+    ).toBeNull()
+    expect(
+      formatPricePerGram(40, p({ category: "tincture", weight_display: "30mg" }))
+    ).toBeNull()
+    expect(formatPricePerGram(20, p({ category: "accessory" }))).toBeNull()
+    expect(
+      formatPricePerGram(20, p({ category: "", weight_display: "1g" }))
+    ).toBeNull()
   })
 
   // Regression: pre-roll multipacks carry a per-unit weight against a pack
@@ -151,13 +184,56 @@ describe("formatPricePerGram", () => {
   // "Rollups 10-pack 0.5g" on the same menu is stored as 5.0g and would read
   // right. Say nothing rather than pick one of the two answers at random.
   it("says nothing for pre-rolls, whose pack weights can't be trusted", () => {
-    expect(formatPricePerGram(50, 0.5, "pre-roll")).toBeNull()
-    expect(formatPricePerGram(50, 5, "pre-roll")).toBeNull()
-    expect(formatPricePerGram(20, 0.5, "Pre-Rolls")).toBeNull()
+    expect(
+      formatPricePerGram(50, p({ category: "pre-roll", weight_display: "0.5g" }))
+    ).toBeNull()
+    expect(
+      formatPricePerGram(50, p({ category: "pre-roll", weight_display: "5g" }))
+    ).toBeNull()
+    expect(
+      formatPricePerGram(20, p({ category: "Pre-Rolls", weight_display: "0.5g" }))
+    ).toBeNull()
   })
 
   it("says nothing when the listing has no price or no weight", () => {
-    expect(formatPricePerGram(null, 28, "flower")).toBeNull()
-    expect(formatPricePerGram(88, null, "flower")).toBeNull()
+    expect(
+      formatPricePerGram(null, p({ category: "flower", weight_display: "28g" }))
+    ).toBeNull()
+    expect(formatPricePerGram(88, p({ category: "flower" }))).toBeNull()
+  })
+})
+
+// The whole point of the normalisation: an edible that could never carry a $/g
+// now carries the rate that actually compares it to another edible.
+describe("formatUnitPrice", () => {
+  it("gives grams to gram categories and doses to edibles", () => {
+    expect(
+      formatUnitPrice(88, p({ category: "flower", weight_display: "28g" }))
+    ).toBe("$3.14/g")
+    // $18 for 100mg of THC = $1.80 per 10mg dose.
+    expect(
+      formatUnitPrice(18, p({ category: "edible", weight_display: "100mg" }))
+    ).toBe("$1.80/10mg")
+    expect(
+      formatUnitPrice(40, p({ category: "tincture", weight_display: "200mg" }))
+    ).toBe("$2.00/10mg")
+  })
+
+  // Convention 2: "3330mg" is 3.33 flower-equivalent grams, not a 3,330mg dose.
+  // Converting it would print "$0.05/10mg" on a normal 100mg pack.
+  it("refuses the flower-equivalent rows rather than inventing a rate", () => {
+    expect(
+      formatUnitPrice(18, p({ category: "edible", weight_display: "3330mg" }))
+    ).toBeNull()
+    expect(
+      formatUnitPrice(6, p({ category: "edible", weight_display: "10000mg" }))
+    ).toBeNull()
+  })
+
+  it("says nothing for categories with neither unit", () => {
+    expect(formatUnitPrice(20, p({ category: "accessory" }))).toBeNull()
+    expect(
+      formatUnitPrice(50, p({ category: "pre-roll", weight_display: "0.5g" }))
+    ).toBeNull()
   })
 })

@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { Product } from "@/lib/types"
+import { formatPricePerDose, netWeightGrams } from "@/lib/product-units"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -79,15 +81,35 @@ export function pricePerGram(
  * two listings of different pack sizes comparable ($88.00/28g is less than half
  * the rate of $6.00/1g, and nothing on the card used to say so). Null for
  * categories the gram doesn't price.
+ *
+ * Takes the whole product now rather than a bare number, because "how many
+ * grams is this" is a question only `product-units` can answer — the
+ * `weight_grams` column means net mass on one row and THC milligrams on the
+ * next. Edibles get their own rate from `formatUnitPrice` below.
  */
 export function formatPricePerGram(
   price: number | string | null,
-  weightGrams: number | string | null,
-  category: string | null | undefined
+  product: Product
 ): string | null {
-  if (!isGramPriced(category)) return null
-  const perGram = pricePerGram(price, weightGrams)
+  if (!isGramPriced(product.category)) return null
+  const perGram = pricePerGram(price, netWeightGrams(product))
   return perGram == null ? null : `${formatPrice(perGram)}/g`
+}
+
+/**
+ * The unit-price label for ANY category — "$3.14/g" for the gram-priced ones,
+ * "$1.20/10mg" for the dose-priced ones, null where neither means anything.
+ *
+ * One entry point so a surface can't accidentally print a per-gram rate for a
+ * gummy pack: before this existed, the card's only question was "is this
+ * gram-priced?", and the 705 live edible listings that answered no simply went
+ * blank rather than getting the rate that actually compares them.
+ */
+export function formatUnitPrice(
+  price: number | string | null,
+  product: Product
+): string | null {
+  return formatPricePerGram(price, product) ?? formatPricePerDose(price, product)
 }
 
 /**

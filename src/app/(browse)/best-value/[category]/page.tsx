@@ -2,7 +2,13 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { getInventoryByCategory } from "@/lib/queries/products"
-import { rankByValue, isValueCategory, VALUE_CATEGORIES } from "@/lib/value-ranking"
+import {
+  rankByValue,
+  isValueCategory,
+  VALUE_CATEGORIES,
+  VALUE_UNIT,
+  formatUnitRate,
+} from "@/lib/value-ranking"
 import { ValueRow } from "@/components/product/value-row"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
@@ -10,7 +16,7 @@ import { JsonLd } from "@/components/seo/json-ld"
 import { collectionPageJsonLd, ITEM_LIST_MAX } from "@/lib/seo/structured-data"
 import { pageOpenGraph } from "@/lib/seo/og"
 import { cn } from "@/lib/utils"
-import { CATEGORY_COPY, VALUE_DISCLAIMER } from "../copy"
+import { CATEGORY_COPY, valueDisclaimer } from "../copy"
 
 export const revalidate = 1800 // matches getInventoryByCategory's cache window
 
@@ -85,7 +91,7 @@ export default async function BestValueCategoryPage({
             <p>{copy.subheading}</p>
             {/* The most important line on the page. Ranking by price alone
                 would otherwise read as a quality judgement, which it is not. */}
-            <p className="mt-1 text-sm">{VALUE_DISCLAIMER}</p>
+            <p className="mt-1 text-sm">{valueDisclaimer(VALUE_UNIT[category])}</p>
           </>
         }
       />
@@ -106,8 +112,8 @@ export default async function BestValueCategoryPage({
                   {section.band.label}
                 </h2>
                 <p className="shrink-0 text-[12px] text-muted-foreground">
-                  typical ${section.typicalPricePerGram.toFixed(2)}/g ·{" "}
-                  {section.candidateCount} products
+                  typical {formatUnitRate(section.typicalUnitRate, section.unit)}{" "}
+                  · {section.candidateCount} products
                 </p>
               </div>
               <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">

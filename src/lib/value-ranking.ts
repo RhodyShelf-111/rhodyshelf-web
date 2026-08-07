@@ -1,5 +1,11 @@
 import type { InventoryListing } from "@/lib/types"
 import { isGramPriced, pricePerGram } from "@/lib/utils"
+import {
+  DOSE_MG,
+  netWeightGrams,
+  pricePerDose,
+  thcMilligrams,
+} from "@/lib/product-units"
 
 /**
  * Ranking for /best-value — "most product per dollar", by price per gram.
@@ -7,14 +13,14 @@ import { isGramPriced, pricePerGram } from "@/lib/utils"
  * Three things about this data forced the shape below, all measured against
  * production rather than assumed:
  *
- * 1. `weight_grams` carries inconsistent units. Flower, vape and concentrate
- *    store real mass, but edibles and topicals mix real mass with the labelled
- *    THC milligrams divided by 1000 — a 5mg chocolate is stored as 0.005.
- *    Edible $/g therefore spans $0.06 to $35,000 with a $229 median. Those
- *    categories are excluded until the column is normalised; no outlier bound
- *    can rescue a numerator and denominator that disagree on units.
- *    (Pre-rolls store real mass but are excluded for a separate reason — see
- *    VALUE_CATEGORIES.)
+ * 1. `weight_grams` carries inconsistent units, so no category ranks on the raw
+ *    column — every rate goes through @/lib/product-units, which resolves what
+ *    a row's number actually means. Flower, vape and concentrate store real
+ *    mass and rank per gram. Edibles store a THC dose and rank per 10mg THC,
+ *    which is what "value" means for them; the ~110 live rows that store
+ *    flower-equivalent grams instead are refused a rate there and so never
+ *    reach this file. (Pre-rolls store real mass but are excluded for a
+ *    separate reason — see VALUE_CATEGORIES.)
  *
  * 2. Bigger formats are always cheaper per gram, so one ranking across all sizes
  *    is just an ounce list. Sizes are therefore SECTIONS, each ranked within
@@ -36,15 +42,33 @@ import { isGramPriced, pricePerGram } from "@/lib/utils"
  * — ranking a category by a rate the product card refuses to print would be the
  * worst of both. A test asserts the two stay in agreement.
  */
-export const VALUE_CATEGORIES = ["flower", "vape", "concentrate"] as const
+export const VALUE_CATEGORIES = [
+  "flower",
+  "vape",
+  "concentrate",
+  "edible",
+] as const
 
 export type ValueCategory = (typeof VALUE_CATEGORIES)[number]
 
+/** What "one unit" is for a category — the thing its rate is per. */
+export type ValueUnit = "gram" | "dose"
+
+export const VALUE_UNIT: Record<ValueCategory, ValueUnit> = {
+  flower: "gram",
+  vape: "gram",
+  concentrate: "gram",
+  edible: "dose",
+}
+
 export function isValueCategory(c: string): c is ValueCategory {
-  // Both gates, deliberately. Widening VALUE_CATEGORIES alone cannot make this
-  // page rank a category whose $/g the product card refuses to print — the two
-  // have to be changed together, on purpose.
-  return (VALUE_CATEGORIES as readonly string[]).includes(c) && isGramPriced(c)
+  if (!(VALUE_CATEGORIES as readonly string[]).includes(c)) return false
+  // Both gates for the gram categories, deliberately: widening
+  // VALUE_CATEGORIES alone cannot make this page rank a category whose $/g the
+  // product card refuses to print. Dose categories don't consult isGramPriced
+  // (they aren't gram-priced by definition) — their gate is per row instead,
+  // since only some edible rows carry a resolvable dose.
+  return VALUE_UNIT[c as ValueCategory] === "dose" || isGramPriced(c)
 }
 
 export interface SizeBand {
@@ -52,7 +76,8 @@ export interface SizeBand {
   id: string
   /** Shopper-facing name. */
   label: string
-  /** Inclusive gram range. */
+  /** Inclusive range, in the category's own quantity — grams for the gram
+   *  categories, total THC milligrams for the dose ones. */
   min: number
   max: number
 }
@@ -87,6 +112,16 @@ export const SIZE_BANDS: Record<ValueCategory, SizeBand[]> = {
     { id: "gram", label: "1g", min: 0.9, max: 1.1 },
     { id: "two-gram", label: "2g", min: 1.6, max: 2.1 },
     { id: "three-gram", label: "3.5g", min: 3.2, max: 3.6 },
+  ],
+  // Total THC milligrams per package, not grams. The bands are the real market
+  // tiers: 228 live listings sit at or below 50mg (singles and small packs) and
+  // 206 at the 100mg pack that dominates the shelf. Per-dose price falls hard
+  // across them — median $13.50/10mg for the small ones against $2.00/10mg for
+  // a 100mg pack — which is exactly why they cannot share one ranking.
+  edible: [
+    { id: "single", label: "Singles & small packs (up to 50mg)", min: 1, max: 50 },
+    { id: "standard", label: "100mg packs", min: 51, max: 120 },
+    { id: "large", label: "Large packs (200-500mg)", min: 121, max: 500 },
   ],
 }
 
@@ -150,9 +185,46 @@ export function isExcludedFromValue(listing: InventoryListing): boolean {
  * Dollars per gram for a listing. Thin wrapper over the shared helper in
  * @/lib/utils so the page, the product card and the "cheapest per gram" sort
  * can never disagree about the arithmetic or about which inputs are valid.
+ *
+ * Reads the resolved net mass, never the raw column — `weight_grams` is a
+ * different unit depending on the row.
  */
 export function listingPricePerGram(listing: InventoryListing): number | null {
-  return pricePerGram(listing.price, listing.product.weight_grams)
+  return pricePerGram(listing.price, netWeightGrams(listing.product))
+}
+
+/**
+ * The rate a listing is ranked and shown by, in its category's own unit:
+ * dollars per gram, or dollars per 10mg THC. Null when the row carries no
+ * resolvable quantity, which is the gate that keeps flower-equivalent edible
+ * rows off the board entirely.
+ */
+export function listingUnitRate(listing: InventoryListing): number | null {
+  const category = listing.product.category
+  if (!isValueCategory(category)) return null
+  return VALUE_UNIT[category] === "dose"
+    ? pricePerDose(listing.price, listing.product)
+    : listingPricePerGram(listing)
+}
+
+/**
+ * The quantity that decides which band a listing falls in — grams, or total THC
+ * milligrams. Same resolution as the rate, so a row can never rank in a band
+ * whose quantity it doesn't actually have.
+ */
+export function bandQuantity(listing: InventoryListing): number | null {
+  const category = listing.product.category
+  if (!isValueCategory(category)) return null
+  return VALUE_UNIT[category] === "dose"
+    ? thcMilligrams(listing.product)
+    : netWeightGrams(listing.product)
+}
+
+/** "$3.14/g" or "$1.20/10mg" — the rate label for a category's unit. */
+export function formatUnitRate(rate: number, unit: ValueUnit): string {
+  return unit === "dose"
+    ? `$${rate.toFixed(2)}/${DOSE_MG}mg`
+    : `$${rate.toFixed(2)}/g`
 }
 
 /**
@@ -164,7 +236,7 @@ export function listingPricePerGram(listing: InventoryListing): number | null {
  * Bounded to a plausible potency range per category, because `thc_percent` also
  * carries stray pack-milligram values.
  */
-const PLAUSIBLE_THC: Record<ValueCategory, [number, number]> = {
+const PLAUSIBLE_THC: Partial<Record<ValueCategory, [number, number]>> = {
   flower: [5, 40],
   vape: [30, 95],
   concentrate: [30, 95],
@@ -172,30 +244,44 @@ const PLAUSIBLE_THC: Record<ValueCategory, [number, number]> = {
 
 export function pricePerMgThc(listing: InventoryListing): number | null {
   const price = listing.price
-  const grams = listing.product.weight_grams
   const thc = listing.thc_percent
   const category = listing.product.category
   if (price == null || price <= 0) return null
-  if (grams == null || grams <= 0) return null
   if (thc == null || thc <= 0) return null
   if (!isValueCategory(category)) return null
-  const [lo, hi] = PLAUSIBLE_THC[category]
+  // Dose categories have no percent-by-weight assay to work from, and their
+  // primary rate is already per mg of THC — this would just restate it.
+  const bounds = PLAUSIBLE_THC[category]
+  if (!bounds) return null
+  const grams = netWeightGrams(listing.product)
+  if (grams == null || grams <= 0) return null
+  const [lo, hi] = bounds
   if (thc < lo || thc > hi) return null
   const mg = grams * 10 * thc // grams * 1000 * (thc/100)
   return mg > 0 ? price / mg : null
 }
 
-/** The band a weight falls in, or null when it sits outside all of them. */
-export function bandFor(category: string, grams: number | null): SizeBand | null {
-  if (!isValueCategory(category) || grams == null) return null
+/**
+ * The band a quantity falls in, or null when it sits outside all of them. The
+ * quantity is grams for gram categories and total THC milligrams for dose ones
+ * — use `bandQuantity(listing)` to get the right one.
+ */
+export function bandFor(
+  category: string,
+  quantity: number | null
+): SizeBand | null {
+  if (!isValueCategory(category) || quantity == null) return null
   return (
-    SIZE_BANDS[category].find((b) => grams >= b.min && grams <= b.max) ?? null
+    SIZE_BANDS[category].find(
+      (b) => quantity >= b.min && quantity <= b.max
+    ) ?? null
   )
 }
 
 export interface ValueRow {
   listing: InventoryListing
-  pricePerGram: number
+  /** The rate this row ranks on, in the section's unit. */
+  unitRate: number
   pricePerMgThc: number | null
   /** How far below the band's median this sits, as a whole percent. 0 when at or above. */
   percentBelowTypical: number
@@ -203,9 +289,10 @@ export interface ValueRow {
 
 export interface ValueSection {
   band: SizeBand
+  unit: ValueUnit
   rows: ValueRow[]
-  /** Median $/g across every qualifying listing in the band, before capping. */
-  typicalPricePerGram: number
+  /** Median rate across every qualifying listing in the band, before capping. */
+  typicalUnitRate: number
   /** Qualifying listings in the band, before the per-brand cap and row limit. */
   candidateCount: number
 }
@@ -230,17 +317,20 @@ function median(values: number[]): number {
 function cheapestPerProduct(listings: InventoryListing[]): InventoryListing[] {
   const best = new Map<string, InventoryListing>()
   for (const listing of listings) {
-    const ppg = listingPricePerGram(listing)
-    if (ppg == null) continue
+    const rate = listingUnitRate(listing)
+    if (rate == null) continue
     const key = listing.product.id
     const incumbent = best.get(key)
     if (!incumbent) {
       best.set(key, listing)
       continue
     }
-    const incumbentPpg = listingPricePerGram(incumbent) ?? Infinity
+    const incumbentRate = listingUnitRate(incumbent) ?? Infinity
     // Ties resolve on listing id so the winner is stable across revalidations.
-    if (ppg < incumbentPpg || (ppg === incumbentPpg && listing.id < incumbent.id)) {
+    if (
+      rate < incumbentRate ||
+      (rate === incumbentRate && listing.id < incumbent.id)
+    ) {
       best.set(key, listing)
     }
   }
@@ -254,8 +344,8 @@ function cheapestPerProduct(listings: InventoryListing[]): InventoryListing[] {
  * revalidations with no data change at all.
  */
 function byValue(a: InventoryListing, b: InventoryListing): number {
-  const ppgA = listingPricePerGram(a) ?? Infinity
-  const ppgB = listingPricePerGram(b) ?? Infinity
+  const ppgA = listingUnitRate(a) ?? Infinity
+  const ppgB = listingUnitRate(b) ?? Infinity
   if (ppgA !== ppgB) return ppgA - ppgB
   const priceA = a.price ?? Infinity
   const priceB = b.price ?? Infinity
@@ -312,45 +402,47 @@ export function rankByValue(
   const maxPerDispensary = options.maxPerDispensary ?? MAX_PER_DISPENSARY
   const minBandSize = options.minBandSize ?? MIN_BAND_SIZE
 
+  const unit = VALUE_UNIT[category]
   const eligible = cheapestPerProduct(
     listings.filter(
       (l) =>
         l.product.category === category &&
         !isExcludedFromValue(l) &&
-        listingPricePerGram(l) != null
+        listingUnitRate(l) != null
     )
   )
 
   const sections: ValueSection[] = []
   for (const band of SIZE_BANDS[category]) {
     const inBand = eligible.filter(
-      (l) => bandFor(category, l.product.weight_grams)?.id === band.id
+      (l) => bandFor(category, bandQuantity(l))?.id === band.id
     )
     if (inBand.length < minBandSize) continue
 
     // Median over every candidate, not just the shown rows — the anchor has to
     // describe the market, not the top of the list.
-    const typical = median(inBand.map((l) => listingPricePerGram(l) as number))
+    const typical = median(inBand.map((l) => listingUnitRate(l) as number))
 
     const rows = capDiversity([...inBand].sort(byValue), maxPerBrand, maxPerDispensary)
       .slice(0, rowsPerBand)
       .map((listing) => {
-        const ppg = listingPricePerGram(listing) as number
+        const rate = listingUnitRate(listing) as number
         return {
           listing,
-          pricePerGram: ppg,
+          unitRate: rate,
           pricePerMgThc: pricePerMgThc(listing),
           percentBelowTypical:
-            typical > 0 && ppg < typical
-              ? Math.round(((typical - ppg) / typical) * 100)
+            typical > 0 && rate < typical
+              ? Math.round(((typical - rate) / typical) * 100)
               : 0,
         }
       })
 
     sections.push({
       band,
+      unit,
       rows,
-      typicalPricePerGram: typical,
+      typicalUnitRate: typical,
       candidateCount: inBand.length,
     })
   }
