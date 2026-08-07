@@ -350,10 +350,14 @@ function QuickLookSheet({ children }: { children: ReactNode }) {
           </div>
 
           {/* Pinned close — stays put over any scroll; a translucent pill keeps
-              it legible over light product packshots. */}
+              it legible over light product packshots. 44px on mobile (the
+              codebase's touch-target floor, matching sheet.tsx and FilterSheet)
+              because it sits over an inert packshot: a near-miss used to land on
+              the image and do nothing. Back to the compact pill at sm+, where
+              the pointer is precise. */}
           <Dialog.Close
             ref={closeRef}
-            className="absolute top-2.5 right-2.5 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/70 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute top-2.5 right-2.5 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full bg-background/70 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-9 sm:w-9"
           >
             <XIcon className="h-5 w-5" />
             <span className="sr-only">Close</span>
