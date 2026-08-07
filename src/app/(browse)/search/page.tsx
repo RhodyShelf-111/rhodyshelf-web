@@ -4,6 +4,8 @@ import {
   getBrandNamesFor,
   getBrandCountsFor,
   getCategories,
+  HOMEPAGE_CATEGORIES,
+  SEARCH_PAGE_SIZE,
 } from "@/lib/queries/products"
 import { getDispensaries } from "@/lib/queries/dispensaries"
 import { parseSearchQuery } from "@/lib/search-params"
@@ -44,10 +46,23 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // store degraded values).
   const [page, brands, brandOptions, brandCounts, categories, dispensaries] =
     await Promise.all([
-      searchListings(query, 1).catch((e) => {
-        console.error(e)
-        return { listings: [], total: 0, pageSize: 96 }
-      }),
+      // A failed results query is FLAGGED, not silently emptied: an empty page
+      // from a broken query is byte-identical to a genuine zero-result, and
+      // telling a shopper "No products match 'gummies'" during an outage is the
+      // worst thing a price-comparison site can say. SearchClient branches on
+      // `degraded` to say we couldn't reach the data instead.
+      searchListings(query, 1).then(
+        (result) => ({ ...result, degraded: false }),
+        (e) => {
+          console.error(e)
+          return {
+            listings: [],
+            total: 0,
+            pageSize: SEARCH_PAGE_SIZE,
+            degraded: true,
+          }
+        }
+      ),
       // Full brand list (autocomplete seed) and the facet list narrowed to
       // the active category/dispensary — both read the same cached index.
       getBrandNames().catch(() => [] as string[]),
@@ -72,7 +87,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         title={
           query.q ? `Results for "${query.q}"` : query.brand ? query.brand : "Browse Menu"
         }
-        description={`${page.total.toLocaleString()} products across Rhode Island dispensaries`}
+        // Don't assert a count we don't have — "0 products across Rhode Island
+        // dispensaries" reads as fact, and during an outage it is a lie.
+        description={
+          page.degraded
+            ? undefined
+            : `${page.total.toLocaleString()} products across Rhode Island dispensaries`
+        }
       />
 
       {/* No remount key: FilterBar UI state (mobile sheet open, brand search
@@ -83,10 +104,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         initialListings={page.listings}
         total={page.total}
         pageSize={page.pageSize}
+        degraded={page.degraded}
         brands={brands}
         brandOptions={brandOptions}
         brandCounts={brandCounts}
         categories={categories}
+        // The no-results recovery chips come from the canonical registry, not
+        // from getCategories() — the raw distinct values include the internal
+        // "Other" bucket (no landing page) and an alphabetical cut drops Vapes.
+        // Passed down because products.ts is server-only.
+        browseCategories={HOMEPAGE_CATEGORIES}
         dispensaries={dispensaries}
       />
     </PageContainer>

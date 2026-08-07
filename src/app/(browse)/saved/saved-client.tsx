@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Bookmark, ChevronUp } from "lucide-react"
+import { Bookmark, ChevronUp, CloudOff } from "lucide-react"
 import type { UpvotedListing } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
+import { ProductGridSkeleton } from "@/components/product/product-grid-skeleton"
 import { PageContainer } from "@/components/layout/page-container"
 import { PageHeading } from "@/components/layout/page-heading"
 import { useSavedProductIds } from "@/hooks/use-upvotes"
@@ -16,6 +17,12 @@ export function SavedClient() {
   const [mounted, setMounted] = useState(false)
   // null = not loaded yet; [] = loaded, nothing resolved
   const [listings, setListings] = useState<UpvotedListing[] | null>(null)
+  // Third state alongside null/[]: the lookup FAILED. Without it a 503 was
+  // indistinguishable from "we looked and found nothing", and the page told
+  // the visitor their whole saved list had been delisted from every Rhode
+  // Island menu — while it sat intact in localStorage the entire time.
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [retryTick, setRetryTick] = useState(0)
 
   useEffect(() => setMounted(true), [])
 
@@ -27,23 +34,35 @@ export function SavedClient() {
     if (!mounted) return
     if (savedIds.length === 0) {
       setListings([])
+      setLoadFailed(false)
       return
     }
     const ids = [...savedIds].reverse() // newest saved first
     let cancelled = false
+    setLoadFailed(false)
     fetch(`/api/saved?ids=${ids.join(",")}`)
-      .then((r) => (r.ok ? r.json() : { listings: [] }))
+      .then((r) => {
+        // /api/saved answers 503 with `{ listings: [] }` on a query failure —
+        // the same shape as a genuine no-match, so status is the only signal.
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
       .then((d) => {
         if (!cancelled) setListings((d.listings ?? []) as UpvotedListing[])
       })
       .catch(() => {
-        if (!cancelled) setListings((prev) => prev ?? [])
+        // Leave `listings` alone: null keeps "we never loaded" distinct from
+        // "loaded, nothing resolved", and a previous successful load stays on
+        // screen rather than collapsing to an empty page.
+        if (!cancelled) setLoadFailed(true)
       })
     return () => {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idsKey, mounted])
+  }, [idsKey, mounted, retryTick])
+
+  const retry = useCallback(() => setRetryTick((t) => t + 1), [])
 
   const savedSet = useMemo(() => new Set(savedIds), [idsKey]) // eslint-disable-line react-hooks/exhaustive-deps
   const displayed = useMemo(
@@ -56,8 +75,12 @@ export function SavedClient() {
     [displayed]
   )
 
-  const loading = !mounted || (savedIds.length > 0 && listings === null)
-  const isEmpty = !loading && displayed.length === 0
+  const loading =
+    !mounted || (savedIds.length > 0 && listings === null && !loadFailed)
+  // Only when the failure left us with nothing to show — a failed *refetch*
+  // keeps the last good list on screen instead of blanking it.
+  const failedWithNothing = !loading && loadFailed && displayed.length === 0
+  const isEmpty = !loading && !failedWithNothing && displayed.length === 0
 
   return (
     <PageContainer className="py-6 md:py-8">
@@ -68,12 +91,24 @@ export function SavedClient() {
             ? "Loading your saved products…"
             : displayed.length > 0
               ? summaryLine(inStock.length, outOfStock.length)
-              : "Products you upvote are saved here, on this device"
+              : failedWithNothing
+                ? `${savedIds.length} product${savedIds.length === 1 ? "" : "s"} saved on this device`
+                : "Products you upvote are saved here, on this device"
         }
       />
 
       {loading ? (
-        <SkeletonGrid />
+        // Sized from localStorage (known synchronously) and height-matched to
+        // the real card by the shared skeleton — the old bespoke placeholder
+        // was ~150px shorter per row, so the page jumped when the fetch landed.
+        <ProductGridSkeleton
+          count={Math.min(savedIds.length || 10, 12)}
+          // sm:gap-4 (not the shared md:gap-4 default) to match this page's own
+          // grid — otherwise the 640-767px range shifts by 4px per gap.
+          className="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 sm:gap-4"
+        />
+      ) : failedWithNothing ? (
+        <LoadFailedState onRetry={retry} />
       ) : isEmpty ? (
         <EmptyState hasSaved={savedIds.length > 0} />
       ) : (
@@ -129,22 +164,33 @@ function CardGrid({ listings }: { listings: UpvotedListing[] }) {
   )
 }
 
-function SkeletonGrid() {
+/**
+ * The lookup failed. The saved list itself lives in localStorage and is
+ * untouched — say that plainly, because the alternative copy ("no longer in
+ * our Rhode Island catalog") is an obituary for a list that is still there.
+ */
+function LoadFailedState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-xl border border-border bg-card overflow-hidden"
-        >
-          <div className="aspect-square bg-muted animate-pulse" />
-          <div className="p-3 space-y-2">
-            <div className="h-3 w-2/3 rounded bg-muted animate-pulse" />
-            <div className="h-4 w-full rounded bg-muted animate-pulse" />
-            <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
-          </div>
-        </div>
-      ))}
+    <div
+      className="flex flex-col items-center justify-center py-20 text-center"
+      role="status"
+    >
+      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
+        <CloudOff className="w-6 h-6 text-muted-foreground" aria-hidden />
+      </div>
+      <p className="font-heading text-xl font-bold text-foreground mb-2">
+        We couldn&apos;t load your saved products
+      </p>
+      <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+        Nothing was lost — your list is safe on this device. We just couldn&apos;t
+        reach the menus to look them up.
+      </p>
+      <button
+        onClick={onRetry}
+        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+      >
+        Try again
+      </button>
     </div>
   )
 }
