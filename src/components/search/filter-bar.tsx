@@ -1,23 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { SlidersHorizontal, ChevronDown, X } from "lucide-react"
 import { FilterSheet } from "@/components/filters/filter-sheet"
 import { FilterRadio, OnSaleToggle } from "@/components/filters/filter-controls"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import {
+  SORT_OPTIONS as ALL_SORT_OPTIONS,
+  sortLabel,
+  type SortValue,
+} from "@/lib/sort"
 import { cn, getCategoryIcon } from "@/lib/utils"
 import type { ProductFilters, Dispensary } from "@/lib/types"
 
-const SORT_OPTIONS: { value: NonNullable<ProductFilters["sort"]>; label: string }[] = [
-  { value: "brand-asc", label: "Brand A–Z" },
-  { value: "price-asc", label: "Price: Low to High" },
-  { value: "price-desc", label: "Price: High to Low" },
-  { value: "thc-desc", label: "THC: Highest" },
-  { value: "newest", label: "Newest" },
-]
+/** /search groups by brand when there's no keyword, so that's its resting sort. */
+const DEFAULT_SORT: SortValue = "brand-asc"
 
-type OpenDropdown = "brand" | "dispensary" | "sort" | null
+// The canonical vocabulary (@/lib/sort), narrowed to what /search can actually
+// round-trip. Filters live in the URL here, and parseSearchQuery's VALID_SORTS
+// (src/lib/search-params.ts) doesn't know these — they would bounce back to
+// brand-asc on the next navigation, silently undoing the shopper's choice.
+// searchListings can't honour them either: it orders in PostgREST, which has no
+// discount column and no price/weight_grams expression to sort on, so an
+// unrecognised sort falls through to brand-asc and returns alphabetical results
+// under a label promising something else. Both stay on the client-sorted grids
+// (/category, /brand, /deals, /drops) until the server can express them.
+const UNROUNDTRIPPABLE_SORTS = new Set<SortValue>([
+  "discount-desc",
+  "unit-price-asc",
+])
+const SORT_OPTIONS = ALL_SORT_OPTIONS.filter(
+  (o) => !UNROUNDTRIPPABLE_SORTS.has(o.value)
+)
+
+type DropdownName = "brand" | "dispensary" | "sort"
+type OpenDropdown = DropdownName | null
 
 interface FilterBarProps {
   filters: ProductFilters
@@ -40,9 +58,31 @@ export function FilterBar({
 }: FilterBarProps) {
   const [brandSearch, setBrandSearch] = useState("")
   const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null)
+  const panelId = useId()
+  const triggerRefs = useRef<Record<DropdownName, HTMLButtonElement | null>>({
+    brand: null,
+    dispensary: null,
+    sort: null,
+  })
 
   const toggle = (name: OpenDropdown) =>
     setOpenDropdown((prev) => (prev === name ? null : name))
+
+  // Dismissal used to be the invisible full-screen backdrop only — mouse-only,
+  // so a keyboard user was trapped under it. Escape closes the panel and hands
+  // focus back to the trigger that opened it. Bound on the document because
+  // focus can be anywhere inside (the brand panel's autofocused search box, an
+  // option, or the trigger itself).
+  useEffect(() => {
+    if (!openDropdown) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      setOpenDropdown(null)
+      triggerRefs.current[openDropdown]?.focus()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [openDropdown])
 
   // The list may be narrowed to the active category/dispensary scope — keep
   // the selected brand in it regardless, so it can be seen and unchecked.
@@ -57,10 +97,13 @@ export function FilterBar({
       )
     : brandOptions
 
-  const activeCount = Object.values(filters).filter(
-    (v) => v != null && v !== "" && v !== false
+  // `sort` is excluded: parseSearchQuery always resolves it (to brand-asc), so
+  // counting it lit the badge "1" on a page with nothing applied and made it
+  // mean nothing. Sort isn't a narrowing filter and has its own labelled
+  // control on both the desktop row and the sheet.
+  const activeCount = Object.entries(filters).filter(
+    ([key, v]) => key !== "sort" && v != null && v !== "" && v !== false
   ).length
-  const currentSort = SORT_OPTIONS.find((o) => o.value === filters.sort) ?? SORT_OPTIONS[0]
 
   const mobileFilters = (
     <div className="space-y-6">
@@ -133,7 +176,7 @@ export function FilterBar({
           <FilterRadio
             key={opt.value}
             name="sort-mobile"
-            checked={(filters.sort ?? "brand-asc") === opt.value}
+            checked={(filters.sort ?? DEFAULT_SORT) === opt.value}
             onChange={() => onFilterChange("sort", opt.value)}
             label={opt.label}
           />
@@ -186,9 +229,20 @@ export function FilterBar({
             // nested inside a button (invalid + unreachable by keyboard).
             <div className="inline-flex items-stretch h-8 rounded-lg border border-primary bg-primary text-primary-foreground overflow-hidden">
               <button
+                ref={(el) => {
+                  triggerRefs.current.brand = el
+                }}
                 onClick={() => toggle("brand")}
-                aria-haspopup="listbox"
+                // No aria-haspopup at all: what opens is a role="group" of
+                // toggle buttons. "listbox" would promise options that don't
+                // exist, and bare "true" is an alias for "menu", which promises
+                // menuitems and arrow-key navigation that aren't there either.
+                // aria-expanded + aria-controls is the disclosure pattern, and
+                // it describes this accurately.
                 aria-expanded={openDropdown === "brand"}
+                aria-controls={
+                  openDropdown === "brand" ? `${panelId}-brand` : undefined
+                }
                 className="inline-flex items-center gap-1.5 pl-3 pr-2 text-sm hover:bg-primary/90 transition-colors"
               >
                 {filters.brand}
@@ -207,9 +261,14 @@ export function FilterBar({
             </div>
           ) : (
             <button
+              ref={(el) => {
+                triggerRefs.current.brand = el
+              }}
               onClick={() => toggle("brand")}
-              aria-haspopup="listbox"
               aria-expanded={openDropdown === "brand"}
+              aria-controls={
+                openDropdown === "brand" ? `${panelId}-brand` : undefined
+              }
               className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
             >
               {`All Brands (${brands.length})`}
@@ -217,13 +276,22 @@ export function FilterBar({
             </button>
           )}
           {openDropdown === "brand" && (
-            <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-popover border border-border rounded-xl shadow-lg p-2">
+            <div
+              id={`${panelId}-brand`}
+              role="group"
+              aria-label="Brand"
+              className="absolute top-full left-0 mt-1 z-50 w-56 bg-popover border border-border rounded-xl shadow-lg p-2"
+            >
               <input
                 type="text"
                 placeholder="Search brands..."
                 value={brandSearch}
                 onChange={(e) => setBrandSearch(e.target.value)}
-                className="w-full h-8 px-3 text-sm rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-2"
+                // muted-foreground/70, not --border: this hand-rolled twin of
+                // the sheet's Input had the same near-invisible boundary
+                // (--border is 1.41:1 on --popover, under 1.4.11's 3:1) and a
+                // placeholder for its only label.
+                className="w-full h-8 px-3 text-sm rounded-lg bg-muted border border-muted-foreground/70 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-2"
                 autoFocus
                 onClick={(e) => e.stopPropagation()}
               />
@@ -231,6 +299,11 @@ export function FilterBar({
                 {filteredBrands.map((brand) => (
                   <button
                     key={brand}
+                    // Each row is a real toggle (re-picking the active brand
+                    // clears it), so aria-pressed carries the same state the
+                    // primary fill shows — without it the applied brand was
+                    // indistinguishable from the rest.
+                    aria-pressed={filters.brand === brand}
                     onClick={() => {
                       onFilterChange(
                         "brand",
@@ -258,9 +331,16 @@ export function FilterBar({
           {filters.dispensary ? (
             <div className="inline-flex items-stretch h-8 rounded-lg border border-primary bg-primary text-primary-foreground overflow-hidden">
               <button
+                ref={(el) => {
+                  triggerRefs.current.dispensary = el
+                }}
                 onClick={() => toggle("dispensary")}
-                aria-haspopup="listbox"
                 aria-expanded={openDropdown === "dispensary"}
+                aria-controls={
+                  openDropdown === "dispensary"
+                    ? `${panelId}-dispensary`
+                    : undefined
+                }
                 className="inline-flex items-center gap-1.5 pl-3 pr-2 text-sm hover:bg-primary/90 transition-colors"
               >
                 {dispensaries.find((d) => d.slug === filters.dispensary)?.name ??
@@ -280,9 +360,16 @@ export function FilterBar({
             </div>
           ) : (
             <button
+              ref={(el) => {
+                triggerRefs.current.dispensary = el
+              }}
               onClick={() => toggle("dispensary")}
-              aria-haspopup="listbox"
               aria-expanded={openDropdown === "dispensary"}
+              aria-controls={
+                openDropdown === "dispensary"
+                  ? `${panelId}-dispensary`
+                  : undefined
+              }
               className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
             >
               {`All Dispensaries (${dispensaries.length})`}
@@ -290,10 +377,16 @@ export function FilterBar({
             </button>
           )}
           {openDropdown === "dispensary" && (
-            <div className="absolute top-full left-0 mt-1 z-50 w-52 bg-popover border border-border rounded-xl shadow-lg p-2">
+            <div
+              id={`${panelId}-dispensary`}
+              role="group"
+              aria-label="Dispensary"
+              className="absolute top-full left-0 mt-1 z-50 w-52 bg-popover border border-border rounded-xl shadow-lg p-2"
+            >
               {dispensaries.map((d) => (
                 <button
                   key={d.slug}
+                  aria-pressed={filters.dispensary === d.slug}
                   onClick={() => {
                     onFilterChange(
                       "dispensary",
@@ -318,24 +411,42 @@ export function FilterBar({
         {/* Sort dropdown */}
         <div className="relative z-50 hidden md:block">
           <button
+            ref={(el) => {
+              triggerRefs.current.sort = el
+            }}
             onClick={() => toggle("sort")}
+            // The sort trigger announced nothing at all — no popup, no state,
+            // and no hint of what it controls: unlike its neighbours it shows
+            // only the value, so "Brand: A to Z" read as a second brand
+            // filter. The visible text stays inside the name (WCAG 2.5.3).
+            aria-label={`Sort by: ${sortLabel(filters.sort, DEFAULT_SORT)}`}
+            aria-expanded={openDropdown === "sort"}
+            aria-controls={
+              openDropdown === "sort" ? `${panelId}-sort` : undefined
+            }
             className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
           >
-            {currentSort.label}
+            {sortLabel(filters.sort, DEFAULT_SORT)}
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
           {openDropdown === "sort" && (
-            <div className="absolute top-full right-0 mt-1 z-50 w-44 bg-popover border border-border rounded-xl shadow-lg p-2">
+            <div
+              id={`${panelId}-sort`}
+              role="group"
+              aria-label="Sort"
+              className="absolute top-full right-0 mt-1 z-50 w-44 bg-popover border border-border rounded-xl shadow-lg p-2"
+            >
               {SORT_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
+                  aria-pressed={(filters.sort ?? DEFAULT_SORT) === opt.value}
                   onClick={() => {
                     onFilterChange("sort", opt.value)
                     setOpenDropdown(null)
                   }}
                   className={cn(
                     "w-full text-left px-2 py-1.5 text-sm rounded transition-colors",
-                    (filters.sort ?? "brand-asc") === opt.value
+                    (filters.sort ?? DEFAULT_SORT) === opt.value
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
                   )}
@@ -383,7 +494,10 @@ export function FilterBar({
       </div>
 
       {/* Row 2: Category chips + on sale chip */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-1">
+      {/* overscroll-x-contain: without it, swiping right on a rail already at
+          scrollLeft 0 chains to the document and fires the browser's back
+          gesture, throwing the shopper off the page mid-browse. */}
+      <div className="flex gap-2 overflow-x-auto overscroll-x-contain scrollbar-hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-1">
         {categories.map((cat) => (
           <CategoryChip
             key={cat}

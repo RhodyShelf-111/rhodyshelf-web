@@ -39,7 +39,13 @@ export function FilterRadio({
           onClick={() => {
             if (checked) onChange()
           }}
-          className="peer h-[18px] w-[18px] cursor-pointer appearance-none rounded-full border-2 border-muted-foreground/40 bg-transparent transition-colors hover:border-muted-foreground/70 checked:border-primary checked:hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+          // The ring is the *only* thing that renders an unselected option
+          // (appearance-none + bg-transparent), so it has to clear WCAG
+          // 1.4.11's 3:1. Measured over the real tokens, the old /40
+          // composited to 2.15:1 on --background and 2.13:1 on --popover — the
+          // rows read as plain text. /70 gives 4.26:1 / 3.85:1; hover goes to
+          // the full token so there's still a visible hover delta.
+          className="peer h-[18px] w-[18px] cursor-pointer appearance-none rounded-full border-2 border-muted-foreground/70 bg-transparent transition-colors hover:border-muted-foreground checked:border-primary checked:hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
         />
         <span className="pointer-events-none absolute h-2 w-2 scale-0 rounded-full bg-primary transition-transform peer-checked:scale-100" />
       </span>
