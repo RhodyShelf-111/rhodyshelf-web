@@ -5,6 +5,11 @@ import { createServiceClient } from "@/lib/supabase/service-client"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
+/** Attempts allowed per IP hash per window. Generous for a human browsing
+ *  (a heavy session upvotes a handful of products), cheap for a script to hit. */
+const RATE_LIMIT = 30
+const RATE_WINDOW = "1 hour"
+
 function getIp(req: NextRequest): string {
   const fwd = req.headers.get("x-forwarded-for")
   if (fwd) return fwd.split(",")[0].trim()
@@ -41,6 +46,23 @@ export async function POST(req: NextRequest) {
     const ipHash = hashIp(getIp(req))
     const supabase = createServiceClient()
 
+    // Counts attempts, not stored rows — a remove deletes its row and a repeat
+    // add is a no-op upsert, so either would otherwise be free to repeat.
+    // Fails OPEN: if the limiter itself is unavailable, letting votes through
+    // beats breaking upvoting for everyone over a table this small.
+    const { data: allowed, error: limitError } = await supabase.rpc(
+      "check_upvote_rate_limit",
+      { p_ip_hash: ipHash, p_limit: RATE_LIMIT, p_window: RATE_WINDOW }
+    )
+    if (limitError) {
+      console.error("[api/upvote] rate limit check failed, allowing", limitError)
+    } else if (allowed === false) {
+      return NextResponse.json(
+        { ok: false, error: "rate_limited" },
+        { status: 429 }
+      )
+    }
+
     if (action === "add") {
       const { error } = await supabase
         .from("product_upvotes")
@@ -58,13 +80,13 @@ export async function POST(req: NextRequest) {
       if (error) throw error
     }
 
-    const { data } = await supabase
-      .from("product_upvote_counts")
-      .select("upvote_count")
-      .eq("product_id", product_id)
-      .maybeSingle()
-
-    return NextResponse.json({ ok: true, count: data?.upvote_count ?? 0 })
+    // Deliberately no count in the response. Returning it made this endpoint a
+    // public count oracle: `action: "remove"` for a product the caller never
+    // upvoted deletes zero rows, does not error, and used to still hand back
+    // that product's total — readable and enumerable for every product, with no
+    // vote required. The client fires and forgets and never reads the body
+    // (see postUpvote in src/hooks/use-upvotes.ts), so nothing needs it.
+    return NextResponse.json({ ok: true })
   } catch (err) {
     console.error("[api/upvote]", err)
     return NextResponse.json({ ok: false, error: "db_error" }, { status: 500 })
