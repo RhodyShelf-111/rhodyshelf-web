@@ -1,4 +1,4 @@
-import type { ValueCategory } from "@/lib/value-ranking"
+import type { ValueCategory, ValueUnit } from "@/lib/value-ranking"
 
 /**
  * Copy lives here so the wording is identical across the index page, the
@@ -6,16 +6,26 @@ import type { ValueCategory } from "@/lib/value-ranking"
  *
  * The vocabulary distinction that matters, and which the pages must never blur:
  *   /deals      = discounted off its own usual price
- *   /best-value = cheapest per gram, discount or not
+ *   /best-value = cheapest per unit, discount or not
  */
 
 /**
  * Stated on every page, verbatim. Ranking by price alone reads as a quality
  * judgement unless you say plainly that it isn't one — and the cheapest product
  * in a category is frequently the lowest grade, not the best buy.
+ *
+ * Takes the unit because edibles are not ranked per gram — saying so anyway
+ * would describe a number the page isn't showing.
  */
+export function valueDisclaimer(unit: ValueUnit): string {
+  return unit === "dose"
+    ? "Ranked on price per 10mg of THC, within each pack size. Not a quality ranking."
+    : "Ranked on price per gram, within each size. Not a quality ranking."
+}
+
+/** The index page spans both units, so it names neither. */
 export const VALUE_DISCLAIMER =
-  "Ranked on price per gram, within each size. Not a quality ranking."
+  "Ranked on price per unit, within each size. Not a quality ranking."
 
 export const CATEGORY_COPY: Record<
   ValueCategory,
@@ -51,13 +61,24 @@ export const CATEGORY_COPY: Record<
     description:
       "Rhode Island concentrates ranked by price per gram, compared within each size. Updated through the day.",
   },
+  // Edibles are the one category priced on potency rather than mass: what a
+  // shopper buys is the THC, and a 100mg 10-pack only compares to a 200mg bar
+  // once both are expressed per dose.
+  edible: {
+    tab: "Edibles",
+    heading: "Best Value Edibles",
+    subheading: "The most THC per dollar in Rhode Island right now.",
+    title: "Best Value Edibles — Cheapest Per 10mg THC in Rhode Island",
+    description:
+      "Rhode Island edibles ranked by price per 10mg of THC, compared within each pack size — 100mg packs against 100mg packs. Updated through the day.",
+  },
 }
 
 export const INDEX_COPY = {
   heading: "Best Value",
   subheading:
     "The most product per dollar across all nine Rhode Island dispensaries.",
-  title: "Best Value Cannabis in Rhode Island — Cheapest Per Gram",
+  title: "Best Value Cannabis in Rhode Island — Cheapest Per Gram & Per Dose",
   description:
-    "Cannabis ranked by price per gram across every Rhode Island dispensary menu, compared within each size. Flower, vape cartridges and concentrates.",
+    "Cannabis ranked by price per gram across every Rhode Island dispensary menu, compared within each size — plus edibles ranked per 10mg of THC. Flower, vape cartridges, concentrates and edibles.",
 }

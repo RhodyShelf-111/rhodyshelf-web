@@ -9,7 +9,7 @@ import {
 } from "@/lib/queries/products"
 import {
   formatPrice,
-  formatPricePerGram,
+  formatUnitPrice,
   formatRelativeTime,
 } from "@/lib/utils"
 import { Breadcrumbs } from "@/components/layout/breadcrumbs"
@@ -79,12 +79,9 @@ export default async function ProductPage({
   // the dispensary-level menu_url when a row has no product_url.
   const buyUrl = listing.product_url ?? dispensary.menu_url
   // The rate, next to the price: a 28g jar and a 1g nug are otherwise not
-  // comparable numbers. Null for categories the gram doesn't price.
-  const unitPrice = formatPricePerGram(
-    price,
-    product.weight_grams,
-    product.category
-  )
+  // comparable numbers, and neither are a 100mg 10-pack and a 200mg bar.
+  // "$3.14/g" for gram-priced categories, "$1.20/10mg" for dose-priced ones.
+  const unitPrice = formatUnitPrice(price, product)
 
   // One cached fetch of the brand's fresh listings feeds both the price
   // comparison and the "More from this brand" rail — no extra DB round-trip

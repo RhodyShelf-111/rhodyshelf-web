@@ -7,6 +7,7 @@ import type {
 import { resolveAlias } from "@/lib/brand-aliases"
 import { searchHaystack, searchTokens } from "@/lib/search-terms"
 import { isGramPriced, pricePerGram } from "@/lib/utils"
+import { netWeightGrams } from "@/lib/product-units"
 
 export interface FacetOptions {
   categories: string[]
@@ -276,13 +277,19 @@ export function applyFilters(
     // feeds, so a mis-listed pack reads as a falsely low $/g and would take
     // first place under "best value per gram" — with no printed rate on the
     // card to contradict it. Listings with no meaningful $/g sort last.
+    //
+    // Reads the RESOLVED net mass, never the raw column: `weight_grams` is a
+    // THC dose on an edible row and flower-equivalent grams on some others, so
+    // dividing by it directly is only safe by accident of the isGramPriced
+    // gate. Going through netWeightGrams makes the denominator mean the same
+    // thing on every row that reaches the division.
     case "unit-price-asc":
       result = [...result].sort((a, b) => {
         const ua = isGramPriced(a.product.category)
-          ? pricePerGram(a.price, a.product.weight_grams)
+          ? pricePerGram(a.price, netWeightGrams(a.product))
           : null
         const ub = isGramPriced(b.product.category)
-          ? pricePerGram(b.price, b.product.weight_grams)
+          ? pricePerGram(b.price, netWeightGrams(b.product))
           : null
         return (ua ?? Infinity) - (ub ?? Infinity)
       })

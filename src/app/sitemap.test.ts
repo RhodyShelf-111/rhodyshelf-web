@@ -45,9 +45,13 @@ describe("sitemap", () => {
   })
 
   it("does not invent a value page for a category that cannot be ranked", async () => {
-    // Edible weight_grams mixes real mass with THC-milligrams-over-1000, so it
-    // is deliberately absent from VALUE_CATEGORIES and must stay out of here.
-    expect(await urls()).not.toContain("https://rhodyshelf.com/best-value/edible")
+    // Topicals and tinctures are dose-labelled like edibles but far too thin to
+    // rank (43 and 14 live listings), so they stay out of VALUE_CATEGORIES and
+    // must stay out of here. Pre-rolls are out for untrustworthy pack weights.
+    const all = await urls()
+    expect(all).not.toContain("https://rhodyshelf.com/best-value/topical")
+    expect(all).not.toContain("https://rhodyshelf.com/best-value/tincture")
+    expect(all).not.toContain("https://rhodyshelf.com/best-value/pre-roll")
   })
 
   it("still lists the pages that existed before", async () => {

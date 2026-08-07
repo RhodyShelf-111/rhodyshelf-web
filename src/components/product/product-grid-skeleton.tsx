@@ -33,16 +33,17 @@ function ProductCardSkeleton({
 }) {
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
-      {/* The real plate ends in a hairline against the text block. It costs no
-          height either way (box-sizing is border-box, so aspect-square resolves
-          against the border box — measured 214x214 with the border present), so
-          this is purely so the placeholder reads as the same card. */}
+      {/* The real plate ends in a hairline against the text block, drawn by the
+          text block's border-t — the plate itself carries no border, because on
+          the real card a border-b there shrinks the fill image's content box and
+          letterboxes square packshots in white. Mirrored exactly so the
+          placeholder and the card agree to the pixel. */}
       {/* Tinted toward the real plate's white (--product-plate) rather than the
           default dark Skeleton fill, so the swap to a loaded packshot isn't a
           dark-to-white flash. Held at 70% so it still reads as "loading" and
           not as an image that failed to draw. */}
-      <Skeleton className="aspect-square rounded-none border-b border-border/60 bg-product-plate/70" />
-      <div className="flex flex-1 flex-col px-3 py-2.5">
+      <Skeleton className="aspect-square rounded-none bg-product-plate/70" />
+      <div className="flex flex-1 flex-col border-t border-border/60 px-3 py-2.5">
         {/* space-y-1 (not 1.5) — the real card's stack gap. */}
         <div className="space-y-1">
           <Skeleton className="h-[18px] w-16" />
@@ -53,12 +54,12 @@ function ProductCardSkeleton({
           {/* $/g · THC line — always reserved on the real card */}
           <Skeleton className="h-[19.5px] w-16" />
         </div>
-        {/* Dispensary + actions, pinned to the bottom. The real card stacks the
-            dispensary line over the action row at EVERY breakpoint (only the
-            row's own height shrinks, 44px -> 28px), so this stays a column;
-            an sm:flex-row here collapsed two rows into one and left the desktop
-            skeleton short. */}
-        <div className="mt-auto flex flex-col gap-2 pt-2">
+        {/* Dispensary + actions, pinned to the bottom. Mirrors the real card's
+            footer at BOTH breakpoints: stacked on mobile (where the action row
+            is 44px), folded into one inline row at sm+ (where it is 28px). The
+            two must agree — a column here while the card goes row leaves the
+            desktop skeleton a whole row too tall, and vice versa. */}
+        <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
           {/* Single-dispensary pages hide this line on the real card (it would
               repeat the page title), so reserving it there would over-reserve
               26px per row and jump the grid UP when content lands. */}

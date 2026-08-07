@@ -12,6 +12,7 @@ import {
   SIZE_BANDS,
   MIN_BAND_SIZE,
   VALUE_CATEGORIES,
+  VALUE_UNIT,
 } from "./value-ranking"
 import { isGramPriced } from "./utils"
 
@@ -28,6 +29,8 @@ function listing(over: {
   productId?: string
   id?: string
   shop?: string
+  /** Dose-priced rows need it: it is what tells a THC dose from a net mass. */
+  display?: string | null
 }): InventoryListing {
   seq += 1
   const id = over.id ?? `l${seq}`
@@ -50,7 +53,7 @@ function listing(over: {
       category: over.category ?? "flower",
       subcategory: over.subcategory ?? null,
       weight_grams: over.grams === undefined ? 3.5 : over.grams,
-      weight_display: null,
+      weight_display: over.display ?? null,
       strain_type: null,
       strain_name: null,
       image_url: null,
@@ -79,9 +82,25 @@ function eighths(count: number, pricePer: number, prefix = "x"): InventoryListin
 // The page must never rank a category whose $/g the rest of the site refuses to
 // print. If someone widens either list, this fails until both agree.
 describe("agreement with the site-wide $/g gate", () => {
-  it.each([...VALUE_CATEGORIES])("isGramPriced allows %s", (c) => {
+  // Only the gram-priced categories have to satisfy isGramPriced. Ranking a
+  // category by a rate the product card refuses to print is still forbidden —
+  // but edibles rank per 10mg THC, which the card does print, so the gate they
+  // must agree with is the dose one rather than the gram one.
+  const gramCategories = VALUE_CATEGORIES.filter(
+    (c) => VALUE_UNIT[c] === "gram"
+  )
+
+  it.each([...gramCategories])("isGramPriced allows %s", (c) => {
     expect(isGramPriced(c)).toBe(true)
   })
+
+  it.each([...VALUE_CATEGORIES.filter((c) => VALUE_UNIT[c] === "dose")])(
+    "%s ranks on a dose rate, not a gram one",
+    (c) => {
+      expect(isGramPriced(c)).toBe(false)
+      expect(VALUE_UNIT[c]).toBe("dose")
+    }
+  )
 })
 
 describe("isValueCategory", () => {
@@ -89,9 +108,15 @@ describe("isValueCategory", () => {
     expect(isValueCategory(c)).toBe(true)
   })
 
-  // These carry THC-milligrams-as-mass in weight_grams, giving a $229 median
-  // and a $35,000 max price-per-gram. They cannot be ranked on this axis.
-  it.each(["edible", "topical", "tincture", "other", "pre-roll"])("rejects %s", (c) => {
+  // Edibles rank per 10mg of THC, on the rows whose dose is resolvable.
+  it("accepts edible, on the dose axis", () => {
+    expect(isValueCategory("edible")).toBe(true)
+    expect(VALUE_UNIT.edible).toBe("dose")
+  })
+
+  // Topicals and tinctures are dose-labelled too but too thin to rank (43 and
+  // 14 live listings); pre-rolls carry untrustworthy pack weights.
+  it.each(["topical", "tincture", "other", "pre-roll"])("rejects %s", (c) => {
     expect(isValueCategory(c)).toBe(false)
   })
 })
@@ -165,7 +190,16 @@ describe("bandFor", () => {
 
   it("returns null for a null weight or a non-value category", () => {
     expect(bandFor("flower", null)).toBeNull()
-    expect(bandFor("edible", 3.5)).toBeNull()
+    expect(bandFor("topical", 3.5)).toBeNull()
+  })
+
+  // Edible bands are measured in total THC milligrams, not grams — a 3.5 there
+  // is 3.5mg of THC and lands in the singles band, not "eighths".
+  it("bands edibles by dose", () => {
+    expect(bandFor("edible", 10)?.id).toBe("single")
+    expect(bandFor("edible", 100)?.id).toBe("standard")
+    expect(bandFor("edible", 500)?.id).toBe("large")
+    expect(bandFor("edible", 5000)).toBeNull()
   })
 
   it("has no overlapping ranges within a category", () => {
@@ -233,7 +267,83 @@ describe("isExcludedFromValue", () => {
 
 describe("rankByValue", () => {
   it("returns nothing for a category it cannot rank", () => {
-    expect(rankByValue(eighths(30, 10), "edible")).toEqual([])
+    expect(rankByValue(eighths(30, 10), "topical")).toEqual([])
+  })
+
+  // The whole point of the normalisation. Before it, this returned [] and 705
+  // live edible listings had no value ranking at all.
+  describe("edibles, ranked per 10mg of THC", () => {
+    /** n 100mg packs at a given $/10mg. */
+    function packs(count: number, per10mg: number, prefix = "e") {
+      return Array.from({ length: count }, (_, i) =>
+        listing({
+          category: "edible",
+          display: "100mg",
+          grams: 0.1,
+          price: per10mg * 10, // 100mg = 10 doses
+          brand: `${prefix}Brand${i}`,
+          productId: `${prefix}p${i}`,
+          id: `${prefix}l${i}`,
+        })
+      )
+    }
+
+    it("ranks the cheapest dose first, in the pack's own band", () => {
+      const cheap = listing({
+        category: "edible",
+        display: "100mg",
+        grams: 0.1,
+        price: 10, // $1.00 per 10mg
+        brand: "Cheap",
+        productId: "cheap",
+      })
+      const [section] = rankByValue([...packs(MIN_BAND_SIZE, 2), cheap], "edible")
+      expect(section.band.id).toBe("standard")
+      expect(section.unit).toBe("dose")
+      expect(section.rows[0].listing.product.brand_name).toBe("Cheap")
+      expect(section.rows[0].unitRate).toBeCloseTo(1)
+      expect(section.typicalUnitRate).toBeCloseTo(2)
+    })
+
+    // A 3.33 row is flower-equivalent grams, so it has no resolvable dose and
+    // must not reach the board — read literally it would price at $0.05/10mg
+    // and take first place from every honest listing.
+    it("keeps flower-equivalent rows off the board entirely", () => {
+      const equivalent = listing({
+        category: "edible",
+        display: "3330mg",
+        grams: 3.33,
+        price: 18,
+        brand: "Equivalent",
+        productId: "equiv",
+      })
+      const [section] = rankByValue(
+        [...packs(MIN_BAND_SIZE, 2), equivalent],
+        "edible"
+      )
+      expect(
+        section.rows.some((r) => r.listing.product.brand_name === "Equivalent")
+      ).toBe(false)
+      expect(section.candidateCount).toBe(MIN_BAND_SIZE)
+    })
+
+    // Per-dose price falls hard across pack sizes, so a 10mg single must never
+    // be ranked against a 100mg pack.
+    it("separates singles from 100mg packs", () => {
+      const singles = Array.from({ length: MIN_BAND_SIZE }, (_, i) =>
+        listing({
+          category: "edible",
+          display: "10mg",
+          grams: 0.01,
+          price: 5,
+          brand: `sBrand${i}`,
+          productId: `sp${i}`,
+          id: `sl${i}`,
+        })
+      )
+      const sections = rankByValue([...singles, ...packs(MIN_BAND_SIZE, 2)], "edible")
+      expect(sections.map((s) => s.band.id)).toEqual(["single", "standard"])
+    })
   })
 
   it("drops a band with too few products to describe a market", () => {
@@ -251,7 +361,7 @@ describe("rankByValue", () => {
     const pool = [...eighths(MIN_BAND_SIZE, 10), listing({ grams: 3.5, price: 7, brand: "Cheap", productId: "cheap" })]
     const [section] = rankByValue(pool, "flower")
     expect(section.rows[0].listing.product.brand_name).toBe("Cheap")
-    expect(section.rows[0].pricePerGram).toBe(2)
+    expect(section.rows[0].unitRate).toBe(2)
   })
 
   it("caps a brand at two rows so one brand cannot own a section", () => {
@@ -347,7 +457,7 @@ describe("rankByValue", () => {
 
   it("reports the band median over all candidates, not just shown rows", () => {
     const [section] = rankByValue(eighths(MIN_BAND_SIZE, 10), "flower")
-    expect(section.typicalPricePerGram).toBe(10)
+    expect(section.typicalUnitRate).toBe(10)
     expect(section.candidateCount).toBe(MIN_BAND_SIZE)
   })
 

@@ -68,6 +68,24 @@ describe("ProductCard image plate", () => {
     expect(plate).toHaveClass("bg-product-plate")
     expect(plate).not.toHaveClass("bg-muted")
   })
+
+  // Regression: the plate carried the card's divider as border-b. aspect-ratio
+  // sizes the BORDER box, so that 1px left the fill image a 210.25x209.25
+  // content box; object-contain fitted the (square) packshot to 209.25 square
+  // and centred it, painting 0.5px of white plate down each side — invisible on
+  // a white packshot, a white hairline around every dark one. jsdom computes no
+  // layout, so the invariant is asserted structurally: no border on the plate,
+  // divider on the text block instead.
+  it("puts no border on the square plate, so packshots fill it exactly", () => {
+    render(<ProductCard listing={makeListing()} />)
+    const plate = screen.getByRole("img", { name: "Blue Dream 3.5g" })
+      .parentElement!
+    expect(plate).toHaveClass("aspect-square")
+    expect(plate.className).not.toMatch(/\bborder-b\b/)
+
+    const textBlock = plate.nextElementSibling!
+    expect(textBlock).toHaveClass("border-t")
+  })
 })
 
 function withProduct(
@@ -117,7 +135,10 @@ describe("ProductCard unit price", () => {
 
   // An edible's weight_grams is its THC dose (100mg → 0.1g), so $/g would read
   // "$180.00/g" on an $18 bag of gummies.
-  it("says nothing for categories the gram doesn't price", () => {
+  // An edible has no per-gram rate — its weight_grams is the THC dose — but it
+  // does have a per-dose one, which is the number that compares it to the pack
+  // beside it. $18 for 100mg of THC is $1.80 per 10mg.
+  it("prices an edible per dose instead of per gram", () => {
     render(
       <ProductCard
         listing={withProduct(
@@ -130,8 +151,27 @@ describe("ProductCard unit price", () => {
         )}
       />
     )
-    expect(screen.queryByText(/\/g/)).not.toBeInTheDocument()
-    expect(screen.getByText("THC: 21.4%")).toBeInTheDocument()
+    expect(screen.queryByText(/\/g\b/)).not.toBeInTheDocument()
+    expect(screen.getByText(/\$1\.80\/10mg/)).toBeInTheDocument()
+  })
+
+  // The flower-equivalent rows carry no resolvable dose, so the card falls
+  // silent rather than printing a rate 33x better than reality.
+  it("prints no rate for a flower-equivalent edible row", () => {
+    render(
+      <ProductCard
+        listing={withProduct(
+          {
+            category: "edible",
+            weight_grams: 3.33,
+            weight_display: "3330mg",
+          },
+          { price: 18 }
+        )}
+      />
+    )
+    expect(screen.queryByText(/\/10mg/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/\/g\b/)).not.toBeInTheDocument()
   })
 })
 
@@ -153,12 +193,15 @@ describe("ProductCard dispensary line", () => {
     expect(screen.queryByText(/· Newport/)).not.toBeInTheDocument()
   })
 
-  // Sharing one row with the shrink-0 Buy + upvote controls left the name ~76px
-  // of a 200px card on desktop ("Aura of Rh…").
-  it("keeps the where-line on its own full-width row at every breakpoint", () => {
+  // The where-line shares the Buy + upvote row at sm+, and only there. On mobile
+  // the actions are 44px touch targets and three of them inline on a ~175px card
+  // leaves the shop name ~15px, so it takes its own full-width row first.
+  it("folds the where-line into the action row at sm+, but not on mobile", () => {
     render(<ProductCard listing={atShop("Aura of Rhode Island", "Central Falls")} />)
     const whereLine = screen.getByText("Aura of Rhode Island").closest("div")!
-    expect(whereLine.parentElement!.className).not.toMatch(/sm:flex-row/)
+    const footer = whereLine.parentElement!.className
+    expect(footer).toMatch(/sm:flex-row/)
+    expect(footer).toMatch(/flex-col/)
   })
 
   // The multi-shop label on /saved names no single store, so no town applies.
