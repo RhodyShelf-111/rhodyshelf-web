@@ -5,6 +5,7 @@ import {
   getSitemapListings,
   HOMEPAGE_CATEGORIES,
 } from "@/lib/queries/products"
+import { VALUE_CATEGORIES } from "@/lib/value-ranking"
 
 export const revalidate = 86400 // daily
 
@@ -46,6 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${baseUrl}/deals`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/drops`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${baseUrl}/best-value`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/dispensary`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${baseUrl}/brand`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.3 },
@@ -56,6 +58,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Indexable category landing pages (the head-query targets).
   const categoryPages: MetadataRoute.Sitemap = HOMEPAGE_CATEGORIES.map((c) => ({
     url: `${baseUrl}/category/${c.key}`,
+    lastModified: now,
+    changeFrequency: "daily" as const,
+    priority: 0.8,
+  }))
+
+  // Value rankings, one indexable page per rankable category. These target a
+  // real head query ("cheapest flower rhode island") that the generic
+  // /best-value page does not.
+  const valuePages: MetadataRoute.Sitemap = VALUE_CATEGORIES.map((c) => ({
+    url: `${baseUrl}/best-value/${c}`,
     lastModified: now,
     changeFrequency: "daily" as const,
     priority: 0.8,
@@ -92,6 +104,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticPages,
     ...categoryPages,
+    ...valuePages,
     ...dispensaryPages,
     ...brandPages,
     ...productPages,
