@@ -27,12 +27,14 @@ export default function PrivacyPage() {
         Privacy Policy
       </h1>
       <div className="space-y-4 text-muted-foreground">
-        <p>Last updated: June 2026</p>
+        <p>Last updated: August 2026</p>
         <p>
           RhodyShelf displays publicly available cannabis menu information from
           Rhode Island dispensaries. We do not collect personal information, require
           account creation, or use tracking cookies beyond the age verification
-          cookie required by law.
+          cookie required by law. We do measure which pages are visited, in a way
+          that stores nothing on your device and does not build a profile of you —
+          described under Analytics below.
         </p>
         <h2 className="text-foreground font-semibold text-lg mt-6">
           Information We Collect
@@ -48,12 +50,30 @@ export default function PrivacyPage() {
           hash of your IP address. We never store your raw IP address, and
           votes are not linked to any account, name, or profile.
         </p>
+        <h2 className="text-foreground font-semibold text-lg mt-6">Analytics</h2>
+        <p>
+          We use PostHog to understand which pages people visit and which
+          features get used, so we know what to improve. It runs in cookieless
+          mode: nothing is written to cookies, local storage, or session
+          storage, and there is no identifier stored on your device. Visitor
+          counts are worked out from a one-way hash computed on PostHog&apos;s
+          servers, which cannot be reversed to identify you.
+        </p>
+        <p>
+          What we record: the page addresses you visit (which include your
+          search terms and filter selections, since those live in the address),
+          the site that referred you, clicks on a dispensary&apos;s
+          &ldquo;Buy&rdquo; link, upvotes, and how many results a search
+          returned. We do not record your screen, your typing, or your mouse
+          movements &mdash; session recording is switched off deliberately.
+        </p>
         <h2 className="text-foreground font-semibold text-lg mt-6">
           Third-Party Services
         </h2>
         <p>
-          We use Vercel for hosting (which may collect anonymous analytics) and
-          display product images hosted by dispensary platforms.
+          We use Vercel for hosting (which may collect anonymous analytics),
+          PostHog for the cookieless analytics described above, and display
+          product images hosted by dispensary platforms.
         </p>
         <h2 className="text-foreground font-semibold text-lg mt-6">Contact</h2>
         <p>

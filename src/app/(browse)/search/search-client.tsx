@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useMemo, useCallback, useTransition } from "react"
+import { useState, useMemo, useCallback, useEffect, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { CloudOff } from "lucide-react"
+import { track, ANALYTICS_EVENTS } from "@/lib/analytics"
 import type {
   InventoryListing,
   ProductFilters,
@@ -62,6 +63,7 @@ export function SearchClient({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [extraListings, setExtraListings] = useState<InventoryListing[]>([])
+
   const [nextPage, setNextPage] = useState(2)
   const [exhausted, setExhausted] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -78,6 +80,30 @@ export function SearchClient({
     setExhausted(false)
     setLoadMoreError(false)
   }
+
+  // The search text and every filter already live in the URL, so their usage is
+  // readable straight off pageviews. What a URL cannot say is how many results
+  // came back — the number that answers "is search returning nothing?".
+  //
+  // Skipped entirely when `degraded`: the server's query failed and `total` is
+  // a placeholder, so recording it would manufacture a zero-result search that
+  // never happened. Keyed on the query, so changing filters records again but
+  // paging through "load more" does not.
+  useEffect(() => {
+    if (degraded) return
+    track(ANALYTICS_EVENTS.SEARCH_PERFORMED, {
+      has_text: Boolean(query.q),
+      category: query.category,
+      brand: query.brand,
+      dispensary: query.dispensary,
+      on_sale: query.onSale,
+      sort: query.sort,
+      results: total,
+      zero_results: total === 0,
+    })
+    // queryKey is the serialized form of `query`; `total` is derived from it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, degraded])
 
   const listings = useMemo(() => {
     // dedupe across page boundaries: cached pages can drift as inventory

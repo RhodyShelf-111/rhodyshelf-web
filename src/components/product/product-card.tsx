@@ -278,6 +278,13 @@ export function ProductCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
+                // Read by the delegated buy-click listener in
+                // src/instrumentation-client.ts. An attribute rather than a
+                // handler so the same markup works from server components too.
+                data-track="buy"
+                data-dispensary={dispensary.name}
+                data-category={product.category}
+                data-surface="card"
                 aria-label={`Buy ${product.name} at ${dispensary.name} (opens dispensary site)`}
                 className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1 h-11 sm:h-7 px-3 sm:px-2.5 rounded-md text-[13px] sm:text-[12px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               >

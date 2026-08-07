@@ -195,6 +195,10 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
               href={buyUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-track="buy"
+              data-dispensary={dispensary.name}
+              data-category={product.category}
+              data-surface="quick-look"
               className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <span className="truncate">Buy at {dispensary.name}</span>
