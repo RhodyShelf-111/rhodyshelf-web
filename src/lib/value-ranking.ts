@@ -104,6 +104,15 @@ export const ROWS_PER_BAND = 10
 export const MAX_PER_BRAND = 2
 
 /**
+ * Stops one shop owning a whole section. Without this the 1g flower board was
+ * nine rows from a single dispensary at an identical $6.00/g — technically the
+ * cheapest, but it answers "who has a flat 1g price" rather than "what is good
+ * value", and it hides every other shop's competing offer. Looser than the
+ * brand cap so a section is never starved.
+ */
+export const MAX_PER_DISPENSARY = 3
+
+/**
  * Bulk grades and non-comparable products.
  *
  * Kief is the case that proves the list has to cover names as well as
@@ -254,15 +263,26 @@ function byValue(a: InventoryListing, b: InventoryListing): number {
   return a.product.id < b.product.id ? -1 : a.product.id > b.product.id ? 1 : 0
 }
 
-/** At most `MAX_PER_BRAND` rows per brand, preserving order. */
-function capPerBrand(listings: InventoryListing[], max: number): InventoryListing[] {
-  const seen = new Map<string, number>()
+/**
+ * At most `maxPerBrand` rows per brand and `maxPerDispensary` per shop,
+ * preserving order. Both caps exist so a section shows the market rather than
+ * one supplier's price list.
+ */
+function capDiversity(
+  listings: InventoryListing[],
+  maxPerBrand: number,
+  maxPerDispensary: number
+): InventoryListing[] {
+  const byBrand = new Map<string, number>()
+  const byShop = new Map<string, number>()
   const out: InventoryListing[] = []
   for (const listing of listings) {
     const brand = listing.product.brand_name || "—"
-    const count = seen.get(brand) ?? 0
-    if (count >= max) continue
-    seen.set(brand, count + 1)
+    const shop = listing.dispensary.id || listing.dispensary.name || "—"
+    if ((byBrand.get(brand) ?? 0) >= maxPerBrand) continue
+    if ((byShop.get(shop) ?? 0) >= maxPerDispensary) continue
+    byBrand.set(brand, (byBrand.get(brand) ?? 0) + 1)
+    byShop.set(shop, (byShop.get(shop) ?? 0) + 1)
     out.push(listing)
   }
   return out
@@ -271,6 +291,7 @@ function capPerBrand(listings: InventoryListing[], max: number): InventoryListin
 export interface RankOptions {
   rowsPerBand?: number
   maxPerBrand?: number
+  maxPerDispensary?: number
   minBandSize?: number
 }
 
@@ -288,6 +309,7 @@ export function rankByValue(
   if (!isValueCategory(category)) return []
   const rowsPerBand = options.rowsPerBand ?? ROWS_PER_BAND
   const maxPerBrand = options.maxPerBrand ?? MAX_PER_BRAND
+  const maxPerDispensary = options.maxPerDispensary ?? MAX_PER_DISPENSARY
   const minBandSize = options.minBandSize ?? MIN_BAND_SIZE
 
   const eligible = cheapestPerProduct(
@@ -310,7 +332,7 @@ export function rankByValue(
     // describe the market, not the top of the list.
     const typical = median(inBand.map((l) => listingPricePerGram(l) as number))
 
-    const rows = capPerBrand([...inBand].sort(byValue), maxPerBrand)
+    const rows = capDiversity([...inBand].sort(byValue), maxPerBrand, maxPerDispensary)
       .slice(0, rowsPerBand)
       .map((listing) => {
         const ppg = listingPricePerGram(listing) as number

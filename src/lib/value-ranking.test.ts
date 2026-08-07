@@ -27,6 +27,7 @@ function listing(over: {
   thc?: number | null
   productId?: string
   id?: string
+  shop?: string
 }): InventoryListing {
   seq += 1
   const id = over.id ?? `l${seq}`
@@ -55,8 +56,8 @@ function listing(over: {
       image_url: null,
     },
     dispensary: {
-      id: "d1",
-      name: "Mother Earth",
+      id: over.shop ?? `d${seq}`,
+      name: over.shop ?? "Mother Earth",
       slug: "mother-earth-pawtucket",
     } as InventoryListing["dispensary"],
   }
@@ -308,6 +309,40 @@ describe("rankByValue", () => {
     expect(once[0].rows.map((r) => r.listing.product.id)).toEqual(
       twice[0].rows.map((r) => r.listing.product.id)
     )
+  })
+
+  // Regression: the live 1g flower board was nine rows from one dispensary at an
+  // identical $6.00/g — the cheapest, but it answered "who has a flat 1g price"
+  // rather than "what is good value", and buried every competing shop.
+  it("caps a single dispensary so one shop cannot own a section", () => {
+    const oneShop = Array.from({ length: 8 }, (_, i) =>
+      listing({
+        grams: 3.5,
+        price: 7,
+        brand: `Cheap${i}`,
+        productId: `cheap${i}`,
+        id: `cheap${i}`,
+        shop: "Aura",
+      })
+    )
+    const [section] = rankByValue([...eighths(MIN_BAND_SIZE, 10), ...oneShop], "flower")
+    const fromAura = section.rows.filter((r) => r.listing.dispensary.id === "Aura")
+    expect(fromAura).toHaveLength(3)
+  })
+
+  it("still surfaces other shops once one shop hits its cap", () => {
+    const aura = Array.from({ length: 6 }, (_, i) =>
+      listing({ grams: 3.5, price: 7, brand: `A${i}`, productId: `a${i}`, shop: "Aura" })
+    )
+    const rival = listing({
+      grams: 3.5,
+      price: 8,
+      brand: "Rival",
+      productId: "rival",
+      shop: "Newport",
+    })
+    const [section] = rankByValue([...eighths(MIN_BAND_SIZE, 10), ...aura, rival], "flower")
+    expect(section.rows.some((r) => r.listing.dispensary.id === "Newport")).toBe(true)
   })
 
   it("reports the band median over all candidates, not just shown rows", () => {
