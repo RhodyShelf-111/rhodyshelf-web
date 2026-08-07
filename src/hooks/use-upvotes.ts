@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useSyncExternalStore } from "react"
+import { track, ANALYTICS_EVENTS } from "@/lib/analytics"
 
 const STORAGE_KEY = "rhodyshelf_upvotes"
 
@@ -96,6 +97,9 @@ export function useUpvotes(productId: string) {
     writeStorage(upvotes)
     notify() // all mounted useUpvotes consumers re-read instantly
     postUpvote(productId, action)
+    // Measures intent to vote, which is the question the server counts cannot
+    // answer: a rate-limited or failed POST still shows up here.
+    track(ANALYTICS_EVENTS.UPVOTE, { action })
   }, [productId])
 
   return { isUpvoted, toggle }

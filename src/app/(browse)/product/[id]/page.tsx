@@ -256,6 +256,12 @@ export default async function ProductPage({
                 href={buyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                // Server component, so no onClick — the delegated listener in
+                // src/instrumentation-client.ts picks this up by attribute.
+                data-track="buy"
+                data-dispensary={dispensary.name}
+                data-category={product.category}
+                data-surface="product-page"
                 className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 h-12 px-4 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span className="truncate">Buy at {dispensary.name}</span>
@@ -327,6 +333,10 @@ export default async function ProductPage({
             href={buyUrl}
             target="_blank"
             rel="noopener noreferrer"
+            data-track="buy"
+            data-dispensary={dispensary.name}
+            data-category={product.category}
+            data-surface="product-page-sticky"
             className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <span className="truncate">Buy at {dispensary.name}</span>
