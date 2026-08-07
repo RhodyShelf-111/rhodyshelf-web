@@ -39,6 +39,7 @@ export async function SiteFooter() {
               </FooterLink>
             ))}
             <FooterLink href="/deals">Deals</FooterLink>
+            <FooterLink href="/best-value">Best Value</FooterLink>
             <FooterLink href="/drops">New Drops</FooterLink>
           </FooterColumn>
 

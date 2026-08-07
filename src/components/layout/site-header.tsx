@@ -9,6 +9,7 @@ import {
   Bookmark,
   Store,
   Percent,
+  Scale,
   Sparkles,
   Tags,
   ChevronRight,
@@ -28,6 +29,10 @@ type NavLink = {
   /** Short scannable subtitle shown in the mobile menu (not on desktop). */
   desc: string
   icon: LucideIcon
+  /** Hold back until `lg` in the desktop row. The row is already tight at `md`
+   *  (logo + 5 links + Saved + a w-64 search), so a 6th entry is only safe once
+   *  there is more width. The mobile menu still lists it at every size. */
+  desktopFromLg?: boolean
 }
 
 const NAV_LINKS: NavLink[] = [
@@ -35,6 +40,16 @@ const NAV_LINKS: NavLink[] = [
   { href: "/dispensary", label: "Dispensaries", desc: "All 9 RI shops", icon: Store },
   { href: "/brand", label: "Brands", desc: "Browse by brand", icon: Tags },
   { href: "/deals", label: "Deals", desc: "Today's price drops", icon: Percent },
+  // Sits next to Deals on purpose — they sound alike and are not. Deals is
+  // discounted off its own usual price; Value is cheapest per gram, discount or
+  // not. The `desc` carries that distinction in the mobile menu.
+  {
+    href: "/best-value",
+    label: "Value",
+    desc: "Most product per dollar",
+    icon: Scale,
+    desktopFromLg: true,
+  },
   { href: "/drops", label: "Drops", desc: "Just added", icon: Sparkles },
 ]
 
@@ -290,6 +305,8 @@ export function SiteHeader() {
               prefetch={false}
               className={cn(
                 "px-3 py-2 text-[15px] font-medium rounded-lg transition-colors whitespace-nowrap",
+                // See NavLink.desktopFromLg — the md row has no space for a 6th.
+                link.desktopFromLg ? "hidden lg:block" : "block",
                 isActive(link.href)
                   ? "text-primary bg-accent"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
