@@ -19,10 +19,11 @@ export const revalidate = 3600 // 1 hour
  * The 14-day window holds ~430 listings and the grid only ever renders 50 at a
  * time, so shipping the whole window put ~950 KB of RSC payload (97 KB gzipped)
  * on the wire — the heaviest route on the site, and one the nav prefetches — to
- * paint cards almost no session scrolls to. /drops is also the one list route
- * that never got the progressive INITIAL_LISTINGS + /api/listings treatment
- * (see the note in DropsPage), so a plain cap is the honest interim: the newest
- * 150, labelled, exactly the way /deals labels its own cap.
+ * paint cards almost no session scrolls to.
+ *
+ * This is a first-paint slice, not a shorter window: the grid fetches the rest
+ * from /api/listings?scope=drops via loadRest, so filtering still runs over all
+ * 14 days. Deliberately not disclosed in the heading for that reason.
  */
 export const DROPS_SHOWN = 150
 

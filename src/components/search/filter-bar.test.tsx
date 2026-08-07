@@ -179,11 +179,16 @@ describe("FilterBar sort vocabulary", () => {
     fireEvent.click(screen.getByRole("button", { name: /Brand: A to Z/ }))
     const panel = screen.getByRole("group", { name: "Sort" })
 
-    // "discount-desc" is the only canonical sort /search can't carry:
+    // The canonical sorts /search can't carry: both are absent from
+    // search-params.ts VALID_SORTS and have no PostgREST ordering, so offering
+    // either would bounce the shopper's choice back to brand-asc.
     // search-params.ts's VALID_SORTS omits it and searchListings has no
     // discount ordering, so picking it would bounce straight back to brand-asc.
     expect(
       within(panel).queryByRole("button", { name: "Biggest discount" })
+    ).toBeNull()
+    expect(
+      within(panel).queryByRole("button", { name: "Best value per gram" })
     ).toBeNull()
     // Everything else round-trips, including name-asc — it's in VALID_SORTS
     // and searchListings orders by product(name) for it.

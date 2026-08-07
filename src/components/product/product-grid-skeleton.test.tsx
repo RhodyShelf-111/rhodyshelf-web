@@ -74,6 +74,20 @@ describe("ProductGridSkeleton", () => {
     expect(classes(grid!)).toContain("grid-cols-2")
   })
 
+  // /dispensary/[slug] renders its cards with showDispensary={false} (the store
+  // name is the page title), so reserving that row there over-shoots by ~26px
+  // per row and jumps the grid UP when the real cards land.
+  it("drops the dispensary row when the route's cards don't render one", () => {
+    render(<ProductGridSkeleton count={1} showDispensary={false} />)
+    const heights = bars().map(height)
+
+    // One fewer bar than the default card, and the missing one is the
+    // dispensary line — the h-11 action row must survive.
+    expect(heights).toHaveLength(7)
+    expect(heights).toContain("h-11")
+    expect(heights.filter((h) => h === "h-[18px]")).toHaveLength(1)
+  })
+
   // The whole point of the component: the reserved rows are the real card's
   // rendered heights, measured at a 390px viewport. Change ProductCard's text
   // stack and this list has to move with it.

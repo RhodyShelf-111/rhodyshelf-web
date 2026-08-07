@@ -5,6 +5,8 @@ import type { InventoryListing } from "@/lib/types"
 const getDeals = vi.fn()
 vi.mock("@/lib/queries/products", () => ({
   getDeals: (...a: unknown[]) => getDeals(...a),
+  // The page clamps loadRest to what scope=deals can actually return.
+  DEALS_CAP: 400,
 }))
 
 // The grid is covered by product-grid.test.tsx; stub it so these tests are
@@ -57,8 +59,12 @@ describe("DealsPage payload", () => {
       screen.getByText(/1,287 products on sale right now/)
     ).toBeInTheDocument()
     expect(screen.queryByText(/showing the top/)).not.toBeInTheDocument()
+    // loadRest carries what the endpoint can actually serve (getDeals is capped
+    // at DEALS_CAP), NOT the headline count. Handing over 1287 would make the
+    // grid promise rows the fetch can never return and leave "Load more (N
+    // remaining)" counting down to a number it can't reach.
     expect(handedProps.mock.calls[0][0].loadRest).toEqual({
-      total: 1287,
+      total: 400,
       scope: "deals",
     })
   })

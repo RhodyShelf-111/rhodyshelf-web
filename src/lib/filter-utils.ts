@@ -6,7 +6,7 @@ import type {
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
 import { searchHaystack, searchTokens } from "@/lib/search-terms"
-import { pricePerGram } from "@/lib/utils"
+import { isGramPriced, pricePerGram } from "@/lib/utils"
 
 export interface FacetOptions {
   categories: string[]
@@ -268,12 +268,22 @@ export function applyFilters(
       break
     // The only ordering that answers "which is actually the better deal".
     // Sorting by raw price puts a $6 gram above an $88 ounce that costs $3.14
-    // a gram. Listings with no meaningful $/g (edibles, accessories) sort last
-    // rather than to the top, where an Infinity-free comparison would put them.
+    // a gram.
+    //
+    // Gated on isGramPriced, the SAME gate the card uses to decide whether to
+    // print a rate. Ranking by an ungated rate is the more dangerous half of
+    // the pair: pre-roll weight_grams is pack-vs-joint inconsistent in the
+    // feeds, so a mis-listed pack reads as a falsely low $/g and would take
+    // first place under "best value per gram" — with no printed rate on the
+    // card to contradict it. Listings with no meaningful $/g sort last.
     case "unit-price-asc":
       result = [...result].sort((a, b) => {
-        const ua = pricePerGram(a.price, a.product.weight_grams)
-        const ub = pricePerGram(b.price, b.product.weight_grams)
+        const ua = isGramPriced(a.product.category)
+          ? pricePerGram(a.price, a.product.weight_grams)
+          : null
+        const ub = isGramPriced(b.product.category)
+          ? pricePerGram(b.price, b.product.weight_grams)
+          : null
         return (ua ?? Infinity) - (ub ?? Infinity)
       })
       break

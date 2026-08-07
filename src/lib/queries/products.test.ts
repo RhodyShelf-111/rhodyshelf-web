@@ -257,11 +257,35 @@ describe("searchListings sort", () => {
     ])
   })
 
-  it("keeps the potency ranking when the set does have real assays", async () => {
+  it("keeps the potency ranking when it costs no rows", async () => {
+    // Same count either way, so the ranking narrows nothing and is kept. The
+    // unranked twin still runs — that comparison is how we know it was free.
     const seen = respondWith(() => ({ data: [row()], count: 2373 }))
     const page = await searchListings(query({ sort: "thc-desc" }), 1)
     expect(page.total).toBe(2373)
-    expect(seen).toHaveLength(1) // no retry
+    expect(page.listings).toHaveLength(1)
+    expect(seen).toHaveLength(2)
+    expect(
+      argsOf(seen[0], "in").some(([col]) => col === "product.category")
+    ).toBe(true)
+  })
+
+  // The regression this guard exists for: the rank narrows the SAME query that
+  // carries count:"exact", so left alone a sort silently retires 46% of the
+  // catalog AND reports the smaller number as the site's inventory.
+  it("abandons the ranking rather than shrink the reported total", async () => {
+    const seen = respondWith((ctx) =>
+      argsOf(ctx, "in").some(([col]) => col === "product.category")
+        ? { data: [row()], count: 2373 } // ranked: 46% of the catalog gone
+        : { data: [row(), row()], count: 4367 } // the truth
+    )
+    const page = await searchListings(query({ sort: "thc-desc" }), 1)
+
+    expect(page.total).toBe(4367)
+    expect(seen).toHaveLength(2)
+    // The returned page is the unranked one — no potency restriction on it.
+    expect(argsOf(seen[1], "in")).toHaveLength(0)
+    expect(argsOf(seen[1], "lt")).toHaveLength(0)
   })
 
   it("doesn't retry a non-potency sort that legitimately matched nothing", async () => {

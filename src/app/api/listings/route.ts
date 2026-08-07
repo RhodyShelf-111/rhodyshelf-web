@@ -1,3 +1,4 @@
+import type { InventoryListing } from "@/lib/types"
 import { NextResponse, type NextRequest } from "next/server"
 import {
   getBrandBySlug,
@@ -15,7 +16,7 @@ const VALID_CATEGORIES = new Set<string>(HOMEPAGE_CATEGORIES.map((c) => c.key))
 /** The full set is a cached snapshot, so it can sit on the CDN: a short
  *  s-maxage keeps a menu sync visible quickly, the long SWR window means a cold
  *  edge never blocks a shopper on the DB. */
-function fullSet(listings: unknown[]) {
+function fullSet(listings: InventoryListing[]) {
   return NextResponse.json(
     { listings },
     {

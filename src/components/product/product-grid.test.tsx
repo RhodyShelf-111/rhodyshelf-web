@@ -215,6 +215,67 @@ describe("ProductGrid progressive loading", () => {
     expect(screen.getByText(/of\s+3\s+products/)).toBeInTheDocument()
   })
 
+  // Both branches of the KEYLESS_SCOPES guard. /drops and /deals have no key to
+  // send; requiring one would strand them on the server-rendered slice forever,
+  // which is precisely the truncated-filtering bug the slice was paired against.
+  it("fetches a keyless scope with no value in the URL", async () => {
+    const fetchMock = vi.fn(async () =>
+      ok([makeListing("l1", "Hi5", "Mother Earth"), makeListing("l2", "Aster", "Solar")])
+    )
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        loadRest={{ total: 2, scope: "drops" }}
+      />
+    )
+    reachForFilters()
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    const url = String((fetchMock.mock.calls[0] as unknown[])[0])
+    expect(url).toContain("/api/listings?scope=drops")
+    // No key means no value param at all — not an empty one the route would 400.
+    expect(url).not.toContain("value=")
+  })
+
+  it("never fetches a keyed scope that is missing its value", async () => {
+    const fetchMock = vi.fn(async () => ok([]))
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        // A keyed scope with no value can only produce a 400 — don't ask.
+        loadRest={{ total: 3, scope: "category" }}
+      />
+    )
+    reachForFilters()
+
+    await waitFor(() => expect(screen.getByText("Product l1")).toBeInTheDocument())
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  // A 400/404 means the scope or value is wrong; three tries get the same answer.
+  it("gives up immediately on a terminal 4xx instead of retrying", async () => {
+    const fetchMock = vi.fn(async () => new Response("{}", { status: 404 }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    render(
+      <ProductGrid
+        listings={[makeListing("l1", "Hi5", "Mother Earth")]}
+        loadRest={{ total: 3, scope: "brand", value: "nope" }}
+      />
+    )
+    reachForFilters()
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    // Outlive the retry backoff (400ms then 800ms) before asserting it never
+    // fired — a shorter wait passes whether or not the short-circuit exists.
+    await new Promise((r) => setTimeout(r, 1400))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
   it("does not fetch when no loadRest is given", async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal("fetch", fetchMock)

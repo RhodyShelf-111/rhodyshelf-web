@@ -157,6 +157,14 @@ export function ProductGrid({
       for (let attempt = 0; attempt < 3 && !cancelled; attempt++) {
         try {
           const res = await fetch(url, { signal: controller.signal })
+          // A 400/404 is the route telling us the scope or value is wrong —
+          // retrying it just spends two more requests and ~1.2s of "Loading"
+          // to get the same answer. Only 5xx and network faults are transient.
+          if (res.status >= 400 && res.status < 500) {
+            setLoadError(true)
+            setLoadingRest(false)
+            return
+          }
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           const data = (await res.json()) as { listings: InventoryListing[] }
           if (cancelled) return
@@ -492,6 +500,19 @@ export function ProductGrid({
           // to load — the match may be in the un-fetched rows, so offer a retry
           // rather than a misleading "no products match."
           <RetryLoad total={restTotal} onRetry={retryLoadRest} empty />
+        ) : activeFilterCount === 0 ? (
+          // Empty with nothing filtered. Reachable when the full set comes back
+          // legitimately empty (the API can answer from a newer, emptier cache
+          // generation than the HTML did), and blaming filters there would offer
+          // a "Clear all filters" button that clears nothing.
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-lg font-medium text-foreground mb-2">
+              Nothing in stock right now
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Rhode Island menus refresh throughout the day — check back soon.
+            </p>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-lg font-medium text-foreground mb-2">

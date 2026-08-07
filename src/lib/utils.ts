@@ -42,6 +42,17 @@ const GRAM_PRICED_CATEGORIES = new Set([
 ])
 
 /**
+ * Whether a $/g figure means anything for this category — the single gate for
+ * both showing the rate and ranking by it. Sorting by a rate the card refuses
+ * to print is the worse half: a mis-listed pack weight produces a falsely low
+ * $/g, which puts that listing at the TOP of "best value per gram" with no
+ * printed rate on the card to contradict it.
+ */
+export function isGramPriced(category: string | null | undefined): boolean {
+  return GRAM_PRICED_CATEGORIES.has((category ?? "").trim().toLowerCase())
+}
+
+/**
  * Unit price of a listing, in dollars per gram. Null whenever the division
  * would be meaningless or misleading.
  *
@@ -74,9 +85,7 @@ export function formatPricePerGram(
   weightGrams: number | string | null,
   category: string | null | undefined
 ): string | null {
-  if (!GRAM_PRICED_CATEGORIES.has((category ?? "").trim().toLowerCase())) {
-    return null
-  }
+  if (!isGramPriced(category)) return null
   const perGram = pricePerGram(price, weightGrams)
   return perGram == null ? null : `${formatPrice(perGram)}/g`
 }

@@ -100,7 +100,12 @@ function usablePercent(value: number | null): number | null {
  * Returns the row untouched when nothing changed (the common case).
  */
 function sanitizePotency<T extends InventoryListing>(listing: T): T {
-  const byWeight = POTENCY_BY_WEIGHT.has(listing.product.category.toLowerCase())
+  // products.category is nullable in the live schema and comes from external
+  // dispensary feeds; toListings runs this over EVERY row on every read path,
+  // so one null would 500 the whole site rather than one page.
+  const byWeight = POTENCY_BY_WEIGHT.has(
+    (listing.product.category ?? "").toLowerCase()
+  )
   const thc = byWeight ? usablePercent(listing.thc_percent) : null
   const cbd = byWeight ? usablePercent(listing.cbd_percent) : null
   if (thc === listing.thc_percent && cbd === listing.cbd_percent) return listing
@@ -621,14 +626,23 @@ export const searchListings = unstable_cache(
     if (query.sort === "newest") return newestSearchPage(query, page)
 
     const result = await sortedSearchPage(query, page, true)
-    // The potency rank keeps only rows with a real assay, and for a search like
-    // "gummy" or "tincture" that is none of them — so ranking would answer "No
-    // products found" over 47 genuine matches, which reads as "we don't carry
-    // that". A sort must never delete the result set, so drop the ranking when
-    // nothing in the set is rankable. (rankableByPotency catches the pinned-
-    // category form up front; q/brand/dispensary can only be found by asking.)
-    if (query.sort === "thc-desc" && result.total === 0) {
-      return sortedSearchPage(query, page, false)
+    // A sort must never change WHICH rows are in the result set, only their
+    // order — and the potency rank does, because it narrows the same query that
+    // carries count:"exact". Left unchecked it rewrites the site's headline
+    // inventory number: measured live, 4,367 fresh listings rank down to 2,373,
+    // so picking "THC: High to Low" would silently retire 46% of the catalog and
+    // the page would report the smaller figure as fact.
+    //
+    // So compare against the unranked twin and keep the ranking only when it
+    // costs nothing. When it would drop rows we fall back to the plain ordering:
+    // less useful on a mixed set (the raw column is a dose for edibles, so they
+    // float up unlabelled — their potency is nulled at the read boundary), but
+    // it is the ordering main already shipped, and it tells the truth about how
+    // much we carry. The real fix is ordering on a sanitized generated column;
+    // until that exists, honesty beats ranking.
+    if (query.sort === "thc-desc") {
+      const unranked = await sortedSearchPage(query, page, false)
+      if (unranked.total > result.total) return unranked
     }
     return result
   },
@@ -636,7 +650,7 @@ export const searchListings = unstable_cache(
   { revalidate: 600, tags: ["inventory"] }
 )
 
-const DEALS_CAP = 400
+export const DEALS_CAP = 400
 
 /**
  * Top deals by discount percent, capped. `total` is the uncapped count.

@@ -53,7 +53,14 @@ export function MenuClient({
         Object.entries(parsed).filter(([, v]) => v !== undefined)
       ),
     }
-    if (Object.values(next).some(Boolean)) {
+    // Gate on what the URL actually carried, NOT on `next` — `next` always
+    // holds defaultSort, so on /deals (defaultSort="discount-desc") a bare URL
+    // looked like a deep link and remounted the grid every load. That remount
+    // aborted the in-flight full-set fetch and issued it a second time, which
+    // is both a doubled ~1 MB request and the exact opposite of the deferral
+    // it was added for. defaultSort is already in the useState initializer, so
+    // skipping the sync when the URL is empty loses nothing.
+    if (Object.values(parsed).some((v) => v !== undefined)) {
       // Post-mount URL read (kept out of render so host pages stay statically
       // prerenderable); a one-shot sync, not a render loop.
       // eslint-disable-next-line react-hooks/set-state-in-effect

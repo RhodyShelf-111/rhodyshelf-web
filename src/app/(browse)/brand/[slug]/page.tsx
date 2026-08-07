@@ -23,7 +23,8 @@ export const revalidate = 3600
  *
  * A big brand runs 240-260 listings (~720-840 KB of RSC payload) while the grid
  * renders 50 at a time — so the shopper waited on 5x the data they could see.
- * Same trade the /deals cap makes; the heading says when it's showing a slice.
+ * Same trade the /deals cap makes. Not disclosed in the heading: the grid
+ * fetches the rest, so the slice is a paint optimization, not a shorter list.
  */
 export const BRAND_LISTINGS_SHOWN = 150
 
@@ -66,9 +67,8 @@ export default async function BrandPage({
   const all = await getInventoryByBrand(brand.canonical_name)
   const total = all.length
   // Sorted A-Z by product name, so the slice is the front of the list the
-  // shopper is already reading. (/api/listings serves a `brand` scope for the
-  // progressive full-set fetch /category uses; wiring it needs ProductGrid's
-  // `loadRest` to accept the scope.)
+  // shopper is already reading; the rest arrives from /api/listings?scope=brand
+  // via loadRest below.
   const brandListings = all.slice(0, BRAND_LISTINGS_SHOWN)
 
   return (

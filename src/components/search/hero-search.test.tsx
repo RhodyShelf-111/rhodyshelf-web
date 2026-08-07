@@ -20,6 +20,9 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  // restoreMocks isn't on in vitest.config.ts, so spies on shared prototypes
+  // (Element.prototype.scrollIntoView) would otherwise leak into later tests.
+  vi.restoreAllMocks()
 })
 
 const BRANDS = ["Gumdrop Farms", "Gummy Co", "Green Acres"]
@@ -160,9 +163,17 @@ describe("HeroSearch combobox", () => {
   })
 
   it("scrolls the arrowed-to option into the capped-height list", () => {
-    const scrollIntoView = vi.fn()
-    // jsdom has no layout, so scrollIntoView isn't implemented at all.
-    Element.prototype.scrollIntoView = scrollIntoView
+    // jsdom has no layout, so scrollIntoView isn't defined at all — vi.spyOn
+    // refuses to spy on a missing property, so define it first, then spy so it
+    // is restored afterwards instead of leaking into every test below.
+    Object.defineProperty(Element.prototype, "scrollIntoView", {
+      value: () => {},
+      writable: true,
+      configurable: true,
+    })
+    const scrollIntoView = vi
+      .spyOn(Element.prototype, "scrollIntoView")
+      .mockImplementation(() => {})
 
     const input = typeQuery("gum")
     fireEvent.keyDown(input, { key: "ArrowDown" })
