@@ -13,6 +13,12 @@ npm run typecheck  # tsc --noEmit
 npm run dev        # dev server
 ```
 
+If `typecheck` reports errors in `.next/types/validator.ts` — missing route
+modules, or a layout not satisfying `LayoutConfig` — the build artifacts are
+stale, not your code. `tsconfig.json` includes `.next/types/**` and
+`.next/dev/types/**`, so a `.next` predating a route move typechecks the old
+route table. `rm -rf .next` and re-run. CI never hits this; it checks out clean.
+
 ## Data layer
 
 `src/lib/queries/products.ts` and `dispensaries.ts` own every Supabase read.

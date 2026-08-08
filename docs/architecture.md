@@ -196,6 +196,16 @@ loading passed. The fix was moving the constant to a plain module
 (`src/lib/image-priority.ts`). Never export non-component values from a
 `"use client"` module.
 
+**A stale `.next` fails the typecheck with errors that aren't yours.**
+`tsconfig.json` includes `.next/types/**/*.ts` and `.next/dev/types/**/*.ts`, so
+`tsc --noEmit` typechecks Next's generated route validators alongside your
+source. If those artifacts predate a route move, you get errors naming modules
+that no longer exist (`Cannot find module '../../src/app/privacy/page.js'`) and
+layouts that "don't satisfy `LayoutConfig`" — all from the old route table. The
+main checkout hit exactly this: a June `.next` still describing `privacy` and
+`terms` as top-level routes after they moved into `(browse)`. `rm -rf .next`
+clears it. CI is immune, since a fresh checkout has no `.next` at all.
+
 **ISR serves stale HTML in dev.** Pages carry `revalidate = 1800`, so after a
 source edit the dev server may serve a cached SSR render — the client bundle
 updates but the HTML doesn't. It looks exactly like "my change didn't work."
