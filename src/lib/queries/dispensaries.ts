@@ -3,6 +3,7 @@ import { cache } from "react"
 import { createServiceClient } from "@/lib/supabase/service-client"
 import type { Dispensary, DispensaryWithCounts } from "@/lib/types"
 import { slugify } from "@/lib/utils"
+import { isOnSale } from "@/lib/discount"
 
 const DISPENSARY_COLUMNS = "id, name, slug, city, menu_url"
 
@@ -39,7 +40,7 @@ export const getDispensaries = unstable_cache(
     while (true) {
       const { data, error } = await client
         .from("current_inventory")
-        .select("dispensary_id, discount_amount")
+        .select("dispensary_id, price, original_price")
         .gt("last_seen_at", freshnessCutoff())
         .order("id")
         .range(from, from + PAGE_SIZE - 1)
@@ -48,7 +49,15 @@ export const getDispensaries = unstable_cache(
       for (const row of data) {
         const did = row.dispensary_id as string
         productCounts.set(did, (productCounts.get(did) ?? 0) + 1)
-        if (((row.discount_amount as number) ?? 0) > 0) {
+        // Verified against the two prices, not the feed's discount_amount:
+        // four live rows carry a discount_amount equal to the whole price with
+        // no markdown, which inflated a shop's advertised deal count.
+        if (
+          isOnSale({
+            price: row.price as number | null,
+            original_price: row.original_price as number | null,
+          })
+        ) {
           dealCounts.set(did, (dealCounts.get(did) ?? 0) + 1)
         }
       }

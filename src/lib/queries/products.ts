@@ -13,6 +13,7 @@ import type {
   SearchPage,
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
+import { isOnSale, byDiscountDesc } from "@/lib/discount"
 import {
   brandCountsFromIndex,
   brandNamesFromIndex,
@@ -159,7 +160,7 @@ const getCatalogIndex = unstable_cache(
       const { data, error } = await client
         .from("current_inventory")
         .select(
-          "id, discount_amount, product:product_id!inner(category, brand_name), dispensary:dispensary_id!inner(id, slug)"
+          "id, price, original_price, product:product_id!inner(category, brand_name), dispensary:dispensary_id!inner(id, slug)"
         )
         .gt("last_seen_at", freshnessCutoff())
         .eq("dispensary.is_active", true)
@@ -178,7 +179,10 @@ const getCatalogIndex = unstable_cache(
           category: product.category.toLowerCase(),
           brand: product.brand_name,
           dispensary: dispensary.slug,
-          onSale: Number(row.discount_amount ?? 0) > 0,
+          onSale: isOnSale({
+            price: row.price as number | null,
+            original_price: row.original_price as number | null,
+          }),
         })
       }
       if (data.length < PAGE_SIZE) break
@@ -653,18 +657,35 @@ export const searchListings = unstable_cache(
 export const DEALS_CAP = 400
 
 /**
+ * How many rows to consider before verifying. PostgREST caps a response at 1000
+ * and there were 284 candidates on 2026-08-08, so one page covers it with room;
+ * if this ever comes back full, /deals is silently truncating and needs the
+ * range-pagination helper.
+ */
+const DEALS_CANDIDATE_CAP = 1000
+
+/**
  * Top deals by discount percent, capped. `total` is the uncapped count.
  */
 export const getDeals = unstable_cache(
   async (): Promise<{ listings: InventoryListing[]; total: number }> => {
     const client = createServiceClient()
-    const { data, count, error } = await freshListings(client, true)
+    // discount_amount narrows the fetch and decides nothing else. Ordering by
+    // the feed's discount_percent is what put a "100% off" badge on a $7 -> $6
+    // markdown at the top of this page: the single most wrong row in the
+    // catalog won the ranking precisely because it was the most wrong. The
+    // percentage is computed from the two prices now, and the sort happens here.
+    // Measured 2026-08-08: 284 candidates, and zero real markdowns sit outside
+    // this filter, so it loses nothing today.
+    const { data, error } = await freshListings(client)
       .gt("discount_amount", 0)
-      .order("discount_percent", { ascending: false, nullsFirst: false })
       .order("id", { ascending: true })
-      .limit(DEALS_CAP)
+      .limit(DEALS_CANDIDATE_CAP)
     assertNoError(error, "getDeals")
-    return { listings: toListings(data), total: count ?? 0 }
+    const verified = toListings(data).filter(isOnSale).sort(byDiscountDesc)
+    // `total` counts verified markdowns, not candidates — four of those
+    // candidates are $50-off-a-$50-item rows with no markdown at all.
+    return { listings: verified.slice(0, DEALS_CAP), total: verified.length }
   },
   ["deals-v1"],
   { revalidate: 900, tags: ["inventory"] }

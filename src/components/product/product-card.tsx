@@ -12,6 +12,7 @@ import {
 } from "@/lib/utils"
 import { shortDispensaryName } from "@/lib/dispensary-name"
 import { CategoryIcon } from "@/components/ui/category-icon"
+import { verifiedDiscount } from "@/lib/discount"
 import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { rememberListing } from "@/lib/listing-cache"
@@ -46,20 +47,13 @@ export function ProductCard({
   eager = false,
   sizes = GRID_SIZES,
 }: ProductCardProps) {
-  const {
-    product,
-    dispensary,
-    price,
-    original_price,
-    discount_amount,
-    discount_percent,
-    thc_percent,
-  } = listing
+  const { product, dispensary, price, thc_percent } = listing
   const imageUrl = listing.image_url ?? product.image_url
   const outOfStock = stock != null && !stock.inStock
-  const isOnSale = !outOfStock && (discount_amount ?? 0) > 0
-  const showStrike =
-    isOnSale && original_price != null && price != null && original_price > price
+  // Derived from the two prices, never from the feed's discount_* columns —
+  // see src/lib/discount.ts. One value now decides both the badge and the
+  // struck-through price, so they can no longer disagree.
+  const discount = outOfStock ? null : verifiedDiscount(listing)
   // Per-product deep-link into the dispensary menu (the money action). Nothing
   // to buy when it's out of stock, so the CTA is suppressed there.
   const buyUrl = outOfStock ? null : listing.product_url ?? dispensary.menu_url
@@ -182,7 +176,7 @@ export function ProductCard({
 
         {/* Badges (decorative — let clicks fall through to the card link) */}
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none">
-          {isOnSale && <DealBadge percent={discount_percent} />}
+          {discount && <DealBadge percent={discount.percent} />}
           {dropBadge && (
             <DropBadge label={dropBadge.label} badgeClassName={dropBadge.className} />
           )}
@@ -233,9 +227,9 @@ export function ProductCard({
                 See dispensary
               </span>
             )}
-            {showStrike && (
+            {discount && (
               <span className="text-muted-foreground font-normal text-meta line-through ml-1.5">
-                {formatPrice(original_price)}
+                {formatPrice(discount.originalPrice)}
               </span>
             )}
             {product.weight_display && (

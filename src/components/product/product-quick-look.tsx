@@ -6,6 +6,7 @@ import { ExternalLink, MapPin } from "lucide-react"
 import type { InventoryListing } from "@/lib/types"
 import { formatPrice, formatUnitPrice, formatRelativeTime } from "@/lib/utils"
 import { DealBadge } from "@/components/product/deal-badge"
+import { verifiedDiscount } from "@/lib/discount"
 import { ProductHeroImage } from "@/components/product/product-hero-image"
 import { UpvoteButton } from "@/components/product/upvote-button"
 import { PriceComparisonPanel } from "@/components/product/price-comparison"
@@ -33,20 +34,11 @@ import { SheetTitle, SheetDescription } from "@/components/ui/sheet"
  * beat later without delaying the open.
  */
 export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
-  const {
-    product,
-    dispensary,
-    price,
-    original_price,
-    discount_amount,
-    discount_percent,
-    thc_percent,
-    cbd_percent,
-  } = listing
+  const { product, dispensary, price, thc_percent, cbd_percent } = listing
   const imageUrl = listing.image_url ?? product.image_url
-  const isOnSale = (discount_amount ?? 0) > 0
-  const showStrike =
-    isOnSale && original_price != null && price != null && original_price > price
+  // Computed from the prices, not the feed's discount_* columns. See
+  // src/lib/discount.ts.
+  const discount = verifiedDiscount(listing)
   // Per-product deep-link into the dispensary menu (primary CTA); falls back to
   // the dispensary-level menu_url when a row has no product_url.
   const buyUrl = listing.product_url ?? dispensary.menu_url
@@ -73,9 +65,9 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
             alt={product.name}
             category={product.category}
           />
-          {isOnSale && (
+          {discount && (
             <div className="absolute top-3 left-3">
-              <DealBadge percent={discount_percent} />
+              <DealBadge percent={discount.percent} />
             </div>
           )}
         </div>
@@ -108,14 +100,14 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
                   </span>
                 )}
               </span>
-              {showStrike && (
+              {discount && (
                 <span className="text-lead text-muted-foreground line-through">
-                  {formatPrice(original_price)}
+                  {formatPrice(discount.originalPrice)}
                 </span>
               )}
-              {showStrike && (
+              {discount && (
                 <span className="text-body font-medium text-primary">
-                  Save {formatPrice((original_price ?? 0) - (price ?? 0))}
+                  Save {formatPrice(discount.amount)}
                 </span>
               )}
               {unitPrice && (
