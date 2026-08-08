@@ -100,11 +100,13 @@ function withProduct(
   }
 }
 
-describe("ProductCard unit price", () => {
-  // A price-comparison site that prints "$88.00 / 28g" next to "$6.00 / 1g"
-  // and never divides is asking the shopper to do the arithmetic: the 28g pack
-  // is $3.14/g, less than half the rate of the "cheaper" gram.
-  it("normalizes the price to $/g so two pack sizes can be compared", () => {
+describe("ProductCard stats line", () => {
+  // The unit rate ("$3.14/g") used to share this line with THC. The card
+  // already carries category, strain, name, brand, price, pack size, shop and
+  // town in ~175px, and a second money figure directly under the first read as
+  // clutter rather than as the comparison it was meant to be. The rate still
+  // leads the product page and the /best-value rows.
+  it("prints no per-gram rate next to the price", () => {
     render(
       <ProductCard
         listing={withProduct(
@@ -113,32 +115,13 @@ describe("ProductCard unit price", () => {
         )}
       />
     )
-    expect(screen.getByText(/\$3\.14\/g/)).toBeInTheDocument()
+    expect(screen.queryByText(/\$3\.14\/g/)).not.toBeInTheDocument()
+    expect(screen.getByText("$88.00")).toBeInTheDocument()
   })
 
-  // The card reserves fixed heights on the name and THC lines so grid rows stay
-  // even; the unit price shares the THC line rather than adding one.
-  it("shares the reserved stats line with THC instead of adding a line", () => {
-    render(
-      <ProductCard
-        listing={withProduct(
-          { weight_grams: 28, weight_display: "28g" },
-          { price: 88 }
-        )}
-      />
-    )
-    const stats = screen.getByText("$3.14/g · THC: 21.4%")
-    expect(stats.className).toMatch(/min-h-\[1rem\]/)
-    // nowrap, so a card carrying both facts can never grow a second line.
-    expect(stats).toHaveClass("truncate")
-  })
-
-  // An edible's weight_grams is its THC dose (100mg → 0.1g), so $/g would read
-  // "$180.00/g" on an $18 bag of gummies.
-  // An edible has no per-gram rate — its weight_grams is the THC dose — but it
-  // does have a per-dose one, which is the number that compares it to the pack
-  // beside it. $18 for 100mg of THC is $1.80 per 10mg.
-  it("prices an edible per dose instead of per gram", () => {
+  // Same for the dose-priced categories — an edible's "$1.80/10mg" is off the
+  // card too, so the rule is "no rate here", not "no rate we can't compute".
+  it("prints no per-dose rate for an edible", () => {
     render(
       <ProductCard
         listing={withProduct(
@@ -151,27 +134,50 @@ describe("ProductCard unit price", () => {
         )}
       />
     )
+    expect(screen.queryByText(/\/10mg/)).not.toBeInTheDocument()
     expect(screen.queryByText(/\/g\b/)).not.toBeInTheDocument()
-    expect(screen.getByText(/\$1\.80\/10mg/)).toBeInTheDocument()
   })
 
-  // The flower-equivalent rows carry no resolvable dose, so the card falls
-  // silent rather than printing a rate 33x better than reality.
-  it("prints no rate for a flower-equivalent edible row", () => {
+  it("prints THC on a single truncating line", () => {
     render(
       <ProductCard
         listing={withProduct(
-          {
-            category: "edible",
-            weight_grams: 3.33,
-            weight_display: "3330mg",
-          },
-          { price: 18 }
+          { weight_grams: 28, weight_display: "28g" },
+          { price: 88 }
         )}
       />
     )
-    expect(screen.queryByText(/\/10mg/)).not.toBeInTheDocument()
-    expect(screen.queryByText(/\/g\b/)).not.toBeInTheDocument()
+    // truncate, not wrap: a long stat can never grow a second line and knock
+    // its card out of its grid row.
+    expect(screen.getByText("THC: 21.4%")).toHaveClass("truncate")
+  })
+
+  // Regression: the line reserved its height unconditionally, which made sense
+  // while it also carried the unit rate. Potency is nulled at the read boundary
+  // for everything but flower/pre-roll/vape/concentrate, so 44% of live
+  // listings rendered a dead 19px band under the price. Alignment doesn't
+  // depend on it — the grid stretches cards and the footer is bottom-pinned.
+  it("renders no line at all when the listing reports no potency", () => {
+    const { container } = render(
+      <ProductCard
+        listing={withProduct(
+          { category: "accessory", weight_display: null },
+          { price: 30, thc_percent: null }
+        )}
+      />
+    )
+    const blank = [...container.querySelectorAll("p")].filter(
+      (p) => p.textContent?.trim() === ""
+    )
+    expect(blank).toHaveLength(0)
+  })
+
+  // The footer stays bottom-pinned, which is what actually keeps the shop line
+  // and Buy button level across a row of unequal cards.
+  it("pins the footer to the bottom so rows stay aligned without the spacer", () => {
+    render(<ProductCard listing={makeListing()} />)
+    const footer = screen.getByText("Sweetspot").closest("div")!.parentElement!
+    expect(footer).toHaveClass("mt-auto")
   })
 })
 
@@ -181,31 +187,86 @@ describe("ProductCard dispensary line", () => {
     return { ...listing, dispensary: { ...listing.dispensary, name, city } }
   }
 
-  // "Reef Wellness" and "Sweetspot" are an hour apart; the card used to give a
-  // truncated store name and no town at all.
-  it("shows the town when the store name doesn't already say it", () => {
-    render(<ProductCard listing={atShop("Reef Wellness", "Woonsocket")} />)
-    expect(screen.getByText("· Woonsocket")).toBeInTheDocument()
+  // The registered name is the licence, not the label: "Aura of Rhode Island -
+  // Central Falls" truncated to "Aura of Rhode I…" on a grid card. The short
+  // name fits whole.
+  it("abbreviates the store name", () => {
+    render(
+      <ProductCard
+        listing={atShop("Aura of Rhode Island - Central Falls", "Central Falls")}
+      />
+    )
+    expect(screen.getByText("Aura")).toBeInTheDocument()
+    expect(screen.queryByText(/Aura of Rhode Island/)).not.toBeInTheDocument()
   })
 
-  it("doesn't repeat a town the store name already carries", () => {
-    render(<ProductCard listing={atShop("Newport Cannabis Co.", "Newport")} />)
-    expect(screen.queryByText(/· Newport/)).not.toBeInTheDocument()
+  // The town used to ride along as "· Woonsocket". A grid tile already carries
+  // category, strain, name, brand, price, pack size and shop; the town is on
+  // the product page, one tap away, where there's room for it.
+  it("prints no town beside the shop", () => {
+    render(<ProductCard listing={atShop("Reef Wellness", "Woonsocket")} />)
+    expect(screen.getByText("Reef")).toBeInTheDocument()
+    expect(screen.queryByText(/Woonsocket/)).not.toBeInTheDocument()
+  })
+
+  // The full name is still the data — analytics keys off it, and a screen
+  // reader reading the Buy link out of context needs the real store.
+  it("keeps the full name on the buy link and its analytics attribute", () => {
+    render(
+      <ProductCard
+        listing={{
+          ...atShop("Solar Cannabis Co. Warwick", "Warwick"),
+          product_url: "https://shop.example/p/1",
+        }}
+      />
+    )
+    const buy = screen.getByRole("link", { name: /Buy Blue Dream/ })
+    expect(buy).toHaveAttribute("data-dispensary", "Solar Cannabis Co. Warwick")
+    expect(buy.getAttribute("aria-label")).toContain("Solar Cannabis Co. Warwick")
+    expect(screen.getByText("Solar")).toBeInTheDocument()
+  })
+
+  // The card's own link is what a screen reader announces, and the same SKU
+  // ranks once per shop on /search and /category. Without the shop in the
+  // accessible name, four adjacent links read identically and there is no way
+  // to tell which one opens which store.
+  it("names the shop in the card link, so sibling cards don't announce alike", () => {
+    const { unmount } = render(
+      <ProductCard listing={atShop("Solar Cannabis Co. Warwick", "Warwick")} />
+    )
+    const first = screen.getByRole("link", {
+      name: "Blue Dream 3.5g by Lovewell Farms at Solar Cannabis Co. Warwick",
+    })
+    expect(first).toHaveAttribute("href", "/product/l1")
+    unmount()
+
+    // Same product, different shop: the accessible names must differ.
+    render(<ProductCard listing={atShop("Reef Wellness", "Woonsocket")} />)
+    expect(
+      screen.getByRole("link", {
+        name: "Blue Dream 3.5g by Lovewell Farms at Reef Wellness",
+      })
+    ).toBeInTheDocument()
   })
 
   // The where-line shares the Buy + upvote row at sm+, and only there. On mobile
   // the actions are 44px touch targets and three of them inline on a ~175px card
   // leaves the shop name ~15px, so it takes its own full-width row first.
   it("folds the where-line into the action row at sm+, but not on mobile", () => {
-    render(<ProductCard listing={atShop("Aura of Rhode Island", "Central Falls")} />)
-    const whereLine = screen.getByText("Aura of Rhode Island").closest("div")!
+    render(
+      <ProductCard
+        listing={atShop("Aura of Rhode Island - Central Falls", "Central Falls")}
+      />
+    )
+    const whereLine = screen.getByText("Aura").closest("div")!
     const footer = whereLine.parentElement!.className
     expect(footer).toMatch(/sm:flex-row/)
     expect(footer).toMatch(/flex-col/)
   })
 
-  // The multi-shop label on /saved names no single store, so no town applies.
-  it("adds no town to a multi-dispensary count", () => {
+  // A product carried at several stores can't be labelled with one of them, so
+  // /saved shows the count instead of any single (short) name.
+  it("shows a count instead of a store name when several carry it", () => {
     render(
       <ProductCard
         listing={atShop("Reef Wellness", "Woonsocket")}
@@ -213,7 +274,24 @@ describe("ProductCard dispensary line", () => {
       />
     )
     expect(screen.getByText("3 dispensaries")).toBeInTheDocument()
-    expect(screen.queryByText("· Woonsocket")).not.toBeInTheDocument()
+    expect(screen.queryByText("Reef")).not.toBeInTheDocument()
+  })
+
+  // The listing /saved keeps for a multi-shop product is just the cheapest of
+  // the set, so naming it in the accessible name would tell a screen-reader
+  // user the card is Reef's while the visible label says three shops.
+  it("announces the count, not one shop, when several carry it", () => {
+    render(
+      <ProductCard
+        listing={atShop("Reef Wellness", "Woonsocket")}
+        stock={{ inStock: true, dispensaryCount: 3 }}
+      />
+    )
+    const card = screen.getByRole("link", {
+      name: "Blue Dream 3.5g by Lovewell Farms at 3 dispensaries",
+    })
+    expect(card).toBeInTheDocument()
+    expect(card.getAttribute("aria-label")).not.toContain("Reef Wellness")
   })
 })
 

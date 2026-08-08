@@ -8,10 +8,10 @@ import type { InventoryListing } from "@/lib/types"
 import {
   cn,
   formatPrice,
-  formatUnitPrice,
   formatRelativeTime,
   getCategoryIcon,
 } from "@/lib/utils"
+import { shortDispensaryName } from "@/lib/dispensary-name"
 import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { rememberListing } from "@/lib/listing-cache"
@@ -66,26 +66,22 @@ export function ProductCard({
   const { isUpvoted, toggle } = useUpvotes(product.id)
   // Saved-page dispensary line: collapse several shops to a count so a product
   // carried at multiple stores isn't misrepresented by a single store name.
-  const dispensaryLabel =
+  const multiShopLabel =
     stock?.inStock && stock.dispensaryCount > 1
       ? `${stock.dispensaryCount} dispensaries`
-      : dispensary.name
-  // The town answers half the shopper's question ("can I get there?") and is
-  // missing from most store names. Suppressed when the name already says it, so
-  // the row never reads "Newport Cannabis Co. · Newport", and when the label is
-  // a multi-shop count rather than one store.
-  const cityLabel =
-    dispensaryLabel === dispensary.name &&
-    dispensary.city &&
-    !dispensary.name.toLowerCase().includes(dispensary.city.toLowerCase())
-      ? dispensary.city
       : null
-  // The one number that makes two pack sizes comparable — "$3.14/g" for the
-  // gram-priced categories, "$1.20/10mg" for the dose-priced ones. Rendered on
-  // the THC line, which already reserves its height, so grid rows stay even.
-  const unitPrice = formatUnitPrice(price, product)
-  const thcLabel = thc_percent != null ? `THC: ${thc_percent.toFixed(1)}%` : null
-  const statLine = [unitPrice, thcLabel].filter(Boolean).join(" · ")
+  // Shop name only, abbreviated: the registered names don't fit the card's
+  // where-line (they truncated mid-word), and the town came off the card
+  // entirely — a grid tile carries category, strain, name, brand, price, pack
+  // size and shop already. The full name and the town are both on the product
+  // page, one tap away, where there's room to read them.
+  const dispensaryLabel =
+    multiShopLabel ?? shortDispensaryName(dispensary.name, dispensary.city)
+  // THC only. The per-unit rate ("$3.14/g") used to share this line, but a
+  // second money figure directly under the price read as noise on a tile this
+  // dense. It still leads the product page and the /best-value rows, where
+  // comparing rates is the whole point of the surface.
+  const statLine = thc_percent != null ? `THC: ${thc_percent.toFixed(1)}%` : ""
   // Out-of-stock cards show when the product was last on a menu (helps judge
   // whether it might return). Empty for products purged from inventory entirely.
   const lastSeenLabel =
@@ -116,7 +112,18 @@ export function ProductCard({
       {!outOfStock && (
         <Link
           href={`/product/${listing.id}`}
-          aria-label={`${product.name} by ${product.brand_name}`}
+          // The shop is in the accessible name because the same SKU appears
+          // once per dispensary on /search and /category: without it, four
+          // adjacent links announce identically and a screen-reader user has no
+          // way to tell which shop they're opening. Full name, not the card's
+          // short label — the link is read out of context. On /saved, where one
+          // row stands in for several shops, it announces the count instead:
+          // the listing kept there is just the cheapest of the set, so naming
+          // it would tell a screen-reader user the card is one shop's when the
+          // visible label says three.
+          aria-label={`${product.name} by ${product.brand_name} at ${
+            multiShopLabel ?? dispensary.name
+          }`}
           className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         />
       )}
@@ -235,12 +242,26 @@ export function ProductCard({
             )}
           </p>
 
-          {/* Unit price + THC — always reserve exactly one line. truncate (not
-              wrap) so a card carrying both can never grow a second line and
-              knock its grid row out of alignment. */}
-          <p className="text-[13px] text-muted-foreground min-h-[1rem] truncate">
-            {statLine || " "}
-          </p>
+          {/* THC, when there is any.
+
+              This line used to reserve its height unconditionally, which was
+              right while it also carried the unit rate: something was nearly
+              always in it. It isn't now. Potency is nulled at the read boundary
+              for every category that isn't flower/pre-roll/vape/concentrate
+              (sanitizePotency), so 44% of live listings were rendering a dead
+              19px band between the price and the shop.
+
+              Collapsing it costs no alignment, measured rather than assumed:
+              cards stretch to their grid row and the footer is bottom-pinned,
+              so a row whose cards disagree about potency renders identically
+              (the spare space lands below the price either way), and a row
+              where nothing reports potency — a page of edibles, a page of
+              accessories — simply gets 19px shorter. */}
+          {statLine && (
+            <p className="text-[13px] text-muted-foreground truncate">
+              {statLine}
+            </p>
+          )}
         </div>
 
         {/* Dispensary + actions (pinned to bottom).
@@ -261,12 +282,7 @@ export function ProductCard({
             : showDispensary && (
                 <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
                   <MapPin className="w-3 h-3 shrink-0" />
-                  {/* The town never truncates — it's the part that decides
-                      whether the shop is reachable. The store name yields. */}
                   <span className="truncate">{dispensaryLabel}</span>
-                  {cityLabel && (
-                    <span className="shrink-0">· {cityLabel}</span>
-                  )}
                 </div>
               )}
           <div

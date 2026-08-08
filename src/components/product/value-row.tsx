@@ -9,6 +9,7 @@ import type {
 import { formatPricePerMgThc, valueAnchor, VALUE_UNIT } from "@/lib/value-ranking"
 import { DOSE_MG } from "@/lib/product-units"
 import { formatPrice, formatUnitPrice, getCategoryIcon } from "@/lib/utils"
+import { shortDispensaryName } from "@/lib/dispensary-name"
 
 /**
  * One row on /best-value.
@@ -84,9 +85,14 @@ export function ValueRow({
           <p className="truncate text-[12px] text-muted-foreground">
             {product.brand_name}
           </p>
+          {/* Short name, same as the product card: this row squeezes name,
+              brand and shop against a large $/g figure, so the registered name
+              clipped mid-word. The accessible name above keeps the full one. */}
           <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
             <MapPin className="h-3 w-3 shrink-0" />
-            <span className="truncate">{dispensary.name}</span>
+            <span className="truncate">
+              {shortDispensaryName(dispensary.name, dispensary.city)}
+            </span>
           </p>
         </div>
 
