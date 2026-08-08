@@ -565,7 +565,7 @@ function FilterSection({
       {/* Same label treatment as ProductFiltersPanel's sections — the two
           hosts share the sheet chrome, so their internals should read as one
           pattern. */}
-      <h4 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+      <h4 className="text-[13px] uppercase tracking-wide text-muted-foreground mb-3">
         {title}
       </h4>
       <div className="space-y-2">{children}</div>

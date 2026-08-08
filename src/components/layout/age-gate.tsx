@@ -182,7 +182,7 @@ export function AgeGate() {
                 ref={yesRef}
                 onClick={handleAccept}
                 className={cn(
-                  "px-8 py-3.5 text-sm font-semibold rounded-xl min-h-[48px] transition-all",
+                  "px-8 py-3.5 text-sm font-medium rounded-xl min-h-[48px] transition-all",
                   "bg-primary text-primary-foreground hover:bg-primary/90",
                   "shadow-[0_0_20px_-5px_rgba(22,163,74,0.3)]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
@@ -194,7 +194,7 @@ export function AgeGate() {
                 ref={noRef}
                 onClick={() => setRejected(true)}
                 className={cn(
-                  "px-8 py-3.5 text-sm font-semibold rounded-xl min-h-[48px] transition-all",
+                  "px-8 py-3.5 text-sm font-medium rounded-xl min-h-[48px] transition-all",
                   "border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2"
                 )}

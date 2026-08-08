@@ -374,7 +374,7 @@ function DegradedState({
         className="w-10 h-10 text-muted-foreground mb-4"
         aria-hidden="true"
       />
-      <p className="font-heading text-xl font-bold text-foreground mb-2">
+      <p className="font-heading text-xl font-semibold text-foreground mb-2">
         We couldn&apos;t reach our menu data just now
       </p>
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
@@ -383,7 +383,7 @@ function DegradedState({
       </p>
       <button
         onClick={onRetry}
-        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
       >
         Try again
       </button>
@@ -412,7 +412,7 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <p className="font-heading text-xl font-bold text-foreground mb-2">
+      <p className="font-heading text-xl font-semibold text-foreground mb-2">
         {query ? `No products match "${query}"` : "No products match your filters"}
       </p>
       <p className="text-sm text-muted-foreground mb-6">

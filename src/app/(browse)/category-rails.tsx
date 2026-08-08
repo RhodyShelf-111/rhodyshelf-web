@@ -38,7 +38,7 @@ export function CategoryRails({ sections }: CategoryRailsProps) {
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
                   <CategoryIcon category={section.key} className="size-5 text-muted-foreground" />
-                  <h2 className="font-heading text-[17px] font-bold text-foreground">
+                  <h2 className="font-heading text-[17px] font-semibold text-foreground">
                     {section.label}
                   </h2>
                   <span className="text-[13px] text-muted-foreground">

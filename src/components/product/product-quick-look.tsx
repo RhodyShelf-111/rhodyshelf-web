@@ -88,7 +88,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
               {product.strain_type ? ` · ${product.strain_type}` : ""}
               {product.weight_display ? ` · ${product.weight_display}` : ""}
             </SheetDescription>
-            <SheetTitle className="mt-1 text-xl font-bold">
+            <SheetTitle className="mt-1 text-xl font-semibold">
               {product.name}
             </SheetTitle>
             <Link
@@ -101,7 +101,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
 
           <div>
             <div className="flex flex-wrap items-baseline gap-2.5">
-              <span className="text-2xl font-bold text-foreground">
+              <span className="text-2xl font-semibold text-foreground">
                 {formatPrice(price) ?? (
                   <span className="text-base font-normal text-muted-foreground">
                     See dispensary for price
@@ -114,7 +114,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
                 </span>
               )}
               {showStrike && (
-                <span className="text-sm font-semibold text-primary">
+                <span className="text-sm font-medium text-primary">
                   Save {formatPrice((original_price ?? 0) - (price ?? 0))}
                 </span>
               )}
@@ -135,13 +135,13 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
               {thc_percent != null && (
                 <div className="rounded-lg bg-muted px-4 py-3">
                   <p className="text-xs text-muted-foreground">THC</p>
-                  <p className="text-lg font-semibold">{thc_percent.toFixed(1)}%</p>
+                  <p className="text-lg font-medium">{thc_percent.toFixed(1)}%</p>
                 </div>
               )}
               {cbd_percent != null && cbd_percent > 0 && (
                 <div className="rounded-lg bg-muted px-4 py-3">
                   <p className="text-xs text-muted-foreground">CBD</p>
-                  <p className="text-lg font-semibold">{cbd_percent.toFixed(1)}%</p>
+                  <p className="text-lg font-medium">{cbd_percent.toFixed(1)}%</p>
                 </div>
               )}
             </div>
@@ -152,7 +152,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
             className="block rounded-xl border border-border bg-muted p-4 transition-colors hover:border-primary/40"
           >
             <p className="text-sm text-muted-foreground">Available at</p>
-            <p className="mt-0.5 flex items-center gap-1.5 font-semibold text-foreground">
+            <p className="mt-0.5 flex items-center gap-1.5 font-medium text-foreground">
               <MapPin className="h-4 w-4 text-primary" />
               {dispensary.name}
             </p>
@@ -199,7 +199,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
               data-dispensary={dispensary.name}
               data-category={product.category}
               data-surface="quick-look"
-              className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <span className="truncate">Buy at {dispensary.name}</span>
               <ExternalLink className="h-4 w-4 shrink-0" />

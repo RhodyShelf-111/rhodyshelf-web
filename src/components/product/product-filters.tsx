@@ -216,7 +216,7 @@ function FilterSection({
 }) {
   return (
     <div>
-      <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+      <h2 className="text-[13px] uppercase tracking-wide text-muted-foreground mb-3">
         {title}
       </h2>
       <div className="space-y-2">{children}</div>

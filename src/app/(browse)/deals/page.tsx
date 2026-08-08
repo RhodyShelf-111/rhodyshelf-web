@@ -92,7 +92,7 @@ export default async function DealsPage() {
           </p>
           <Link
             href="/search"
-            className="inline-flex items-center justify-center h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Browse all products
           </Link>
