@@ -17,11 +17,29 @@ just yolo coding. With tests, it's a superpower.
 ```bash
 npm run test        # single run (CI mode)
 npm run test:watch  # watch mode
+npm run verify      # lint + typecheck + test — what CI runs
 ```
 
-Recommended CI (add `.github/workflows/test.yml` via GitHub's web UI — the
-CLI token lacks `workflow` scope): run `npm run lint`, `npx tsc --noEmit`, and
-`npm run test` on every push and PR.
+## CI
+
+`.github/workflows/ci.yml` runs `npm ci`, `npm run lint`, `npm run typecheck`,
+and `npm run test` on every push to `main` and every PR.
+
+The `npm ci` step matters as much as the test step. On 2026-08-08 `posthog-js`
+was in `package.json` and the lockfile but had never been installed locally, so
+11 test files failed to load and `tsc` errored — on `main`, for two days, with
+nothing watching. Vercel was fine (it installs from the lockfile); only the
+local checkouts were stale.
+
+There is **no build step** in CI. Browse routes are SSG/ISR and query Supabase
+at build time, so building here would mean putting the service-role key in repo
+secrets. Vercel builds every PR as a preview deployment with the real env, so
+that coverage already exists elsewhere.
+
+**Editing the workflow requires a token with `workflow` scope.** The default
+`gh` login (`repo`) cannot push changes to `.github/workflows/`. Either run
+`gh auth refresh -h github.com -s workflow` once, or edit the file through
+GitHub's web UI.
 
 ## Test layers
 
