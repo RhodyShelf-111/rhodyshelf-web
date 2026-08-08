@@ -1,4 +1,4 @@
-import type { ComponentType } from "react"
+import { createElement, type ComponentType } from "react"
 import {
   Cannabis,
   Cookie,
@@ -120,12 +120,14 @@ interface CategoryIconProps {
  * text, so announcing it again is noise for a screen reader.
  */
 export function CategoryIcon({ category, className }: CategoryIconProps) {
-  const Glyph = getCategoryGlyph(category)
-  return (
-    <Glyph
-      aria-hidden="true"
-      focusable="false"
-      className={cn("size-4 shrink-0", className)}
-    />
-  )
+  // createElement, not `const Glyph = …; <Glyph />`. Every glyph is a stable
+  // module-level reference out of ICONS, so nothing is really being created per
+  // render — but react-hooks/static-components can't see through the lookup and
+  // reads a capitalized local rendered as JSX as a component defined during
+  // render. This says the same thing in a form the rule can verify.
+  return createElement(getCategoryGlyph(category), {
+    "aria-hidden": true,
+    focusable: "false",
+    className: cn("size-4 shrink-0", className),
+  })
 }

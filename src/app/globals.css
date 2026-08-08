@@ -74,8 +74,13 @@
      a dispensary CDN URL 404s. It can't inherit --foreground (white on white),
      and full black would make a missing image louder than a present one, so
      this is a quiet placeholder gray carrying the same green cast as the rest
-     of the palette. */
-  --product-plate-foreground: #b4bdb4;
+     of the palette.
+
+     3.02:1 against the plate, just clear of the 3:1 WCAG floor for meaningful
+     graphics. Quiet is the brief, invisible is not: this glyph is the focal
+     point of a product whose image failed, and the first draft (#b4bdb4, a
+     measured 1.93:1) was closer to a smudge than a placeholder. */
+  --product-plate-foreground: #8d978d;
 }
 
 @layer base {
