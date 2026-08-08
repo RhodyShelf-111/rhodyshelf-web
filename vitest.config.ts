@@ -9,6 +9,12 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    // Base UI Sheet/Dialog tests drive real open/close transitions, and jsdom
+    // environment setup for 53 files is already heavy. At vitest's 5s default
+    // these time out roughly one run in six on a busy machine — the failures
+    // are always "Test timed out in 5000ms", never an assertion. CI runners are
+    // slower than a dev laptop, so the default would flake there routinely.
+    testTimeout: 20000,
   },
   resolve: {
     // Mirror tsconfig's "@/*" → "src/*" path alias.
