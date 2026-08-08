@@ -84,31 +84,43 @@ Both are liabilities: a system-ui body face is the "we gave up on typography"
 signal, and Space Grotesk is what every AI design tool reaches for as the safe
 alternative to Inter. Using it is indistinguishable from not having chosen.
 
-### The recommendation: one family, Familjen Grotesk
+### The recommendation: Archivo
 
-Replace both with **Familjen Grotesk** (Google Fonts, variable) as the only text
-face — headings, body, UI and numerals.
+Replace both with **Archivo** (Omnibus-Type, Google Fonts, variable, `wght`
+100–900) as the text face — headings, body, UI and numerals. A grotesque drawn
+for newspaper highlight *and* small text, which is this product in a typeface.
 
-The reason is measurable rather than aesthetic. Instanced with fontTools at
-weights 400/500/600/700, **all ten digits and the dollar sign are exactly
-680/1200 units at every weight.** It is tabular *by construction*, not by opt-in.
-Compare the alternatives, same method: Archivo 521–574, Geist 384–663, Instrument
-Sans 391–666, Figtree 413–641, Schibsted Grotesk 703–1252 — all proportional by
-default, all requiring a `tnum` opt-in on every single price element.
+Its figure toolkit was read straight out of the shipped variable TTF's GSUB
+table: `tnum`, `pnum`, `lnum`, `onum`, `frac`, `numr`, `dnom`, `zero`, `case`,
+`ordn`. That is complete rather than a checkbox — `frac`/`numr`/`dnom` mean
+"1/8 oz" and "1/2 oz" can set as **real fractions** in a catalog where half the
+SKUs are priced by fractional ounce, and `zero` gives a slashed zero.
 
-That matters because of how the alignment breaks: a developer who forgets the
-class on one price gets a silently ragged column, and a ragged money column on a
-price-comparison site is the exact opposite of the memorable thing. With Familjen
-the forgetful path still produces a true column.
+Load it without the `wdth` axis; nothing here varies width and requesting it
+roughly doubles the file. Omit `weight` so `next/font` resolves the variable
+face instead of pinning static instances.
 
-It also collapses two families to one — deleting `--font-display`, the
-`Space_Grotesk` import in `src/app/layout.tsx`, and the `ui-sans-serif`
-body stack in a single change.
+**Why not Familjen Grotesk**, which was the earlier recommendation here: it is
+tabular *by construction* — measured with fontTools, all ten digits and the
+dollar sign are exactly 680/1200 units at every weight, against Archivo's
+521–574, Geist's 384–663, Instrument Sans' 391–666 and Figtree's 413–641. That
+was a real advantage while `tabular-nums` was an opt-in that had reached one
+file, because a forgotten opt-in fails silently. **Declaring it once on `body`
+removed that risk**, and with the silent-failure argument gone, Archivo's
+fractions and its `opsz`-adjacent range are worth more than Familjen's
+belt-and-braces metrics. If the global declaration is ever reverted, Familjen
+becomes the correct choice again.
 
-**Runner-up:** Archivo, if a second opinion is wanted. It carries genuine `tnum`
-plus `numr`/`dnom`/`frac`, which would let "1/8 oz" and "1/2 oz" set as real
-fractions — a lovely detail in a category whose vocabulary is eighths and
-quarters. It needs the opt-in, though.
+**Optional display face:** Newsreader (variable, real `opsz` axis) for the
+wordmark, the page `h1`, and empty-state headlines — two or three elements per
+page, never setting a number. `preload: false`; it must not compete with the LCP
+packshot. This is the one genuinely optional piece: dropping it and setting
+those elements in Archivo 600 loses a voice and nothing structural.
+
+Explicitly rejected: a monospace numeral face (reads terminal, and Archivo
+already carries `tnum`), and Fraunces with `WONK` on — a characterful wonky
+serif over a workhorse grotesque is itself a 2026-tier convergence, and "wonk"
+is a strange thing to ask of a ledger.
 
 **Ruled out.** Beyond the usual convergent set (Inter, Roboto, Helvetica, Open
 Sans, Lato, Montserrat, Poppins, Space Grotesk), the census of this category also
@@ -206,16 +218,51 @@ dark-mode packshot edge cases. Treat it as a signature, not a compromise. The
 value is measured: 62% of catalog packshots are shot on white and another 8% are
 cutouts drawn for white.
 
+### The brand green is a framework default
+
+`--primary: oklch(0.792 0.209 151.711)` is **byte-identical to Tailwind's
+`--color-green-400`**, which ships as `oklch(79.2% 0.209 151.711)` on line 74 of
+`node_modules/tailwindcss/theme.css` — the same colour, written with a
+percentage lightness. (`#05df72`.)
+
+The brand hue of a cannabis product is an untouched framework default. That is
+the most literal possible version of "nobody chose this," sitting on the one
+colour the whole identity rests on. Nothing else in this document matters more
+per byte changed.
+
+Proposed: `oklch(0.80 0.165 145)` = `#72d978`. Chroma drops 21% and the hue
+rotates away from mint toward the plant — neon spring-green becomes leaf.
+Contrast is preserved and marginally better: **10.97:1** on `--background` (from
+10.90) and **10.03:1** on `--card` (from 9.96), verified by converting both to
+sRGB. `--ring` follows it. `--primary-foreground` moves `#052e16` → `#0a1f0c`, so
+a filled control stops reading as two greens stacked.
+
+Not shipped — the brand colour is your call, not a refactor.
+
 ### Green means cheaper
 
 Green currently does triple duty — brand mark, active nav state, and cheapest
 price — in *two* different hues (`--primary` in oklch, and Tailwind `emerald-*`
-in the badges). That spends the signal.
+in the badges). That spends the signal. The workable split is two clauses rather
+than one absolutist rule, since `bg-primary` appears 42 times and most of those
+are selected-filter state that genuinely needs a fill:
+
+- **Green as text = best price.**
+- **Green as fill = selected / you are here.**
+
+### Markdowns are not red
 
 Retail convention codes discounts red; finance convention codes savings green.
-We are closer to Kayak than to a store, so: **green means price advantage, and
-nothing else competes for it.** Markdowns are a struck-through compare-at price
-plus a quiet percentage. No red anywhere except genuine errors.
+We are closer to Kayak than to a store. But green is already spoken for, so
+markdowns need a third colour — because today `deal-badge.tsx:19` renders a
+*saving* in `bg-red-950/90 text-red-300` while `dispensary/page.tsx:119` renders
+a *closed store* in `text-red-400`. **A win and a failure share a hue family**,
+and red on a price says "problem" in the exact spot the site is claiming a win.
+
+Proposed `--markdown: oklch(0.80 0.125 74)` = `#eeb15b`, measured at 10.18:1 on
+`--background`. Amber, as text and never as a fill. Dutchie codes discounts red
+and Tymber codes them green, so there is no convention to violate here. Red stays
+for genuine errors only.
 
 ---
 
@@ -298,10 +345,14 @@ Real, measured, not yet fixed:
   3:1 floor for control boundaries. `input.tsx` already worked out the right
   answer for itself (`border-muted-foreground/70`, with the measurement in a
   comment); promoting that from one component to the token is the fix.
-- **`tabular-nums` is in one file.** See Numerals above. This is the highest-value
-  remaining change.
+- **The brand green is Tailwind `green-400`, unmodified.** See Color above. The
+  highest signal-per-byte change available.
 - **Space Grotesk is still the display face.** See Typography above.
-- **Green is spent three ways in two hues.** See Color above.
+- **A saving and a failure share a hue.** Discount badges and closed-store
+  warnings are both red. See Markdowns above.
+- **Green is spent seven ways** — Buy fill, active upvote, focus ring, cheapest
+  price, "Lowest", "% below typical", scrollbar thumb — in two hue systems. A
+  colour that means seven things means none.
 - **Mobile filter sheet** inherits the desktop sidebar's smaller controls, an
   invisible switch track (`bg-muted` on `bg-popover` is 1.00:1), and none of its
   focus states. The mobile surface is the primary one and should be designed
@@ -322,4 +373,6 @@ Real, measured, not yet fixed:
 | 2026-08-08 | Stay dark-only | Deliberate, differentiating, with live local precedent |
 | 2026-08-08 | Keep the white product plate | 70% of packshots are shot on or drawn for white; no competitor has solved this |
 | 2026-08-08 | Green means price advantage, not "sale" | We are a comparison layer, not a store; finance convention beats retail convention here |
+| 2026-08-08 | Tabular figures declared once on `body` (#68) | Digits spanned 28.75px proportionally; `1` was 29% narrower than `4` |
+| 2026-08-08 | Typeface recommendation moved Familjen Grotesk → Archivo | #68 removed the silent-failure risk that made tabular-by-construction decisive; Archivo's `frac`/`numr`/`dnom` set real fractions for eighths and quarters |
 | 2026-08-08 | Initial design system created | `/design-consultation`, grounded in a live census of the cannabis category and comparison-shopping tools |

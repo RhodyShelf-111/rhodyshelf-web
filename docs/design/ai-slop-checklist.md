@@ -145,16 +145,40 @@ the component.
 5. Does it look like a person made it on purpose, or like the first thing a model
    emitted?
 
+## 8. Untouched framework defaults ❌ FAIL
+
+The tell nobody names, because it looks like a decision. If a value that carries
+the brand is byte-identical to what the framework shipped, nobody chose it.
+
+```bash
+rg -o 'oklch\([^)]+\)' src/app/globals.css | sort -u | while read -r c; do
+  v=$(printf '%s' "$c" | sed -E 's/oklch\(([0-9.]+) /oklch(\1 /'); \
+  rg -q "${v#oklch(}" node_modules/tailwindcss/theme.css && echo "FRAMEWORK DEFAULT: $c"; done
+```
+
+`--primary` is `oklch(0.792 0.209 151.711)`. Tailwind ships
+`--color-green-400: oklch(79.2% 0.209 151.711)` — the same colour, written with a
+percentage lightness, which is why a naive string grep misses it. **The brand hue
+of a cannabis product is an untouched framework default.**
+
+Worth checking the same way for radii, shadows and durations before assuming any
+of them were chosen.
+
 ## Still open
 
-Tracked in [`DESIGN.md`](../../DESIGN.md) under *Known open items*. The two with
-the most left on the table:
+Tracked in [`DESIGN.md`](../../DESIGN.md) under *Known open items*. The three
+with the most left on the table:
 
-- **`tabular-nums` is in exactly one file.** Not one platform in this category
-  sets tabular figures — it is the clearest unclaimed advantage available to a
-  site that stacks the same SKU across nine shops.
+- **The brand green is Tailwind `green-400`.** See above. Highest signal per byte
+  changed in the whole audit.
 - **Space Grotesk is still the display face.** It is what every AI design tool
   reaches for as the safe alternative to Inter; using it is indistinguishable
   from not having chosen.
+- **A saving and a failure share a hue.** `deal-badge.tsx:19` renders a discount
+  in red; `dispensary/page.tsx:119` renders a closed store in red.
+
+Fixed since the first audit: `tabular-nums` is now declared once on `body`
+(#68), so the money column is straight. Not one platform in this category does
+the same.
 
 Audit performed 2026-08-08. Check git history before trusting any status above.
