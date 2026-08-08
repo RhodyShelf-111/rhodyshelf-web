@@ -15,11 +15,10 @@ is never downloaded (the import is dynamic).
 
 1. **Create a PostHog project** at [posthog.com](https://posthog.com). The free
    tier is 1M events/month with no card, which is far above this site's volume.
-2. **Enable "Cookieless server hash mode"** under *Project Settings → Web
-   analytics*. Required, and do it **before** the key goes live — PostHog
-   documents it as a prerequisite for client-side cookieless tracking, and
-   identity cannot be re-derived for events already ingested (the daily salt is
-   deleted after processing).
+2. **Leave "Cookieless server hash mode" OFF** under *Project Settings → Web
+   analytics*, and enable **Session replay**. This install ran cookieless from
+   2026-08-08 until later the same day; see *Cookies and replay* below for why
+   it was dropped and what it cost.
 3. **Set one env var in Vercel — Production only:**
 
    | Variable | Value |
@@ -39,48 +38,58 @@ no-ops, and `posthog-js` is never downloaded. If real dev analytics are ever
 wanted, use a **second PostHog project** with its own key rather than sharing
 this one.
 
-## Why cookieless
+## Cookies and replay
 
-`cookieless_mode: "always"` writes **nothing** to cookies, localStorage, or
-sessionStorage. People are counted by a one-way hash computed on PostHog's
-servers, which cannot be reversed. This keeps `/privacy`'s "no tracking cookies
-beyond age verification" claim true, and means no consent banner.
+This install ran `cookieless_mode: "always"` for a few hours on 2026-08-08 and
+then dropped it, deliberately, to turn on session replay. **The two are mutually
+exclusive**: replay needs device storage, and the SDK silently refuses to record
+in cookieless mode no matter what the project settings say. Both switches were
+briefly on at once and the result was zero recordings — the SDK just declines.
+There is a regression test asserting `cookieless_mode` is never re-added, because
+re-adding it turns replay off with no error and no failing build.
 
-The identifier is `hash(team_id, daily_salt, ip_address, user_agent, hostname)`,
-and PostHog deletes each day's salt once that day's events are processed. Two
-consequences that change how the numbers must be read:
+So PostHog sets cookies now, and `/privacy` was rewritten in the same change to
+say so plainly, including what replay captures. Keep those in step: the page
+describes the data collection, so a change to one is a change to both.
 
-- **Returning visitors count as a new person every day.** The salt rotates at
-  midnight, so unique-person counts are inflated and multi-day retention is
-  close to meaningless. This is why the kill criterion below is written in
-  *page views* and *event counts*, never users — event counts are unaffected by
-  identity. Keep it that way.
-- **Bot detection is half-disabled, and the half that still works is the half
-  you need.** PostHog hashes and strips the IP before transformations run, so
-  IP-based enrichment (GeoIP, the ingestion-time bot filter) is gone. But the
-  user-agent-derived `$virt_*` properties are computed at *query* time and work
-  normally. Filter every query with:
+What replay records is deliberately narrow — the screen, and nothing else:
 
-  ```sql
-  AND NOT coalesce(properties.$virt_is_bot, false)
-  ```
+| Setting | State | Why |
+|---|---|---|
+| `maskAllInputs` | on | typed text never leaves the browser |
+| `enable_recording_console_log` | off | console output can leak internals |
+| `capture_performance_opt_in` | off | no request/response bodies |
+| retention | 30d | shortest PostHog offers |
 
-  Not optional. Measured on 2026-08-08, the day the key went live: **28 of 28
-  events had `$virt_is_bot = true`** — agent browsing and crawlers, zero humans.
-  An unfiltered pageview count on this project isn't a weak signal, it's a
-  meaningless one. Note `$virt_*` won't appear in the project's property
-  taxonomy and queries using it emit a "property not found" warning; it resolves
-  correctly anyway.
+**No consent banner.** That is a deliberate call made while the site is in beta,
+not an oversight. Revisit it before any real marketing push, and note that RI
+visitors are the entire audience, so the calculus is simpler than for a site with
+EU traffic.
 
-Session replay is **off deliberately**, and not just as a default:
+### What changed about reading the numbers
 
-- It requires device storage, which would break cookieless mode.
-- Recording what specific individuals browse on a cannabis site is
-  sensitive-category behavior, whatever the privacy policy says.
+Dropping cookieless **fixed** two things this doc previously warned about:
 
-If a funnel ever comes back genuinely ambiguous and replay is the only way to
-resolve it, turn it on for a bounded window and ship the `/privacy` update in
-the same PR.
+- **Returning visitors now persist.** Under cookieless, the identifier was
+  `hash(team_id, daily_salt, ip, user_agent, hostname)` with the salt rotating at
+  midnight, so the same person counted as new every day and multi-day retention
+  was meaningless. With cookies, unique-person counts and retention are real. The
+  kill criterion is still written in page views and event counts — it was
+  authored that way and it is not being loosened after the fact.
+- **IP-based enrichment works again.** GeoIP and PostHog's own ingestion-time bot
+  filtering are back, since the IP is no longer stripped before transformations.
+
+One thing did **not** change: still filter bots explicitly in every query.
+
+```sql
+AND NOT coalesce(properties.$virt_is_bot, false)
+```
+
+Measured 2026-08-08, the day the key went live: **28 of 28 events had
+`$virt_is_bot = true`** — agent browsing and crawlers, zero humans. An unfiltered
+pageview count on this project isn't a weak signal, it's a meaningless one. Note
+`$virt_*` won't appear in the project's property taxonomy and queries using it
+emit a "property not found" warning; it resolves correctly anyway.
 
 ## What is instrumented
 
@@ -102,7 +111,12 @@ new event.
 - **The dispensary page's "Visit Site" link** — that is store browsing, not a
   product purchase. Tagging it would pollute `buy_click`, which is meant to be
   the money metric.
-- **Session replay / `$pageleave`** — see above.
+- **`$pageleave`** — off. Note this is one of the two inputs PostHog needs to
+  compute bounce rate; see the bounce-rate note below before setting a target
+  for it.
+
+Session replay **is** on as of 2026-08-08 — see *Cookies and replay* above for
+what it captures and what it masks.
 
 ### Settings that live in PostHog, not in this repo
 

@@ -6,16 +6,17 @@
  * key, `init` returns immediately, `track` no-ops, and posthog-js is never even
  * downloaded (the import is dynamic).
  *
- * Cookieless: `cookieless_mode: "always"` writes nothing to cookies,
- * localStorage, or sessionStorage; PostHog counts people with a hash computed
- * on its own servers. That keeps /privacy's "no tracking cookies beyond age
- * verification" claim true, and it is also why session replay is off — replay
- * requires device storage, and recording what individuals browse on a cannabis
- * site is sensitive-category behavior.
+ * Cookie posture: this install used to run `cookieless_mode: "always"`, which
+ * wrote nothing to any browser storage. That was dropped on 2026-08-08 to turn
+ * on session replay, which is mutually exclusive with it — replay needs device
+ * storage, and the PostHog SDK refuses to record in cookieless mode regardless
+ * of any project-side toggle. PostHog now sets its own cookies, and /privacy
+ * was updated in the same change to say so.
  *
- * NOTE: cookieless mode also requires "Cookieless server hash mode" to be
- * enabled in PostHog under Project Settings > Web analytics. Without it the
- * events arrive but people are not counted.
+ * Replay is deliberately narrow: input masking stays on (PostHog's default),
+ * and console logs and network payloads are explicitly off. Recording what
+ * individuals browse on a cannabis site is sensitive-category behavior, so the
+ * recording captures the screen and nothing else.
  */
 
 import type { PostHog } from "posthog-js"
@@ -69,14 +70,21 @@ export function initAnalytics(): void {
     .then(({ default: posthog }) => {
       posthog.init(apiKey, {
         api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || DEFAULT_HOST,
-        cookieless_mode: "always",
         // Pageviews are captured explicitly: App Router client navigations are
         // not full page loads, so automatic capture would only ever see the
         // first one. See instrumentation-client.ts.
         capture_pageview: false,
         capture_pageleave: false,
-        // Needs device storage, and this is a cannabis site. Deliberate.
-        disable_session_recording: true,
+        // Session replay, on since 2026-08-08. The screen only: inputs stay
+        // masked (PostHog's default), and the two settings below keep console
+        // output and request/response bodies out of recordings — on a cannabis
+        // site those add real exposure and answer no product question.
+        disable_session_recording: false,
+        enable_recording_console_log: false,
+        session_recording: {
+          maskAllInputs: true,
+          recordCrossOriginIframes: false,
+        },
         // No accounts on this site, so there is never anyone to identify.
         person_profiles: "identified_only",
         // Deliberately off: autocapture fires on every click and would bury the
