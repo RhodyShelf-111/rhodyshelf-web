@@ -46,7 +46,7 @@ export default async function BrandListPage() {
             <li key={b.id}>
               <Link
                 href={`/brand/${b.slug}`}
-                className="flex min-h-11 items-center rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="flex min-h-11 items-center rounded-xl border border-border bg-card px-4 py-3 text-body font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span className="truncate">{b.canonical_name}</span>
               </Link>
@@ -55,10 +55,10 @@ export default async function BrandListPage() {
         </ul>
       ) : (
         <div className="text-center py-16">
-          <p className="text-lg font-medium text-foreground mb-2">
+          <p className="text-subhead font-medium text-foreground mb-2">
             No brands available right now
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             Menus refresh throughout the day — check back soon.
           </p>
         </div>

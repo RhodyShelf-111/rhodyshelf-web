@@ -38,16 +38,16 @@ export function CategoryRails({ sections }: CategoryRailsProps) {
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
                   <CategoryIcon category={section.key} className="size-5 text-muted-foreground" />
-                  <h2 className="font-heading text-[17px] font-semibold text-foreground">
+                  <h2 className="font-heading text-subhead font-semibold text-foreground">
                     {section.label}
                   </h2>
-                  <span className="text-[13px] text-muted-foreground">
+                  <span className="text-meta text-muted-foreground">
                     {section.count.toLocaleString()} products
                   </span>
                 </div>
                 <Link
                   href={`/search?category=${encodeURIComponent(section.key)}`}
-                  className="-my-3 inline-flex min-h-11 shrink-0 items-center py-3 text-sm text-primary hover:underline"
+                  className="-my-3 inline-flex min-h-11 shrink-0 items-center py-3 text-body text-primary hover:underline"
                 >
                   View all →
                 </Link>
@@ -87,7 +87,7 @@ export function CategoryRails({ sections }: CategoryRailsProps) {
               {/* Trailing browse CTA (mobile) */}
               <Link
                 href={`/search?category=${encodeURIComponent(section.key)}`}
-                className="sm:hidden flex items-center justify-between px-4 py-3 text-sm font-medium text-primary border-t border-border hover:bg-muted transition-colors"
+                className="sm:hidden flex items-center justify-between px-4 py-3 text-body font-medium text-primary border-t border-border hover:bg-muted transition-colors"
               >
                 <span>Browse all {section.count.toLocaleString()} {section.label}</span>
                 <span aria-hidden>→</span>

@@ -86,7 +86,7 @@ export default async function DispensaryDetailPage({
                 {dispensary.city}, RI
               </span>
             )}
-            <span className="block text-sm">
+            <span className="block text-body">
               {total.toLocaleString()} products available
             </span>
           </div>
@@ -97,7 +97,7 @@ export default async function DispensaryDetailPage({
               href={dispensary.menu_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center justify-center h-11 sm:h-9 px-4 sm:px-3 text-sm sm:text-[0.8rem] font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+              className="inline-flex shrink-0 items-center justify-center h-11 sm:h-9 px-4 sm:px-3 text-body sm:text-meta font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
               Visit Site
               <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5 ml-1.5" />
@@ -131,10 +131,10 @@ export default async function DispensaryDetailPage({
         />
       ) : (
         <div className="text-center py-16">
-          <p className="text-lg font-medium text-foreground mb-2">
+          <p className="text-subhead font-medium text-foreground mb-2">
             No products available
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             This dispensary&apos;s menu may be updating.
           </p>
         </div>

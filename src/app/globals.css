@@ -5,6 +5,52 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* ------------------------------------------------------------------
+     Type scale.
+
+     Tailwind's default scale is cleared, not extended. It offered nine
+     steps and the codebase reached for all of them plus five hand-picked
+     pixel values (11/12/13/15/17px) — fourteen sizes, with text-[13px]
+     and text-sm sitting one pixel apart and both in heavy use. That is
+     not a scale, it is an accumulation, and no reader can perceive the
+     difference the maintainer has to reason about.
+
+     Six steps, each named for its job, so picking one is a decision
+     about what the text IS rather than how big it should look. `initial`
+     removes text-xs/sm/base/lg/xl/2xl/3xl entirely: reaching for an
+     off-scale size now fails to generate a class rather than silently
+     widening the scale again. (Nothing in shadcn/tailwind.css or
+     tw-animate-css depends on the defaults — checked.)
+     ------------------------------------------------------------------ */
+  --text-*: initial;
+
+  /* Badges, ordinals, timestamps, card metadata, section labels. */
+  --text-meta: 0.75rem; /* 12px */
+  --text-meta--line-height: 1rem; /* 16px */
+
+  /* The workhorse: product names, prices, buttons, nav, body copy. */
+  --text-body: 0.875rem; /* 14px */
+  --text-body--line-height: 1.25rem; /* 20px */
+
+  /* Form controls, and body copy that wants a little more room.
+     16px is a floor, not a preference: iOS Safari zooms the viewport when
+     a focused input's font-size is below it, which is why the inputs read
+     text-lead md:text-body rather than text-body everywhere. */
+  --text-lead: 1rem; /* 16px */
+  --text-lead--line-height: 1.5rem; /* 24px */
+
+  /* Section and rail headings, stat values, empty-state headlines. */
+  --text-subhead: 1.125rem; /* 18px */
+  --text-subhead--line-height: 1.625rem; /* 26px */
+
+  /* Sheet and dialog titles, the RhodyShelf wordmark. */
+  --text-title: 1.375rem; /* 22px */
+  --text-title--line-height: 1.75rem; /* 28px */
+
+  /* The page h1, and nothing else. */
+  --text-display: 1.875rem; /* 30px */
+  --text-display--line-height: 2.25rem; /* 36px */
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,

@@ -69,7 +69,7 @@ function SavedNavLink({
       href="/saved"
       onClick={onNavigate}
       className={cn(
-        "rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 px-3 py-2 text-[15px]",
+        "rounded-lg font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 px-3 py-2 text-lead",
         active
           ? "text-primary bg-accent"
           : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -78,7 +78,7 @@ function SavedNavLink({
       <Bookmark className={cn("w-4 h-4", active && "fill-current")} />
       Saved
       {count > 0 && (
-        <span className="ml-0.5 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-medium">
+        <span className="ml-0.5 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-meta font-medium">
           {count}
         </span>
       )}
@@ -133,13 +133,13 @@ function MobileMenuRow({
       <span className="min-w-0 flex-1">
         <span
           className={cn(
-            "block text-base font-medium leading-tight",
+            "block text-lead font-medium leading-tight",
             active ? "text-accent-foreground" : "text-foreground"
           )}
         >
           {label}
         </span>
-        <span className="block text-xs text-muted-foreground leading-tight mt-0.5">
+        <span className="block text-meta text-muted-foreground leading-tight mt-0.5">
           {desc}
         </span>
       </span>
@@ -175,7 +175,7 @@ function MobileSavedRow({
       onNavigate={onNavigate}
       trailing={
         count > 0 ? (
-          <span className="min-w-6 h-6 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium shrink-0">
+          <span className="min-w-6 h-6 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-meta font-medium shrink-0">
             {count}
           </span>
         ) : undefined
@@ -287,7 +287,7 @@ export function SiteHeader() {
       <PageContainer className="h-full flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="shrink-0" aria-label="RhodyShelf home">
-          <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
+          <span className="font-heading text-title font-bold tracking-tight text-foreground">
             Rhody<span className="text-primary">Shelf</span>
           </span>
         </Link>
@@ -304,7 +304,7 @@ export function SiteHeader() {
               // competing with product images. Matches the footer/home chips.
               prefetch={false}
               className={cn(
-                "px-3 py-2 text-[15px] font-medium rounded-lg transition-colors whitespace-nowrap",
+                "px-3 py-2 text-lead font-medium rounded-lg transition-colors whitespace-nowrap",
                 // See NavLink.desktopFromLg — the md row has no space for a 6th.
                 link.desktopFromLg ? "hidden lg:block" : "block",
                 isActive(link.href)
@@ -358,7 +358,7 @@ export function SiteHeader() {
                   <SearchBar autoFocus inputRef={searchInputRef} />
                   <button
                     onClick={closeMobileSearch}
-                    className="px-2 min-h-11 inline-flex items-center text-sm text-muted-foreground shrink-0"
+                    className="px-2 min-h-11 inline-flex items-center text-body text-muted-foreground shrink-0"
                   >
                     Cancel
                   </button>
@@ -403,7 +403,7 @@ export function SiteHeader() {
                   aria-hidden="true"
                   className="mx-auto mt-2.5 mb-1 h-1.5 w-9 cursor-grab rounded-full bg-border active:cursor-grabbing"
                 />
-                <SheetTitle className="px-5 pt-1 pb-2 text-xs uppercase tracking-wider text-muted-foreground">
+                <SheetTitle className="px-5 pt-1 pb-2 text-meta uppercase tracking-wider text-muted-foreground">
                   Browse
                 </SheetTitle>
               </div>
@@ -421,7 +421,7 @@ export function SiteHeader() {
                 ))}
                 <MobileSavedRow active={isActive("/saved")} onNavigate={closeNav} />
               </nav>
-              <div className="mt-2 mx-3 pt-3 border-t border-border flex items-center justify-between px-3 text-[11.5px] text-muted-foreground">
+              <div className="mt-2 mx-3 pt-3 border-t border-border flex items-center justify-between px-3 text-meta text-muted-foreground">
                 <span>Rhode Island · 21+</span>
                 {/* -my-1 keeps the row height while giving the links a taller tap area. */}
                 <span className="flex items-center gap-1 -my-1">

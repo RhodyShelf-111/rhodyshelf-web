@@ -96,7 +96,7 @@ export function ProductDrawer({ id }: { id: string }) {
           <SheetTitle className="font-medium text-foreground">
             Product not found
           </SheetTitle>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-body text-muted-foreground">
             It may no longer be in stock.
           </p>
         </div>
@@ -105,7 +105,7 @@ export function ProductDrawer({ id }: { id: string }) {
           <SheetTitle className="font-medium text-foreground">
             Couldn&rsquo;t load this product
           </SheetTitle>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-body text-muted-foreground">
             Something went wrong.{" "}
             {/* Hard link (not next/link) so it bypasses interception and
                 loads the full standalone page, which fetches server-side. */}

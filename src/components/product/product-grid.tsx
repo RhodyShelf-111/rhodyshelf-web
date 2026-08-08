@@ -336,7 +336,7 @@ export function ProductGrid({
               other feedback, so a screen-reader user hears the new count
               instead of silence. */}
           <p
-            className="text-sm text-muted-foreground whitespace-nowrap"
+            className="text-body text-muted-foreground whitespace-nowrap"
             role="status"
             aria-live="polite"
             aria-atomic="true"
@@ -367,13 +367,13 @@ export function ProductGrid({
             {showFilters && (
               <FilterSheet
                 resultCount={resultTotal}
-                triggerClassName="lg:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                triggerClassName="lg:hidden inline-flex items-center gap-1.5 h-11 px-3 text-body rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
                 trigger={
                   <>
                     <SlidersHorizontal className="w-4 h-4" />
                     Filters
                     {activeFilterCount > 0 && (
-                      <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
+                      <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-meta flex items-center justify-center">
                         {activeFilterCount}
                       </span>
                     )}
@@ -436,7 +436,7 @@ export function ProductGrid({
                 was a 16px-tall sliver. */}
             <button
               onClick={clearFilters}
-              className="inline-flex min-h-11 items-center px-1 text-xs text-primary hover:underline"
+              className="inline-flex min-h-11 items-center px-1 text-meta text-primary hover:underline"
             >
               Clear all
             </button>
@@ -506,19 +506,19 @@ export function ProductGrid({
           // generation than the HTML did), and blaming filters there would offer
           // a "Clear all filters" button that clears nothing.
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-lg font-medium text-foreground mb-2">
+            <p className="text-subhead font-medium text-foreground mb-2">
               Nothing in stock right now
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body text-muted-foreground">
               Rhode Island menus refresh throughout the day — check back soon.
             </p>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-lg font-medium text-foreground mb-2">
+            <p className="text-subhead font-medium text-foreground mb-2">
               No products match your filters
             </p>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-body text-muted-foreground mb-4">
               Try removing a filter or searching for something else.
             </p>
             <Button
@@ -538,7 +538,7 @@ export function ProductGrid({
 function LoadingMore({ total }: { total: number }) {
   return (
     <div
-      className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground"
+      className="flex items-center justify-center gap-2 py-8 text-body text-muted-foreground"
       role="status"
       aria-live="polite"
     >
@@ -570,7 +570,7 @@ function RetryLoad({
       )}
       role="status"
     >
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         {total != null
           ? `Couldn't load all ${total.toLocaleString()} products.`
           : "Couldn't load all products."}
@@ -589,7 +589,7 @@ function FilterChip({
   label: string
   onRemove: () => void
 }) {
-  // The whole chip removes the filter, not just the ×: at text-xs that glyph
+  // The whole chip removes the filter, not just the ×: at text-meta that glyph
   // measures 8×16px, so most taps landed on the (previously inert) label and
   // the shopper was stranded on a one-product view. h-11 on mobile / the
   // original compact size from sm up — the same treatment as the search page's
@@ -597,7 +597,7 @@ function FilterChip({
   return (
     <button
       onClick={onRemove}
-      className="inline-flex h-11 items-center gap-1 rounded-full bg-accent px-3 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80 sm:h-auto sm:px-2.5 sm:py-1"
+      className="inline-flex h-11 items-center gap-1 rounded-full bg-accent px-3 text-meta font-medium text-accent-foreground transition-colors hover:bg-accent/80 sm:h-auto sm:px-2.5 sm:py-1"
       aria-label={`Remove ${label} filter`}
     >
       {label}

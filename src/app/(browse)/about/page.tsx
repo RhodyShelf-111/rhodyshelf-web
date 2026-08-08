@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <PageContainer className="max-w-3xl py-12">
-      <h1 className="font-heading text-3xl font-bold text-foreground mb-6">
+      <h1 className="font-heading text-display font-bold text-foreground mb-6">
         About RhodyShelf
       </h1>
       <div className="space-y-4 text-muted-foreground">
@@ -33,7 +33,7 @@ export default function AboutPage() {
           new drops — then head to the dispensary&apos;s own site to buy.
         </p>
 
-        <h2 className="text-foreground font-semibold text-lg mt-6">
+        <h2 className="text-foreground font-semibold text-subhead mt-6">
           How we source our data
         </h2>
         <p>
@@ -49,7 +49,7 @@ export default function AboutPage() {
           information service and is not affiliated with any dispensary.
         </p>
 
-        <h2 className="text-foreground font-semibold text-lg mt-6">
+        <h2 className="text-foreground font-semibold text-subhead mt-6">
           Who it&apos;s for
         </h2>
         <p>
@@ -58,7 +58,7 @@ export default function AboutPage() {
           purposes only and is not medical advice.
         </p>
 
-        <h2 className="text-foreground font-semibold text-lg mt-6">Contact</h2>
+        <h2 className="text-foreground font-semibold text-subhead mt-6">Contact</h2>
         <p>
           Questions, corrections, or a dispensary that should be listed? Email us
           at{" "}

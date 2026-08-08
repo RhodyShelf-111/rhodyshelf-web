@@ -36,7 +36,7 @@ export default async function ProductNotFound() {
         <div className="mb-5 flex justify-center">
           <PackageX className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
         </div>
-        <h1 className="font-heading mb-2 text-3xl font-bold text-foreground">
+        <h1 className="font-heading mb-2 text-display font-bold text-foreground">
           This listing is off the menu
         </h1>
         <p className="text-muted-foreground">
@@ -54,19 +54,19 @@ export default async function ProductNotFound() {
       <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
         <Link
           href="/deals"
-          className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-body font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           Today&apos;s deals
         </Link>
         <Link
           href="/drops"
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-border px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border px-5 text-body font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           New drops
         </Link>
         <Link
           href="/search"
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-border px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-border px-5 text-body font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           Browse all products
         </Link>

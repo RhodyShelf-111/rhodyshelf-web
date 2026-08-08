@@ -31,7 +31,7 @@ export function CategoryNav({ activeSlug }: { activeSlug?: string }) {
             href={`/category/${c.key}`}
             ariaCurrent={active ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-body font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               active
                 ? "border-primary/40 bg-accent text-primary"
                 : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted"

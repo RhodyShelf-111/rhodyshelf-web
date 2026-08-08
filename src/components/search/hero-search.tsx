@@ -217,7 +217,7 @@ export function HeroSearch({
             onKeyDown={handleKeyDown}
             className={cn(
               // pr clears the 44px clear button on touch, the 32px one on sm+.
-              "w-full h-11 pl-11 pr-12 sm:pr-11 rounded-xl text-base md:text-sm",
+              "w-full h-11 pl-11 pr-12 sm:pr-11 rounded-xl text-lead md:text-body",
               "bg-card border border-border",
               "text-foreground placeholder:text-muted-foreground",
               "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
@@ -267,7 +267,7 @@ export function HeroSearch({
             >
               <p
                 aria-hidden="true"
-                className="px-4 pt-2 pb-1 text-[11px] uppercase tracking-wider text-muted-foreground"
+                className="px-4 pt-2 pb-1 text-meta uppercase tracking-wider text-muted-foreground"
               >
                 {GROUP_LABELS[group.type]}
               </p>
@@ -291,7 +291,7 @@ export function HeroSearch({
                     onClick={() => handleSelect(s)}
                     onMouseEnter={() => setActiveIndex(i)}
                     className={cn(
-                      "w-full text-left px-4 py-3 text-sm transition-colors truncate",
+                      "w-full text-left px-4 py-3 text-body transition-colors truncate",
                       i === activeIndex
                         ? "bg-accent text-accent-foreground"
                         : "text-foreground hover:bg-muted"
@@ -313,7 +313,7 @@ export function HeroSearch({
             onClick={() => handleSubmit()}
             onMouseEnter={() => setActiveIndex(suggestions.length)}
             className={cn(
-              "w-full text-left px-4 py-3 mt-1 text-sm border-t border-border transition-colors",
+              "w-full text-left px-4 py-3 mt-1 text-body border-t border-border transition-colors",
               activeIndex === suggestions.length
                 ? "bg-accent text-accent-foreground"
                 : "text-primary hover:bg-muted"

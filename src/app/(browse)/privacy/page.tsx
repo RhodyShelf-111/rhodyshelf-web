@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <PageContainer className="max-w-3xl py-12">
-      <h1 className="font-heading text-3xl font-bold text-foreground mb-6">
+      <h1 className="font-heading text-display font-bold text-foreground mb-6">
         Privacy Policy
       </h1>
       <div className="space-y-4 text-muted-foreground">
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           site is used, including session recordings of how pages are used —
           described under Analytics below.
         </p>
-        <h2 className="text-foreground font-semibold text-lg mt-6">
+        <h2 className="text-foreground font-semibold text-subhead mt-6">
           Information We Collect
         </h2>
         <p>
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
           hash of your IP address. We never store your raw IP address, and
           votes are not linked to any account, name, or profile.
         </p>
-        <h2 className="text-foreground font-semibold text-lg mt-6">Analytics</h2>
+        <h2 className="text-foreground font-semibold text-subhead mt-6">Analytics</h2>
         <p>
           We use PostHog to understand which pages people visit and which
           features get used, so we know what to improve. PostHog sets cookies in
@@ -70,7 +70,7 @@ export default function PrivacyPage() {
           leaves your browser, and we do not record network requests or browser
           console output. Recordings are deleted after 30 days.
         </p>
-        <h2 className="text-foreground font-semibold text-lg mt-6">
+        <h2 className="text-foreground font-semibold text-subhead mt-6">
           Third-Party Services
         </h2>
         <p>
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
           PostHog for the analytics and session recording described above, and
           display product images hosted by dispensary platforms.
         </p>
-        <h2 className="text-foreground font-semibold text-lg mt-6">Contact</h2>
+        <h2 className="text-foreground font-semibold text-subhead mt-6">Contact</h2>
         <p>
           Questions about this policy? Contact us at{" "}
           <a

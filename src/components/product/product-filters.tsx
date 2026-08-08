@@ -86,7 +86,7 @@ export function ProductFiltersPanel({
           {showCategory && <Separator />}
 
           <FilterSection title="Brand">
-            {/* No text-sm override: the Input's base is text-base (16px) on
+            {/* No text-body override: the Input's base is text-lead (16px) on
                 mobile, so iOS won't zoom the viewport on focus. */}
             <Input
               placeholder="Search brands..."
@@ -216,7 +216,7 @@ function FilterSection({
 }) {
   return (
     <div>
-      <h2 className="text-[13px] uppercase tracking-wide text-muted-foreground mb-3">
+      <h2 className="text-meta uppercase tracking-wide text-muted-foreground mb-3">
         {title}
       </h2>
       <div className="space-y-2">{children}</div>

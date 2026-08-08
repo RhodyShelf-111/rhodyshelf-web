@@ -58,7 +58,7 @@ export function ValueRow({
             first thing announced for every row. */}
         <span
           aria-hidden
-          className="w-5 shrink-0 text-center text-[13px] tabular-nums text-muted-foreground"
+          className="w-5 shrink-0 text-center text-meta tabular-nums text-muted-foreground"
         >
           {rank}
         </span>
@@ -83,16 +83,16 @@ export function ValueRow({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">
+          <p className="truncate text-body font-medium text-foreground">
             {product.name}
           </p>
-          <p className="truncate text-[12px] text-muted-foreground">
+          <p className="truncate text-meta text-muted-foreground">
             {product.brand_name}
           </p>
           {/* Short name, same as the product card: this row squeezes name,
               brand and shop against a large $/g figure, so the registered name
               clipped mid-word. The accessible name above keeps the full one. */}
-          <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 flex items-center gap-1 text-meta text-muted-foreground">
             <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">
               {shortDispensaryName(dispensary.name, dispensary.city)}
@@ -102,20 +102,20 @@ export function ValueRow({
 
         {/* The reason the page exists, so it is the largest type on the row. */}
         <div className="shrink-0 text-right">
-          <p className="text-base font-semibold tabular-nums text-foreground">
+          <p className="text-lead font-semibold tabular-nums text-foreground">
             {perGram}
           </p>
-          <p className="text-[12px] tabular-nums text-muted-foreground">
+          <p className="text-meta tabular-nums text-muted-foreground">
             {formatPrice(listing.price)}
             {product.weight_display ? ` · ${product.weight_display}` : ""}
           </p>
           {anchor && (
-            <p className="text-[11px] font-medium text-primary">
+            <p className="text-meta font-medium text-primary">
               {row.percentBelowTypical}% below typical
             </p>
           )}
           {row.pricePerMgThc != null && (
-            <p className="text-[11px] tabular-nums text-muted-foreground">
+            <p className="text-meta tabular-nums text-muted-foreground">
               {formatPricePerMgThc(row.pricePerMgThc)}
             </p>
           )}

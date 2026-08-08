@@ -94,7 +94,7 @@ describe("BrandGroup", () => {
       .getByRole("heading", { name: "Acme Farms" })
       .className.split(/\s+/)
     expect(cls).toContain("font-heading")
-    expect(cls).toContain("text-[17px]")
+    expect(cls).toContain("text-subhead")
     // 600, not 700: font-bold is reserved for the page h1 and the wordmark, so
     // a section rail heading matching the homepage rails is font-semibold.
     expect(cls).toContain("font-semibold")

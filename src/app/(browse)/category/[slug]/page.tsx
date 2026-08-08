@@ -114,10 +114,10 @@ export default async function CategoryPage({
         />
       ) : (
         <div className="text-center py-16">
-          <p className="text-lg font-medium text-foreground mb-2">
+          <p className="text-subhead font-medium text-foreground mb-2">
             No {category.label.toLowerCase()} available right now
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             Menus refresh throughout the day — check back soon.
           </p>
         </div>

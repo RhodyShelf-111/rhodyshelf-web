@@ -33,7 +33,7 @@ export default async function HomePage() {
         <h1 className="font-heading text-[clamp(1.625rem,3.2vw,2.5rem)] font-bold tracking-tight leading-[1.1] text-foreground mb-2">
           Search RI dispensary menus, all in one place.
         </h1>
-        <p className="text-muted-foreground text-base md:text-lg mb-5 max-w-2xl lg:max-w-none lg:whitespace-nowrap">
+        <p className="text-muted-foreground text-lead md:text-subhead mb-5 max-w-2xl lg:max-w-none lg:whitespace-nowrap">
           Browse every Rhode Island dispensary menu, compare prices across the state, and find what you&apos;re looking for.
         </p>
         <HeroSearch
@@ -58,7 +58,7 @@ export default async function HomePage() {
                 // category pages carry the site's largest RSC payloads —
                 // default prefetch would download all 7 on every home visit.
                 prefetch={false}
-                className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-body font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <CategoryIcon category={section.key} />
                 {section.label}
