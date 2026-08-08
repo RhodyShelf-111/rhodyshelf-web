@@ -5,6 +5,7 @@ import type {
   ProductFilters,
 } from "@/lib/types"
 import { resolveAlias } from "@/lib/brand-aliases"
+import { isOnSale, byDiscountDesc } from "@/lib/discount"
 import { searchHaystack, searchTokens } from "@/lib/search-terms"
 import { isGramPriced, pricePerGram } from "@/lib/utils"
 import { netWeightGrams } from "@/lib/product-units"
@@ -230,7 +231,7 @@ export function applyFilters(
   }
 
   if (filters.onSale) {
-    result = result.filter((l) => (l.discount_amount ?? 0) > 0)
+    result = result.filter(isOnSale)
   }
 
   if (filters.search) {
@@ -313,9 +314,7 @@ export function applyFilters(
       )
       break
     case "discount-desc":
-      result = [...result].sort(
-        (a, b) => (b.discount_percent ?? 0) - (a.discount_percent ?? 0)
-      )
+      result = [...result].sort(byDiscountDesc)
       break
   }
 

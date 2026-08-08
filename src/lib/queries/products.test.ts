@@ -80,8 +80,11 @@ function row(
   const id = over.id ?? `l${++seq}`
   return {
     id,
+    // A real markdown: getDeals verifies against these two prices now, so a
+    // fixture with no original_price is not a deal and never reaches the
+    // potency assertions below.
     price: 10,
-    original_price: null,
+    original_price: 20,
     discount_amount: null,
     discount_percent: null,
     thc_percent: over.thc === undefined ? 22.5 : over.thc,

@@ -24,10 +24,20 @@ function makeListing(
   } = {}
 ): InventoryListing {
   seq += 1
+  const price = overrides.price === undefined ? 20 : overrides.price
+  // On-sale and discount-sort are computed from these two prices now (see
+  // src/lib/discount.ts), so the overrides have to move original_price or they
+  // describe a listing the app correctly refuses to call discounted.
+  let originalPrice: number | null = null
+  if (price != null && overrides.discountPercent != null) {
+    originalPrice = price / (1 - overrides.discountPercent / 100)
+  } else if (price != null && overrides.discount != null && overrides.discount > 0) {
+    originalPrice = price + overrides.discount
+  }
   return {
     id: `l${seq}`,
-    price: overrides.price === undefined ? 20 : overrides.price,
-    original_price: null,
+    price,
+    original_price: originalPrice,
     discount_amount: overrides.discount ?? null,
     discount_percent: overrides.discountPercent ?? null,
     thc_percent: overrides.thc === undefined ? 20 : overrides.thc,
@@ -129,7 +139,7 @@ describe("applyFilters", () => {
     expect(out.map((l) => l.price)).toEqual([5, 15, null])
   })
 
-  it("discount-desc sorts by discount percent", () => {
+  it("discount-desc sorts by the computed percent, and sinks unverifiable rows", () => {
     const listings = [
       makeListing({ discountPercent: 10 }),
       makeListing({ discountPercent: 40 }),
@@ -137,6 +147,27 @@ describe("applyFilters", () => {
     ]
     const out = applyFilters(listings, { sort: "discount-desc" })
     expect(out.map((l) => l.discount_percent)).toEqual([40, 10, null])
+  })
+
+  // Regression: /deals ordered by the feed's discount_percent, so Slater
+  // Center's Astropop — $7.00 down to $6.00, tagged 100% off — sorted above
+  // every genuine markdown in the catalog.
+  it("ignores a feed percent that the prices contradict", () => {
+    const astropop = makeListing({ price: 6 })
+    astropop.original_price = 7 // 14.3% real
+    astropop.discount_percent = 100 // what the feed claimed
+    const genuine = makeListing({ discountPercent: 44 })
+    const out = applyFilters([astropop, genuine], { sort: "discount-desc" })
+    expect(out[0]).toBe(genuine)
+  })
+
+  // Four live Rise Warwick rows carried discount_amount equal to the whole
+  // price with original_price == price, so every one wore an On Sale badge.
+  it("does not treat a whole-price discount_amount with no markdown as a sale", () => {
+    const bogus = makeListing({ price: 50 })
+    bogus.original_price = 50
+    bogus.discount_amount = 50
+    expect(applyFilters([bogus], { onSale: true })).toEqual([])
   })
 })
 
