@@ -40,12 +40,12 @@ export function PriceComparisonPanel({
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
         <h2
           id={headingId}
-          className="font-heading text-[15px] font-bold text-foreground"
+          className="font-heading text-[15px] font-semibold text-foreground"
         >
           At {rows.length} dispensaries
         </h2>
         {savings != null && cheapest && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-900/60 bg-emerald-950/70 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-900/60 bg-emerald-950/70 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
             <TrendingDown className="h-3 w-3" aria-hidden />
             Save {formatPrice(savings)}
           </span>
@@ -112,7 +112,7 @@ export function PriceComparisonPanel({
                   </p>
                 )}
                 {isCheapest && (
-                  <p className="text-[11px] font-semibold text-primary">
+                  <p className="text-[11px] font-medium text-primary">
                     Lowest
                   </p>
                 )}

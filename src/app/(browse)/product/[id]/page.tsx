@@ -174,7 +174,7 @@ export default async function ProductPage({
 
           <div>
             <div className="flex items-baseline gap-2.5 flex-wrap">
-              <span className="text-3xl font-bold text-foreground">
+              <span className="text-3xl font-semibold text-foreground">
                 {formatPrice(price) ?? (
                   <span className="text-base font-normal text-muted-foreground">
                     See dispensary for price
@@ -187,7 +187,7 @@ export default async function ProductPage({
                 </span>
               )}
               {showStrike && (
-                <span className="text-sm font-semibold text-primary">
+                <span className="text-sm font-medium text-primary">
                   Save {formatPrice((original_price ?? 0) - (price ?? 0))}
                 </span>
               )}
@@ -208,7 +208,7 @@ export default async function ProductPage({
               {thc_percent != null && (
                 <div className="bg-muted rounded-lg px-4 py-3">
                   <p className="text-xs text-muted-foreground">THC</p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-lg font-medium">
                     {thc_percent.toFixed(1)}%
                   </p>
                 </div>
@@ -216,7 +216,7 @@ export default async function ProductPage({
               {cbd_percent != null && cbd_percent > 0 && (
                 <div className="bg-muted rounded-lg px-4 py-3">
                   <p className="text-xs text-muted-foreground">CBD</p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-lg font-medium">
                     {cbd_percent.toFixed(1)}%
                   </p>
                 </div>
@@ -229,7 +229,7 @@ export default async function ProductPage({
             className="block bg-muted rounded-xl p-4 border border-border hover:border-primary/40 transition-colors"
           >
             <p className="text-sm text-muted-foreground">Available at</p>
-            <p className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
+            <p className="font-medium text-foreground flex items-center gap-1.5 mt-0.5">
               <MapPin className="w-4 h-4 text-primary" />
               {dispensary.name}
             </p>
@@ -259,7 +259,7 @@ export default async function ProductPage({
                 data-dispensary={dispensary.name}
                 data-category={product.category}
                 data-surface="product-page"
-                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 h-12 px-4 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 h-12 px-4 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span className="truncate">Buy at {dispensary.name}</span>
                 <ExternalLink className="w-4 h-4 shrink-0" />
@@ -278,7 +278,7 @@ export default async function ProductPage({
       {brandListings.length > 0 && (
         <section className="mt-12">
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="font-heading text-lg font-bold text-foreground">
+            <h2 className="font-heading text-lg font-semibold text-foreground">
               More from {product.brand_name}
             </h2>
             <Link
@@ -313,7 +313,7 @@ export default async function ProductPage({
       {buyUrl && (
         <div className="md:hidden sticky bottom-0 z-40 -mx-4 mt-8 flex items-center gap-3 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
           <div className="min-w-0 shrink-0">
-            <p className="text-lg font-bold leading-tight text-foreground">
+            <p className="text-lg font-semibold leading-tight text-foreground">
               {formatPrice(price) ?? (
                 <span className="text-sm font-normal text-muted-foreground">
                   See dispensary
@@ -334,7 +334,7 @@ export default async function ProductPage({
             data-dispensary={dispensary.name}
             data-category={product.category}
             data-surface="product-page-sticky"
-            className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <span className="truncate">Buy at {dispensary.name}</span>
             <ExternalLink className="h-4 w-4 shrink-0" />

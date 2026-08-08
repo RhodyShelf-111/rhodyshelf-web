@@ -96,7 +96,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+      <h2 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
         {title}
       </h2>
       <ul className="flex flex-col">{children}</ul>

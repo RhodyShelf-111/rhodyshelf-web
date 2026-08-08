@@ -95,7 +95,10 @@ describe("BrandGroup", () => {
       .className.split(/\s+/)
     expect(cls).toContain("font-heading")
     expect(cls).toContain("text-[17px]")
-    expect(cls).toContain("font-bold")
+    // 600, not 700: font-bold is reserved for the page h1 and the wordmark, so
+    // a section rail heading matching the homepage rails is font-semibold.
+    expect(cls).toContain("font-semibold")
+    expect(cls).not.toContain("font-bold")
   })
 
   // The rail slot is a fixed 208px (w-52) at every breakpoint. Left on the

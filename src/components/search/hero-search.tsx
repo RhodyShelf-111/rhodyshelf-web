@@ -267,7 +267,7 @@ export function HeroSearch({
             >
               <p
                 aria-hidden="true"
-                className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                className="px-4 pt-2 pb-1 text-[11px] uppercase tracking-wider text-muted-foreground"
               >
                 {GROUP_LABELS[group.type]}
               </p>

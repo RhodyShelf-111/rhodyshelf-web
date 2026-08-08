@@ -118,7 +118,7 @@ export function SavedClient() {
           {outOfStock.length > 0 && (
             <section className="space-y-3">
               <div className="flex items-baseline gap-2">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h2 className="text-sm uppercase tracking-wide text-muted-foreground">
                   Out of stock
                 </h2>
                 <span className="text-xs text-muted-foreground">
@@ -178,7 +178,7 @@ function LoadFailedState({ onRetry }: { onRetry: () => void }) {
       <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
         <CloudOff className="w-6 h-6 text-muted-foreground" aria-hidden />
       </div>
-      <p className="font-heading text-xl font-bold text-foreground mb-2">
+      <p className="font-heading text-xl font-semibold text-foreground mb-2">
         We couldn&apos;t load your saved products
       </p>
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
@@ -187,7 +187,7 @@ function LoadFailedState({ onRetry }: { onRetry: () => void }) {
       </p>
       <button
         onClick={onRetry}
-        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
       >
         Try again
       </button>
@@ -201,7 +201,7 @@ function EmptyState({ hasSaved }: { hasSaved: boolean }) {
       <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
         <Bookmark className="w-6 h-6 text-muted-foreground" />
       </div>
-      <p className="font-heading text-xl font-bold text-foreground mb-2">
+      <p className="font-heading text-xl font-semibold text-foreground mb-2">
         {hasSaved ? "We couldn't find your saved products" : "Nothing saved yet"}
       </p>
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
@@ -221,7 +221,7 @@ function EmptyState({ hasSaved }: { hasSaved: boolean }) {
       </p>
       <Link
         href="/search"
-        className="inline-flex items-center h-10 px-5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        className="inline-flex items-center h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
       >
         Browse products
       </Link>

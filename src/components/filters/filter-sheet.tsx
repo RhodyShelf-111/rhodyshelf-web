@@ -74,7 +74,7 @@ export function FilterSheet({
             <div className="h-1 w-9 rounded-full bg-muted-foreground/40" />
           </div>
           <div className="flex items-center justify-between gap-2 pb-2 pl-4 pr-2.5">
-            <SheetTitle className="text-lg font-bold">{title}</SheetTitle>
+            <SheetTitle className="text-lg font-semibold">{title}</SheetTitle>
             <SheetClose
               render={
                 <Button
@@ -113,7 +113,7 @@ export function FilterSheet({
           <div className="shrink-0 border-t border-border bg-popover/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-popover/80">
             <SheetClose
               render={
-                <Button className="h-12 w-full rounded-lg text-sm font-semibold" />
+                <Button className="h-12 w-full rounded-lg text-sm font-medium" />
               }
             >
               Show {resultCount.toLocaleString()}{" "}

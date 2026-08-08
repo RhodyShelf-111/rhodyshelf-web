@@ -58,7 +58,7 @@ export function ValueRow({
             first thing announced for every row. */}
         <span
           aria-hidden
-          className="w-5 shrink-0 text-center text-[13px] font-semibold tabular-nums text-muted-foreground"
+          className="w-5 shrink-0 text-center text-[13px] tabular-nums text-muted-foreground"
         >
           {rank}
         </span>
@@ -83,7 +83,7 @@ export function ValueRow({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">
+          <p className="truncate text-sm font-medium text-foreground">
             {product.name}
           </p>
           <p className="truncate text-[12px] text-muted-foreground">
@@ -102,7 +102,7 @@ export function ValueRow({
 
         {/* The reason the page exists, so it is the largest type on the row. */}
         <div className="shrink-0 text-right">
-          <p className="text-base font-bold tabular-nums text-foreground">
+          <p className="text-base font-semibold tabular-nums text-foreground">
             {perGram}
           </p>
           <p className="text-[12px] tabular-nums text-muted-foreground">
@@ -110,7 +110,7 @@ export function ValueRow({
             {product.weight_display ? ` · ${product.weight_display}` : ""}
           </p>
           {anchor && (
-            <p className="text-[11px] font-semibold text-primary">
+            <p className="text-[11px] font-medium text-primary">
               {row.percentBelowTypical}% below typical
             </p>
           )}

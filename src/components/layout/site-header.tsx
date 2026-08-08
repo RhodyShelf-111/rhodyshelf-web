@@ -78,7 +78,7 @@ function SavedNavLink({
       <Bookmark className={cn("w-4 h-4", active && "fill-current")} />
       Saved
       {count > 0 && (
-        <span className="ml-0.5 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-semibold">
+        <span className="ml-0.5 min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[11px] font-medium">
           {count}
         </span>
       )}
@@ -175,7 +175,7 @@ function MobileSavedRow({
       onNavigate={onNavigate}
       trailing={
         count > 0 ? (
-          <span className="min-w-6 h-6 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold shrink-0">
+          <span className="min-w-6 h-6 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium shrink-0">
             {count}
           </span>
         ) : undefined
@@ -403,7 +403,7 @@ export function SiteHeader() {
                   aria-hidden="true"
                   className="mx-auto mt-2.5 mb-1 h-1.5 w-9 cursor-grab rounded-full bg-border active:cursor-grabbing"
                 />
-                <SheetTitle className="px-5 pt-1 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <SheetTitle className="px-5 pt-1 pb-2 text-xs uppercase tracking-wider text-muted-foreground">
                   Browse
                 </SheetTitle>
               </div>

@@ -45,7 +45,7 @@ export function BrandGroup({
               (category-rails.tsx), and it was the one instance set in the body
               face — so /search's rails read as a different product from the
               homepage's at the identical size and weight. */}
-          <h3 className="truncate font-heading text-[17px] font-bold text-foreground">
+          <h3 className="truncate font-heading text-[17px] font-semibold text-foreground">
             {brandName}
           </h3>
           <span className="shrink-0 text-[13px] text-muted-foreground">
