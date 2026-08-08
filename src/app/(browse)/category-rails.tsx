@@ -2,7 +2,7 @@ import Link from "next/link"
 import type { CategorySection } from "@/lib/types"
 import { ProductCard } from "@/components/product/product-card"
 import { EAGER_IMAGE_COUNT } from "@/lib/image-priority"
-import { getCategoryIcon } from "@/lib/utils"
+import { CategoryIcon } from "@/components/ui/category-icon"
 
 interface CategoryRailsProps {
   sections: CategorySection[]
@@ -37,7 +37,7 @@ export function CategoryRails({ sections }: CategoryRailsProps) {
               {/* Section header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl" aria-hidden="true">{getCategoryIcon(section.key)}</span>
+                  <CategoryIcon category={section.key} className="size-5 text-muted-foreground" />
                   <h2 className="font-heading text-[17px] font-bold text-foreground">
                     {section.label}
                   </h2>

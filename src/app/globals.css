@@ -23,6 +23,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-product-plate: var(--product-plate);
+  --color-product-plate-foreground: var(--product-plate-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -69,6 +70,12 @@
      would draw a visible seam around the majority case, which is exactly the
      framing effect we removed the padding to get rid of. */
   --product-plate: #ffffff;
+  /* Anything drawn ON that white tile — currently the category glyph shown when
+     a dispensary CDN URL 404s. It can't inherit --foreground (white on white),
+     and full black would make a missing image louder than a present one, so
+     this is a quiet placeholder gray carrying the same green cast as the rest
+     of the palette. */
+  --product-plate-foreground: #b4bdb4;
 }
 
 @layer base {

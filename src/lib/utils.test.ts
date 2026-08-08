@@ -6,7 +6,6 @@ import {
   getFreshnessBadge,
   DROP_WINDOW_DAYS,
   slugify,
-  getCategoryIcon,
   pricePerGram,
   formatPricePerGram,
   formatUnitPrice,
@@ -89,17 +88,6 @@ describe("slugify", () => {
 
   it("strips leading and trailing separators", () => {
     expect(slugify("  Solar Cannabis Co. ")).toBe("solar-cannabis-co")
-  })
-})
-
-describe("getCategoryIcon", () => {
-  it("resolves DB values and plural display aliases, case-insensitively", () => {
-    expect(getCategoryIcon("flower")).toBe("🌿")
-    expect(getCategoryIcon("Pre-Rolls")).toBe("🚬")
-  })
-
-  it("falls back to the leaf for unknown categories", () => {
-    expect(getCategoryIcon("beverage")).toBe("🌿")
   })
 })
 

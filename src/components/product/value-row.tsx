@@ -8,8 +8,9 @@ import type {
 } from "@/lib/value-ranking"
 import { formatPricePerMgThc, valueAnchor, VALUE_UNIT } from "@/lib/value-ranking"
 import { DOSE_MG } from "@/lib/product-units"
-import { formatPrice, formatUnitPrice, getCategoryIcon } from "@/lib/utils"
+import { formatPrice, formatUnitPrice } from "@/lib/utils"
 import { shortDispensaryName } from "@/lib/dispensary-name"
+import { CategoryIcon } from "@/components/ui/category-icon"
 
 /**
  * One row on /best-value.
@@ -72,8 +73,11 @@ export function ValueRow({
               className="object-contain p-0.5"
             />
           ) : (
-            <span className="absolute inset-0 flex items-center justify-center text-lg">
-              {getCategoryIcon(product.category)}
+            <span className="absolute inset-0 flex items-center justify-center">
+              <CategoryIcon
+                category={product.category}
+                className="size-5 text-muted-foreground"
+              />
             </span>
           )}
         </div>

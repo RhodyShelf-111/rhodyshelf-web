@@ -11,7 +11,8 @@ import {
   sortLabel,
   type SortValue,
 } from "@/lib/sort"
-import { cn, getCategoryIcon } from "@/lib/utils"
+import { cn } from "@/lib/utils"
+import { CategoryIcon } from "@/components/ui/category-icon"
 import type { ProductFilters, Dispensary } from "@/lib/types"
 
 /** /search groups by brand when there's no keyword, so that's its resting sort. */
@@ -546,7 +547,8 @@ function CategoryChip({
           : "border-border text-foreground hover:bg-muted"
       )}
     >
-      <span aria-hidden="true">{getCategoryIcon(category)}</span> {label}
+      <CategoryIcon category={category} />
+      {label}
     </button>
   )
 }
