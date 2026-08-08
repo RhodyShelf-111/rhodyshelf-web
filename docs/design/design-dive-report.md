@@ -57,7 +57,7 @@ follow-ups rather than rushed.
 - **Mobile filter UX unification** (MED) — dispensary pages use a left drawer of radios; search uses a bottom sheet of chips. Consolidating onto one shared filter component is a real refactor.
 - **Autocomplete product/strain suggestions** (MED) — the hero autocomplete only suggests brands though the placeholder promises products + strains. Needs a new product/strain suggest query.
 - **Search server-sort unification** (MED) — search sorts server-side with a different option set; fully merging with the client grid vocabulary needs server support for the extra orders.
-- **Narrow-card dispensary-name truncation** (MED/LOW) — on the densest mobile/saved cards the dispensary name still truncates; a card-footer relayout (name on its own line) would fix it globally.
+- ~~**Narrow-card dispensary-name truncation** (MED/LOW) — on the densest mobile/saved cards the dispensary name still truncates; a card-footer relayout (name on its own line) would fix it globally.~~ **RESOLVED** (2026-08-08) — solved by shortening the label rather than relayouting the footer: `src/lib/dispensary-name.ts` maps each registered name to a card label ("Aura of Rhode Island - Central Falls" → "Aura"), so it fits without a second row. The full name stays on the product page, the buy link, and the analytics attribute.
 - **Native filter radios render as white discs** (LOW) — restyle to theme-consistent controls.
 - **Card action 44px touch targets** (LOW) — bumping Buy/upvote would enlarge the compact cards; a deliberate density tradeoff.
 - **Breadcrumbs/back links** on brand + dispensary-detail (LOW).
