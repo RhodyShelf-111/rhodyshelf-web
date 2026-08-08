@@ -55,9 +55,22 @@ consequences that change how the numbers must be read:
   close to meaningless. This is why the kill criterion below is written in
   *page views* and *event counts*, never users — event counts are unaffected by
   identity. Keep it that way.
-- **Bot detection does not run in this mode.** Crawler traffic inflates
-  pageviews. Filter by referrer and user agent before comparing against any
-  threshold, or a few aggressive bots will carry a dead site over the line.
+- **Bot detection is half-disabled, and the half that still works is the half
+  you need.** PostHog hashes and strips the IP before transformations run, so
+  IP-based enrichment (GeoIP, the ingestion-time bot filter) is gone. But the
+  user-agent-derived `$virt_*` properties are computed at *query* time and work
+  normally. Filter every query with:
+
+  ```sql
+  AND NOT coalesce(properties.$virt_is_bot, false)
+  ```
+
+  Not optional. Measured on 2026-08-08, the day the key went live: **28 of 28
+  events had `$virt_is_bot = true`** — agent browsing and crawlers, zero humans.
+  An unfiltered pageview count on this project isn't a weak signal, it's a
+  meaningless one. Note `$virt_*` won't appear in the project's property
+  taxonomy and queries using it emit a "property not found" warning; it resolves
+  correctly anyway.
 
 Session replay is **off deliberately**, and not just as a default:
 
@@ -127,6 +140,12 @@ For an outbound link, prefer the attribute over a handler:
 `data-track="buy"` works from server components too, which a handler cannot.
 
 ## The kill criterion — read this before drawing conclusions
+
+The numbers are pre-built on the [Kill Criterion Review
+dashboard](https://us.posthog.com/project/263857/dashboard/1972621) — built
+2026-08-08, before there was any data to argue with. Every tile filters bots.
+Start with tile 5 (contamination); if the traffic is still mostly automation,
+none of the others mean anything yet.
 
 Written **before** install, on purpose, so the result cannot be
 reinterpreted afterwards.
