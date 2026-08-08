@@ -105,3 +105,72 @@ describe("font-weight policy", () => {
     expect(tally.heavy).toBeLessThan(tally.light)
   })
 })
+
+/**
+ * The type scale, enforced the same way.
+ *
+ * globals.css clears Tailwind's default --text-* namespace, so text-sm and
+ * text-lg no longer generate anything. That failure is silent in the browser —
+ * the element just inherits — which is worse than a build error. This catches
+ * it in CI instead.
+ *
+ * Arbitrary values are the other half. Tailwind always honours text-[13px]
+ * regardless of the theme, and five of those (11/12/13/15/17px) are how the
+ * scale grew to fourteen steps in the first place.
+ */
+describe("type scale", () => {
+  const SCALE = ["meta", "body", "lead", "subhead", "title", "display"]
+
+  it("uses only the six named steps", () => {
+    const offenders = FILES.flatMap(({ rel, lines }) =>
+      lines.flatMap((line, i) => {
+        const hits = line.match(/(?<![\w-])text-(?!\[)[a-z0-9]+(?![\w-])/g) ?? []
+        return hits
+          .map((hit) => hit.replace("text-", ""))
+          // text-* is also the colour namespace (text-foreground, text-primary,
+          // text-red-400…). Only flag the size words Tailwind used to ship.
+          .filter((word) =>
+            /^(xs|sm|base|lg|xl|[2-9]xl)$/.test(word) && !SCALE.includes(word)
+          )
+          .map((word) => `${rel}:${i + 1}  text-${word}`)
+      })
+    )
+    expect(offenders).toEqual([])
+  })
+
+  it("has no arbitrary font sizes outside the one deliberate exception", () => {
+    const offenders = FILES.flatMap(({ rel, lines }) =>
+      lines
+        .map((line, i) => ({ line, n: i + 1 }))
+        .filter(({ line }) => /(?<![\w-])text-\[[0-9]/.test(line))
+        // The homepage h1 is fluid on purpose: text-[clamp(1.625rem,3.2vw,2.5rem)]
+        // spans 26→40px so the one headline on the site scales with the viewport
+        // instead of stepping. It is the display step, just not a fixed one.
+        .filter(({ line }) => !line.includes("clamp("))
+        .map(({ n, line }) => `${rel}:${n}  ${line.trim().slice(0, 80)}`)
+    )
+    expect(offenders).toEqual([])
+  })
+
+  it("keeps the 16px floor on form controls so iOS does not zoom on focus", () => {
+    // Safari zooms the viewport when a focused input is under 16px. Every input
+    // must therefore rest at text-lead and only drop to text-body from md up,
+    // where there is no touch keyboard to trigger it. The two classes need not
+    // be adjacent — input.tsx carries a long className with them far apart.
+    for (const file of [
+      "components/ui/input.tsx",
+      "components/layout/search-bar.tsx",
+      "components/search/hero-search.tsx",
+    ]) {
+      const found = FILES.find(({ rel }) => rel === file)
+      expect(found, `${file} not found`).toBeDefined()
+      const source = found!.lines.join("\n")
+      expect(source, `${file} lost its 16px resting size`).toMatch(
+        /(?<![\w-:])text-lead(?![\w-])/
+      )
+      expect(source, `${file} lost its md:text-body step-down`).toContain(
+        "md:text-body"
+      )
+    }
+  })
+})

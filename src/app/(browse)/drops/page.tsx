@@ -72,16 +72,16 @@ export default async function DropsPage() {
         />
       ) : (
         <div className="text-center py-16">
-          <p className="text-lg font-medium text-foreground mb-2">
+          <p className="text-subhead font-medium text-foreground mb-2">
             No new products in the last 14 days
           </p>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-body text-muted-foreground mb-6">
             New arrivals show up here as dispensaries add them. In the meantime,
             browse the full selection.
           </p>
           <Link
             href="/search"
-            className="inline-flex items-center justify-center h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center h-10 px-5 text-body font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Browse all products
           </Link>

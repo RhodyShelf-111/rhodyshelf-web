@@ -91,7 +91,7 @@ export default async function BestValueCategoryPage({
             <p>{copy.subheading}</p>
             {/* The most important line on the page. Ranking by price alone
                 would otherwise read as a quality judgement, which it is not. */}
-            <p className="mt-1 text-sm">{valueDisclaimer(VALUE_UNIT[category])}</p>
+            <p className="mt-1 text-body">{valueDisclaimer(VALUE_UNIT[category])}</p>
           </>
         }
       />
@@ -107,11 +107,11 @@ export default async function BestValueCategoryPage({
               <div className="mb-2 flex items-baseline justify-between gap-3">
                 <h2
                   id={`band-${section.band.id}`}
-                  className="font-heading text-lg font-semibold text-foreground"
+                  className="font-heading text-subhead font-semibold text-foreground"
                 >
                   {section.band.label}
                 </h2>
-                <p className="shrink-0 text-[12px] text-muted-foreground">
+                <p className="shrink-0 text-meta text-muted-foreground">
                   typical {formatUnitRate(section.typicalUnitRate, section.unit)}{" "}
                   · {section.candidateCount} products
                 </p>
@@ -147,7 +147,7 @@ function CategoryTabs({ active }: { active: string }) {
                 href={`/best-value/${c}`}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-11 items-center rounded-lg border px-4 text-sm font-medium transition-colors",
+                  "inline-flex min-h-11 items-center rounded-lg border px-4 text-body font-medium transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   isActive
                     ? "border-primary/40 bg-primary/15 text-primary"
@@ -171,16 +171,16 @@ function CategoryTabs({ active }: { active: string }) {
 function EmptyState() {
   return (
     <div className="py-16 text-center">
-      <p className="mb-2 text-lg font-medium text-foreground">
+      <p className="mb-2 text-subhead font-medium text-foreground">
         Not enough current listings to rank
       </p>
-      <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
+      <p className="mx-auto mb-6 max-w-md text-body text-muted-foreground">
         Value rankings need a decent number of products at the same size to
         compare against. Check back after the next menu update.
       </p>
       <Link
         href="/search"
-        className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-body font-medium text-primary-foreground transition-colors hover:bg-primary/90"
       >
         Browse all products
       </Link>

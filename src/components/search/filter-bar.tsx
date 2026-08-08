@@ -195,7 +195,7 @@ export function FilterBar({
       {activeCount > 0 && (
         <button
           onClick={onClear}
-          className="inline-flex min-h-11 items-center text-sm text-primary hover:underline"
+          className="inline-flex min-h-11 items-center text-body text-primary hover:underline"
         >
           Clear all filters
         </button>
@@ -215,7 +215,7 @@ export function FilterBar({
 
       {/* Row 1: result count + dropdowns */}
       <div className="flex items-center gap-2 flex-wrap">
-        <p className="text-sm text-muted-foreground mr-auto">
+        <p className="text-body text-muted-foreground mr-auto">
           <span className="font-medium text-foreground">
             {resultCount.toLocaleString()}
           </span>{" "}
@@ -244,7 +244,7 @@ export function FilterBar({
                 aria-controls={
                   openDropdown === "brand" ? `${panelId}-brand` : undefined
                 }
-                className="inline-flex items-center gap-1.5 pl-3 pr-2 text-sm hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-1.5 pl-3 pr-2 text-body hover:bg-primary/90 transition-colors"
               >
                 {filters.brand}
                 <ChevronDown className="w-3.5 h-3.5" />
@@ -270,7 +270,7 @@ export function FilterBar({
               aria-controls={
                 openDropdown === "brand" ? `${panelId}-brand` : undefined
               }
-              className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-body rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
             >
               {`All Brands (${brands.length})`}
               <ChevronDown className="w-3.5 h-3.5" />
@@ -292,7 +292,7 @@ export function FilterBar({
                 // the sheet's Input had the same near-invisible boundary
                 // (--border is 1.41:1 on --popover, under 1.4.11's 3:1) and a
                 // placeholder for its only label.
-                className="w-full h-8 px-3 text-sm rounded-lg bg-muted border border-muted-foreground/70 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-2"
+                className="w-full h-8 px-3 text-body rounded-lg bg-muted border border-muted-foreground/70 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-2"
                 autoFocus
                 onClick={(e) => e.stopPropagation()}
               />
@@ -313,7 +313,7 @@ export function FilterBar({
                       setOpenDropdown(null)
                     }}
                     className={cn(
-                      "w-full text-left px-2 py-1.5 text-sm rounded transition-colors truncate",
+                      "w-full text-left px-2 py-1.5 text-body rounded transition-colors truncate",
                       filters.brand === brand
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-muted"
@@ -342,7 +342,7 @@ export function FilterBar({
                     ? `${panelId}-dispensary`
                     : undefined
                 }
-                className="inline-flex items-center gap-1.5 pl-3 pr-2 text-sm hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-1.5 pl-3 pr-2 text-body hover:bg-primary/90 transition-colors"
               >
                 {dispensaries.find((d) => d.slug === filters.dispensary)?.name ??
                   filters.dispensary}
@@ -371,7 +371,7 @@ export function FilterBar({
                   ? `${panelId}-dispensary`
                   : undefined
               }
-              className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-body rounded-lg border bg-card border-border text-foreground hover:bg-muted transition-colors"
             >
               {`All Dispensaries (${dispensaries.length})`}
               <ChevronDown className="w-3.5 h-3.5" />
@@ -396,7 +396,7 @@ export function FilterBar({
                     setOpenDropdown(null)
                   }}
                   className={cn(
-                    "w-full text-left px-2 py-1.5 text-sm rounded transition-colors",
+                    "w-full text-left px-2 py-1.5 text-body rounded transition-colors",
                     filters.dispensary === d.slug
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
@@ -425,7 +425,7 @@ export function FilterBar({
             aria-controls={
               openDropdown === "sort" ? `${panelId}-sort` : undefined
             }
-            className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+            className="inline-flex items-center gap-1.5 h-8 px-3 text-body rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
           >
             {sortLabel(filters.sort, DEFAULT_SORT)}
             <ChevronDown className="w-3.5 h-3.5" />
@@ -446,7 +446,7 @@ export function FilterBar({
                     setOpenDropdown(null)
                   }}
                   className={cn(
-                    "w-full text-left px-2 py-1.5 text-sm rounded transition-colors",
+                    "w-full text-left px-2 py-1.5 text-body rounded transition-colors",
                     (filters.sort ?? DEFAULT_SORT) === opt.value
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
@@ -464,7 +464,7 @@ export function FilterBar({
           aria-pressed={!!filters.onSale}
           onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
           className={cn(
-            "hidden md:inline-flex items-center h-8 px-3 text-sm rounded-lg border transition-colors",
+            "hidden md:inline-flex items-center h-8 px-3 text-body rounded-lg border transition-colors",
             filters.onSale
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-card border-border text-foreground hover:bg-muted"
@@ -477,13 +477,13 @@ export function FilterBar({
             header, swipe-to-dismiss), same as the grid pages. */}
         <FilterSheet
           resultCount={resultCount}
-          triggerClassName="md:hidden inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+          triggerClassName="md:hidden inline-flex items-center gap-1.5 h-11 px-3 text-body rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
           trigger={
             <>
               <SlidersHorizontal className="w-4 h-4" />
               Filters
               {activeCount > 0 && (
-                <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-[11px] flex items-center justify-center">
+                <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 text-meta flex items-center justify-center">
                   {activeCount}
                 </span>
               )}
@@ -513,7 +513,7 @@ export function FilterBar({
           aria-pressed={!!filters.onSale}
           onClick={() => onFilterChange("onSale", !filters.onSale || undefined)}
           className={cn(
-            "md:hidden shrink-0 inline-flex items-center gap-1.5 h-11 px-3 text-sm rounded-full border transition-colors",
+            "md:hidden shrink-0 inline-flex items-center gap-1.5 h-11 px-3 text-body rounded-full border transition-colors",
             filters.onSale
               ? "bg-primary text-primary-foreground border-primary"
               : "border-border text-foreground hover:bg-muted"
@@ -541,7 +541,7 @@ function CategoryChip({
       aria-pressed={active}
       onClick={onToggle}
       className={cn(
-        "shrink-0 inline-flex items-center gap-1.5 h-11 md:h-8 px-3 text-sm rounded-full border transition-colors",
+        "shrink-0 inline-flex items-center gap-1.5 h-11 md:h-8 px-3 text-body rounded-full border transition-colors",
         active
           ? "bg-primary text-primary-foreground border-primary"
           : "border-border text-foreground hover:bg-muted"
@@ -565,7 +565,7 @@ function FilterSection({
       {/* Same label treatment as ProductFiltersPanel's sections — the two
           hosts share the sheet chrome, so their internals should read as one
           pattern. */}
-      <h4 className="text-[13px] uppercase tracking-wide text-muted-foreground mb-3">
+      <h4 className="text-meta uppercase tracking-wide text-muted-foreground mb-3">
         {title}
       </h4>
       <div className="space-y-2">{children}</div>

@@ -18,7 +18,7 @@ export function NotFoundContent() {
         <div className="flex justify-center mb-5">
           <SearchX className="w-12 h-12 text-muted-foreground" aria-hidden="true" />
         </div>
-        <h1 className="font-heading text-3xl font-bold text-foreground mb-2">
+        <h1 className="font-heading text-display font-bold text-foreground mb-2">
           Page not found
         </h1>
         <p className="text-muted-foreground mb-6">
@@ -27,13 +27,13 @@ export function NotFoundContent() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/search"
-            className="inline-flex items-center justify-center h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="inline-flex items-center justify-center h-10 px-5 text-body font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             Browse all products
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center justify-center h-10 px-5 text-sm font-medium rounded-lg border border-border text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="inline-flex items-center justify-center h-10 px-5 text-body font-medium rounded-lg border border-border text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             Go home
           </Link>

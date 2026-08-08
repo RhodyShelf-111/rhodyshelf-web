@@ -31,10 +31,10 @@ export default function GlobalError({
       <body className="min-h-full flex flex-col items-center justify-center gap-6 px-4 py-16 text-center font-sans bg-background text-foreground">
         <title>Something went wrong | RhodyShelf</title>
         <div>
-          <p className="font-heading text-2xl font-semibold tracking-tight mb-2">
+          <p className="font-heading text-title font-semibold tracking-tight mb-2">
             RhodyShelf
           </p>
-          <h1 className="font-heading text-3xl font-bold mb-2">
+          <h1 className="font-heading text-display font-bold mb-2">
             Something went wrong
           </h1>
           <p className="text-muted-foreground max-w-md">
@@ -45,7 +45,7 @@ export default function GlobalError({
         <button
           type="button"
           onClick={() => unstable_retry()}
-          className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-body font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           Try again
         </button>

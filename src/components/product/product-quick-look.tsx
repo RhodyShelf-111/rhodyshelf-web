@@ -88,7 +88,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
               {product.strain_type ? ` · ${product.strain_type}` : ""}
               {product.weight_display ? ` · ${product.weight_display}` : ""}
             </SheetDescription>
-            <SheetTitle className="mt-1 text-xl font-semibold">
+            <SheetTitle className="mt-1 text-title font-semibold">
               {product.name}
             </SheetTitle>
             <Link
@@ -101,30 +101,30 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
 
           <div>
             <div className="flex flex-wrap items-baseline gap-2.5">
-              <span className="text-2xl font-semibold text-foreground">
+              <span className="text-title font-semibold text-foreground">
                 {formatPrice(price) ?? (
-                  <span className="text-base font-normal text-muted-foreground">
+                  <span className="text-lead font-normal text-muted-foreground">
                     See dispensary for price
                   </span>
                 )}
               </span>
               {showStrike && (
-                <span className="text-base text-muted-foreground line-through">
+                <span className="text-lead text-muted-foreground line-through">
                   {formatPrice(original_price)}
                 </span>
               )}
               {showStrike && (
-                <span className="text-sm font-medium text-primary">
+                <span className="text-body font-medium text-primary">
                   Save {formatPrice((original_price ?? 0) - (price ?? 0))}
                 </span>
               )}
               {unitPrice && (
-                <span className="text-base text-muted-foreground">
+                <span className="text-lead text-muted-foreground">
                   {unitPrice}
                 </span>
               )}
             </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-1.5 text-meta text-muted-foreground">
               Price updated {formatRelativeTime(listing.last_seen_at)} · confirm at
               dispensary before you go
             </p>
@@ -134,14 +134,14 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
             <div className="flex gap-3">
               {thc_percent != null && (
                 <div className="rounded-lg bg-muted px-4 py-3">
-                  <p className="text-xs text-muted-foreground">THC</p>
-                  <p className="text-lg font-medium">{thc_percent.toFixed(1)}%</p>
+                  <p className="text-meta text-muted-foreground">THC</p>
+                  <p className="text-subhead font-medium">{thc_percent.toFixed(1)}%</p>
                 </div>
               )}
               {cbd_percent != null && cbd_percent > 0 && (
                 <div className="rounded-lg bg-muted px-4 py-3">
-                  <p className="text-xs text-muted-foreground">CBD</p>
-                  <p className="text-lg font-medium">{cbd_percent.toFixed(1)}%</p>
+                  <p className="text-meta text-muted-foreground">CBD</p>
+                  <p className="text-subhead font-medium">{cbd_percent.toFixed(1)}%</p>
                 </div>
               )}
             </div>
@@ -151,13 +151,13 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
             href={`/dispensary/${dispensary.slug}`}
             className="block rounded-xl border border-border bg-muted p-4 transition-colors hover:border-primary/40"
           >
-            <p className="text-sm text-muted-foreground">Available at</p>
+            <p className="text-body text-muted-foreground">Available at</p>
             <p className="mt-0.5 flex items-center gap-1.5 font-medium text-foreground">
               <MapPin className="h-4 w-4 text-primary" />
               {dispensary.name}
             </p>
             {dispensary.city && (
-              <p className="ml-5.5 text-sm text-muted-foreground">
+              <p className="ml-5.5 text-body text-muted-foreground">
                 {dispensary.city}, RI
               </p>
             )}
@@ -178,7 +178,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
               the full standalone page — the brand rail and the canonical URL. */}
           <a
             href={`/product/${listing.id}`}
-            className="text-center text-sm text-primary hover:underline"
+            className="text-center text-body text-primary hover:underline"
           >
             View full page →
           </a>
@@ -199,7 +199,7 @@ export function ProductQuickLook({ listing }: { listing: InventoryListing }) {
               data-dispensary={dispensary.name}
               data-category={product.category}
               data-surface="quick-look"
-              className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-4 text-body font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <span className="truncate">Buy at {dispensary.name}</span>
               <ExternalLink className="h-4 w-4 shrink-0" />

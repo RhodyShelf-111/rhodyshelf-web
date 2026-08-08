@@ -49,7 +49,7 @@ export function FilterRadio({
         />
         <span className="pointer-events-none absolute h-2 w-2 scale-0 rounded-full bg-primary transition-transform peer-checked:scale-100" />
       </span>
-      <span className={cn("text-sm", labelClassName)}>{label}</span>
+      <span className={cn("text-body", labelClassName)}>{label}</span>
     </label>
   )
 }
@@ -102,7 +102,7 @@ export function OnSaleToggle({
           )}
         />
       </div>
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-body font-medium">{label}</span>
     </label>
   )
 }

@@ -22,10 +22,10 @@ export async function SiteFooter() {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
-            <span className="font-heading text-xl font-bold text-foreground">
+            <span className="font-heading text-title font-bold text-foreground">
               Rhody<span className="text-primary">Shelf</span>
             </span>
-            <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+            <p className="text-body text-muted-foreground mt-1 max-w-xs">
               Rhode Island cannabis menus, prices, and deals — all in one place.
             </p>
             <SocialLinks className="mt-2" />
@@ -63,7 +63,7 @@ export async function SiteFooter() {
             <li>
               <a
                 href="mailto:hello@rhodyshelf.com"
-                className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex min-h-11 items-center text-body text-muted-foreground hover:text-foreground transition-colors"
               >
                 Contact
               </a>
@@ -71,7 +71,7 @@ export async function SiteFooter() {
           </FooterColumn>
         </div>
 
-        <div className="mt-8 pt-4 border-t border-border text-xs text-muted-foreground space-y-1">
+        <div className="mt-8 pt-4 border-t border-border text-meta text-muted-foreground space-y-1">
           <p>
             For informational purposes only. Not medical advice. Cannabis is for
             adults 21+ and legal for recreational use in Rhode Island.
@@ -96,7 +96,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+      <h2 className="text-meta uppercase tracking-wide text-muted-foreground mb-2">
         {title}
       </h2>
       <ul className="flex flex-col">{children}</ul>
@@ -120,7 +120,7 @@ function FooterLink({
       <Link
         href={href}
         prefetch={false}
-        className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="inline-flex min-h-11 items-center text-body text-muted-foreground hover:text-foreground transition-colors"
       >
         {children}
       </Link>

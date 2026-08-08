@@ -109,10 +109,10 @@ export default async function BrandPage({
         />
       ) : (
         <div className="text-center py-16">
-          <p className="text-lg font-medium text-foreground mb-2">
+          <p className="text-subhead font-medium text-foreground mb-2">
             No products currently available
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             This brand may not have active inventory right now.
           </p>
         </div>

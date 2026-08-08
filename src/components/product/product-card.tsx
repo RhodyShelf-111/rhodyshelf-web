@@ -201,18 +201,18 @@ export function ProductCard({
       <div className="flex-1 flex flex-col px-3 py-2.5 min-h-0 border-t border-border/60">
         <div className="space-y-1">
           {/* Category + Strain */}
-          <p className="text-[12px] text-muted-foreground truncate capitalize">
+          <p className="text-meta text-muted-foreground truncate capitalize">
             {product.category}
             {product.strain_type ? ` · ${product.strain_type}` : ""}
           </p>
 
           {/* Product Name — always reserve 2 lines */}
-          <h3 className="text-sm font-medium text-foreground line-clamp-2 leading-tight min-h-[2.25rem]">
+          <h3 className="text-body font-medium text-foreground line-clamp-2 leading-tight min-h-[2.25rem]">
             {product.name}
           </h3>
 
           {/* Brand */}
-          <p className="text-[13px] text-muted-foreground truncate">
+          <p className="text-meta text-muted-foreground truncate">
             {product.brand_name}
           </p>
 
@@ -220,7 +220,7 @@ export function ProductCard({
               as a reference point (or an em dash once inventory is gone). */}
           <p
             className={cn(
-              "text-sm font-semibold",
+              "text-body font-semibold",
               outOfStock ? "text-muted-foreground" : "text-foreground"
             )}
           >
@@ -234,12 +234,12 @@ export function ProductCard({
               </span>
             )}
             {showStrike && (
-              <span className="text-muted-foreground font-normal text-[13px] line-through ml-1.5">
+              <span className="text-muted-foreground font-normal text-meta line-through ml-1.5">
                 {formatPrice(original_price)}
               </span>
             )}
             {product.weight_display && (
-              <span className="text-muted-foreground font-normal text-[13px] ml-1">
+              <span className="text-muted-foreground font-normal text-meta ml-1">
                 / {product.weight_display}
               </span>
             )}
@@ -261,7 +261,7 @@ export function ProductCard({
               where nothing reports potency — a page of edibles, a page of
               accessories — simply gets 19px shorter. */}
           {statLine && (
-            <p className="text-[13px] text-muted-foreground truncate">
+            <p className="text-meta text-muted-foreground truncate">
               {statLine}
             </p>
           )}
@@ -277,13 +277,13 @@ export function ProductCard({
         <div className="mt-auto pt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           {outOfStock
             ? lastSeenLabel && (
-                <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
+                <div className="flex items-center gap-1 text-meta text-muted-foreground min-w-0">
                   <Clock className="w-3 h-3 shrink-0" />
                   <span className="truncate">Last seen {lastSeenLabel}</span>
                 </div>
               )
             : showDispensary && (
-                <div className="flex items-center gap-1 text-[12px] text-muted-foreground min-w-0">
+                <div className="flex items-center gap-1 text-meta text-muted-foreground min-w-0">
                   <MapPin className="w-3 h-3 shrink-0" />
                   <span className="truncate">{dispensaryLabel}</span>
                 </div>
@@ -308,7 +308,7 @@ export function ProductCard({
                 data-category={product.category}
                 data-surface="card"
                 aria-label={`Buy ${product.name} at ${dispensary.name} (opens dispensary site)`}
-                className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1 h-11 sm:h-7 px-3 sm:px-2.5 rounded-md text-[13px] sm:text-[12px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1 h-11 sm:h-7 px-3 sm:px-2.5 rounded-md text-meta sm:text-meta font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               >
                 Buy
                 <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3" />

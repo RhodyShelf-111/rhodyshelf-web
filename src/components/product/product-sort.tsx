@@ -23,7 +23,7 @@ export function ProductSort({ value, onChange, defaultValue = "newest" }: Produc
       value={value ?? defaultValue}
       onValueChange={(v) => onChange(v as ProductFilters["sort"])}
     >
-      <SelectTrigger className="w-[150px] lg:w-[180px] !h-11 sm:!h-9 text-sm">
+      <SelectTrigger className="w-[150px] lg:w-[180px] !h-11 sm:!h-9 text-body">
         {/* `!h-*` overrides SelectTrigger's built-in data-[size=default]:h-8,
             which otherwise wins on specificity and keeps the mobile trigger at
             32px. Render the friendly label in the resting trigger — Base UI's

@@ -103,12 +103,12 @@ function DispensaryCard({ dispensary: d }: { dispensary: DispensaryWithCounts })
             {d.name}
           </h2>
           {d.city && (
-            <p className="text-sm text-muted-foreground mt-0.5">{d.city}, RI</p>
+            <p className="text-body text-muted-foreground mt-0.5">{d.city}, RI</p>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mt-auto pt-4 text-sm text-muted-foreground">
+      <div className="flex items-center gap-4 mt-auto pt-4 text-body text-muted-foreground">
         {hasMenu ? (
           <>
             <span className="flex items-center gap-1">
@@ -123,7 +123,7 @@ function DispensaryCard({ dispensary: d }: { dispensary: DispensaryWithCounts })
             )}
           </>
         ) : (
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+          <span className="text-meta font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
             Menu coming soon
           </span>
         )}

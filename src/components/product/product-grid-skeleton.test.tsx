@@ -102,12 +102,12 @@ describe("ProductGridSkeleton", () => {
     expect(classes(plate)).not.toContain("border-b")
 
     expect(rows.map(height)).toEqual([
-      "h-[18px]", //   category · strain   (text-[12px])
+      "h-[18px]", //   category · strain   (text-meta)
       "h-9", //        name, 2 lines       (min-h-[2.25rem])
-      "h-[19.5px]", // brand               (text-[13px])
-      "h-5", //        price               (text-sm)
-      "h-[19.5px]", // $/g · THC           (text-[13px] min-h-[1rem])
-      "h-[18px]", //   dispensary line     (text-[12px] + icon)
+      "h-[19.5px]", // brand               (text-meta)
+      "h-5", //        price               (text-body)
+      "h-[19.5px]", // $/g · THC           (text-meta min-h-[1rem])
+      "h-[18px]", //   dispensary line     (text-meta + icon)
       "h-11", //       action row          (h-11 / sm:h-7)
     ])
   })

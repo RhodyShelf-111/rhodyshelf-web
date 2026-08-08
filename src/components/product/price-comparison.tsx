@@ -40,12 +40,12 @@ export function PriceComparisonPanel({
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
         <h2
           id={headingId}
-          className="font-heading text-[15px] font-semibold text-foreground"
+          className="font-heading text-lead font-semibold text-foreground"
         >
           At {rows.length} dispensaries
         </h2>
         {savings != null && cheapest && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-900/60 bg-emerald-950/70 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-900/60 bg-emerald-950/70 px-2 py-0.5 text-meta font-medium text-emerald-300">
             <TrendingDown className="h-3 w-3" aria-hidden />
             Save {formatPrice(savings)}
           </span>
@@ -59,7 +59,7 @@ export function PriceComparisonPanel({
               <div className="min-w-0 flex-1">
                 <p
                   className={cn(
-                    "truncate text-sm",
+                    "truncate text-body",
                     isCurrent
                       ? "font-semibold text-foreground"
                       : "font-medium text-foreground"
@@ -67,7 +67,7 @@ export function PriceComparisonPanel({
                 >
                   {listing.dispensary.name}
                 </p>
-                <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
+                <p className="mt-0.5 flex items-center gap-1 text-meta text-muted-foreground">
                   {listing.dispensary.city && (
                     <>
                       <MapPin className="h-3 w-3 shrink-0" aria-hidden />
@@ -88,12 +88,12 @@ export function PriceComparisonPanel({
               <div className="shrink-0 text-right">
                 <p
                   className={cn(
-                    "text-sm font-semibold",
+                    "text-body font-semibold",
                     isCheapest ? "text-primary" : "text-foreground"
                   )}
                 >
                   {formatPrice(listing.price) ?? (
-                    <span className="text-[13px] font-normal text-muted-foreground">
+                    <span className="text-meta font-normal text-muted-foreground">
                       See dispensary
                     </span>
                   )}
@@ -103,7 +103,7 @@ export function PriceComparisonPanel({
                 {delta != null && delta !== 0 && (
                   <p
                     className={cn(
-                      "text-[12px]",
+                      "text-meta",
                       delta < 0 ? "text-primary" : "text-muted-foreground"
                     )}
                   >
@@ -112,7 +112,7 @@ export function PriceComparisonPanel({
                   </p>
                 )}
                 {isCheapest && (
-                  <p className="text-[11px] font-medium text-primary">
+                  <p className="text-meta font-medium text-primary">
                     Lowest
                   </p>
                 )}
@@ -140,7 +140,7 @@ export function PriceComparisonPanel({
         })}
       </ul>
 
-      <p className="border-t border-border px-4 py-2.5 text-[11px] text-muted-foreground">
+      <p className="border-t border-border px-4 py-2.5 text-meta text-muted-foreground">
         Same product and size, matched across menus. Prices change often —
         confirm at the dispensary.
       </p>

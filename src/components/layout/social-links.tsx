@@ -67,7 +67,7 @@ export function SocialLinks({ className }: { className?: string }) {
               href={profile.url}
               target="_blank"
               rel="me noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
+              className="inline-flex min-h-11 items-center gap-2 text-body text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />
               {profile.name}

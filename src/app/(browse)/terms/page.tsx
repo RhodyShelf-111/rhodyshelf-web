@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <PageContainer className="max-w-3xl py-12">
-      <h1 className="font-heading text-3xl font-bold text-foreground mb-6">
+      <h1 className="font-heading text-display font-bold text-foreground mb-6">
         Terms of Use
       </h1>
       <div className="space-y-4 text-muted-foreground">
@@ -33,7 +33,7 @@ export default function TermsPage() {
           and legally permitted to view cannabis-related content in your
           jurisdiction.
         </p>
-        <h2 className="text-foreground font-semibold text-lg mt-6">
+        <h2 className="text-foreground font-semibold text-subhead mt-6">
           Accuracy of Information
         </h2>
         <p>
@@ -42,7 +42,7 @@ export default function TermsPage() {
           with the dispensary before visiting. RhodyShelf is not responsible for
           inaccuracies in dispensary-provided data.
         </p>
-        <h2 className="text-foreground font-semibold text-lg mt-6">
+        <h2 className="text-foreground font-semibold text-subhead mt-6">
           Not a Dispensary
         </h2>
         <p>
@@ -50,7 +50,7 @@ export default function TermsPage() {
           deliver cannabis products. All purchases must be made directly at
           licensed Rhode Island dispensaries.
         </p>
-        <h2 className="text-foreground font-semibold text-lg mt-6">
+        <h2 className="text-foreground font-semibold text-subhead mt-6">
           Limitation of Liability
         </h2>
         <p>

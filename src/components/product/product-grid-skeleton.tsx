@@ -12,12 +12,12 @@ import { cn } from "@/lib/utils"
  * the difference on every row the moment real cards arrive. Measured on the real
  * card at a 390px viewport:
  *
- *   category · strain   text-[12px]              -> 18px
+ *   category · strain   text-meta              -> 18px
  *   name                min-h-[2.25rem]          -> 36px
- *   brand               text-[13px]              -> 19.5px
- *   price               text-sm                  -> 20px
- *   $/g · THC           text-[13px] min-h-[1rem] -> 19.5px
- *   dispensary line     text-[12px] + icon       -> 18px
+ *   brand               text-meta              -> 19.5px
+ *   price               text-body                  -> 20px
+ *   $/g · THC           text-meta min-h-[1rem] -> 19.5px
+ *   dispensary line     text-meta + icon       -> 18px
  *   action row          h-11 / sm:h-7            -> 44px / 28px
  *
  * (The 19.5s are 13px text at the inherited 1.5 line-height. Rounding them up

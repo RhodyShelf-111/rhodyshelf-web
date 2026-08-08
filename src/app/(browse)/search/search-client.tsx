@@ -270,7 +270,7 @@ export function SearchClient({
 
       {/* Alias notice */}
       {aliasNotice && (
-        <p className="text-sm text-muted-foreground mb-4 italic">{aliasNotice}</p>
+        <p className="text-body text-muted-foreground mb-4 italic">{aliasNotice}</p>
       )}
 
       {/* Results */}
@@ -329,14 +329,14 @@ export function SearchClient({
         {hasMore && listings.length > 0 && (
           <div className="flex flex-col items-center gap-3 py-6">
             {loadMoreError && (
-              <p className="text-sm text-muted-foreground" role="status">
+              <p className="text-body text-muted-foreground" role="status">
                 Couldn&apos;t load more results.
               </p>
             )}
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              className="px-6 py-2 text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors disabled:opacity-50"
+              className="px-6 py-2 text-body font-medium rounded-xl border border-border bg-card hover:bg-muted transition-colors disabled:opacity-50"
             >
               {loadingMore
                 ? "Loading..."
@@ -374,23 +374,23 @@ function DegradedState({
         className="w-10 h-10 text-muted-foreground mb-4"
         aria-hidden="true"
       />
-      <p className="font-heading text-xl font-semibold text-foreground mb-2">
+      <p className="font-heading text-title font-semibold text-foreground mb-2">
         We couldn&apos;t reach our menu data just now
       </p>
-      <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+      <p className="text-body text-muted-foreground mb-6 max-w-sm">
         Your search is fine — our end is having a moment. Try again and it
         should come right back.
       </p>
       <button
         onClick={onRetry}
-        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        className="inline-flex items-center justify-center h-11 sm:h-10 px-5 text-body font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
       >
         Try again
       </button>
       {hasFilters && (
         <button
           onClick={onClear}
-          className="mt-4 text-sm text-primary hover:underline"
+          className="mt-4 text-body text-primary hover:underline"
         >
           Clear all filters
         </button>
@@ -412,10 +412,10 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <p className="font-heading text-xl font-semibold text-foreground mb-2">
+      <p className="font-heading text-title font-semibold text-foreground mb-2">
         {query ? `No products match "${query}"` : "No products match your filters"}
       </p>
-      <p className="text-sm text-muted-foreground mb-6">
+      <p className="text-body text-muted-foreground mb-6">
         Try a different search or browse by category
       </p>
       <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -425,13 +425,13 @@ function EmptyState({
             onClick={() => onCategory(cat.key)}
             // Same 44px-on-mobile chip as FilterBar's category row — this is
             // the one screen where every tap has to land first time.
-            className="inline-flex items-center h-11 md:h-8 px-3 text-sm rounded-full border border-border hover:bg-muted transition-colors"
+            className="inline-flex items-center h-11 md:h-8 px-3 text-body rounded-full border border-border hover:bg-muted transition-colors"
           >
             {cat.label}
           </button>
         ))}
       </div>
-      <button onClick={onClear} className="text-sm text-primary hover:underline">
+      <button onClick={onClear} className="text-body text-primary hover:underline">
         Clear all filters
       </button>
     </div>

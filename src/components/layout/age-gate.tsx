@@ -163,17 +163,17 @@ export function AgeGate() {
               <BrandMark className="w-16 h-16 rounded-2xl shadow-[0_0_40px_-10px_rgba(34,197,94,0.45)]" />
             </div>
 
-            <p className="font-heading text-xl font-bold text-foreground mb-8">
+            <p className="font-heading text-title font-bold text-foreground mb-8">
               Rhody<span className="text-primary">Shelf</span>
             </p>
 
             <h1
               id="age-gate-title"
-              className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-3"
+              className="font-heading text-title sm:text-display font-bold text-foreground mb-3"
             >
               Are you 21 or older?
             </h1>
-            <p id="age-gate-desc" className="text-sm text-muted-foreground mb-10">
+            <p id="age-gate-desc" className="text-body text-muted-foreground mb-10">
               You must be of legal age to view this site.
             </p>
 
@@ -182,7 +182,7 @@ export function AgeGate() {
                 ref={yesRef}
                 onClick={handleAccept}
                 className={cn(
-                  "px-8 py-3.5 text-sm font-medium rounded-xl min-h-[48px] transition-all",
+                  "px-8 py-3.5 text-body font-medium rounded-xl min-h-[48px] transition-all",
                   "bg-primary text-primary-foreground hover:bg-primary/90",
                   "shadow-[0_0_20px_-5px_rgba(22,163,74,0.3)]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
@@ -194,7 +194,7 @@ export function AgeGate() {
                 ref={noRef}
                 onClick={() => setRejected(true)}
                 className={cn(
-                  "px-8 py-3.5 text-sm font-medium rounded-xl min-h-[48px] transition-all",
+                  "px-8 py-3.5 text-body font-medium rounded-xl min-h-[48px] transition-all",
                   "border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2"
                 )}
@@ -211,11 +211,11 @@ export function AgeGate() {
 
             <h1
               id="age-gate-title"
-              className="font-heading text-2xl font-bold text-foreground mb-3"
+              className="font-heading text-title font-bold text-foreground mb-3"
             >
               Come back when you&apos;re 21.
             </h1>
-            <p id="age-gate-desc" className="text-sm text-muted-foreground mb-8">
+            <p id="age-gate-desc" className="text-body text-muted-foreground mb-8">
               RhodyShelf is only available to adults 21 and older.
             </p>
 
@@ -223,7 +223,7 @@ export function AgeGate() {
               ref={leaveRef}
               href="https://www.google.com"
               rel="nofollow noopener"
-              className="inline-flex min-h-[44px] items-center gap-2 px-4 py-3 text-sm text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded-lg"
+              className="inline-flex min-h-[44px] items-center gap-2 px-4 py-3 text-body text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 rounded-lg"
             >
               Leave this site &rarr;
             </a>

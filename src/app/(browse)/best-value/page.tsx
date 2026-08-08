@@ -67,22 +67,22 @@ export default async function BestValueIndexPage() {
         description={
           <>
             <p>{INDEX_COPY.subheading}</p>
-            <p className="mt-1 text-sm">{VALUE_DISCLAIMER}</p>
+            <p className="mt-1 text-body">{VALUE_DISCLAIMER}</p>
           </>
         }
       />
 
       {populated.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="mb-2 text-lg font-medium text-foreground">
+          <p className="mb-2 text-subhead font-medium text-foreground">
             Not enough current listings to rank
           </p>
-          <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
+          <p className="mx-auto mb-6 max-w-md text-body text-muted-foreground">
             Check back after the next menu update.
           </p>
           <Link
             href="/search"
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-body font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Browse all products
           </Link>
@@ -94,16 +94,16 @@ export default async function BestValueIndexPage() {
               <div className="mb-2 flex items-baseline justify-between gap-3">
                 <h2
                   id={`cat-${category}`}
-                  className="font-heading text-lg font-semibold text-foreground"
+                  className="font-heading text-subhead font-semibold text-foreground"
                 >
                   {CATEGORY_COPY[category].tab}
-                  <span className="ml-2 text-[13px] font-normal text-muted-foreground">
+                  <span className="ml-2 text-meta font-normal text-muted-foreground">
                     {headline!.band.label}
                   </span>
                 </h2>
                 <Link
                   href={`/best-value/${category}`}
-                  className="inline-flex shrink-0 items-center gap-0.5 text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="inline-flex shrink-0 items-center gap-0.5 text-meta font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   All sizes
                   <ChevronRight className="h-3.5 w-3.5" />

@@ -45,17 +45,17 @@ export function BrandGroup({
               (category-rails.tsx), and it was the one instance set in the body
               face — so /search's rails read as a different product from the
               homepage's at the identical size and weight. */}
-          <h3 className="truncate font-heading text-[17px] font-semibold text-foreground">
+          <h3 className="truncate font-heading text-subhead font-semibold text-foreground">
             {brandName}
           </h3>
-          <span className="shrink-0 text-[13px] text-muted-foreground">
+          <span className="shrink-0 text-meta text-muted-foreground">
             {minPrice != null ? `From ${formatPrice(minPrice)} · ` : ""}
             {count.toLocaleString()} product{count !== 1 ? "s" : ""}
           </span>
         </div>
         <Link
           href={href}
-          className="text-sm text-primary hover:underline shrink-0"
+          className="text-body text-primary hover:underline shrink-0"
         >
           View all {count.toLocaleString()} →
         </Link>

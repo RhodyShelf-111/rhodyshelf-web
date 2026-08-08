@@ -156,12 +156,12 @@ export default async function ProductPage({
         {/* Details */}
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground capitalize">
+            <p className="text-body text-muted-foreground capitalize">
               {product.category}
               {product.strain_type ? ` · ${product.strain_type}` : ""}
               {product.weight_display ? ` · ${product.weight_display}` : ""}
             </p>
-            <h1 className="font-heading text-3xl font-bold text-foreground mt-1">
+            <h1 className="font-heading text-display font-bold text-foreground mt-1">
               {product.name}
             </h1>
             <Link
@@ -174,30 +174,30 @@ export default async function ProductPage({
 
           <div>
             <div className="flex items-baseline gap-2.5 flex-wrap">
-              <span className="text-3xl font-semibold text-foreground">
+              <span className="text-display font-semibold text-foreground">
                 {formatPrice(price) ?? (
-                  <span className="text-base font-normal text-muted-foreground">
+                  <span className="text-lead font-normal text-muted-foreground">
                     See dispensary for price
                   </span>
                 )}
               </span>
               {showStrike && (
-                <span className="text-lg text-muted-foreground line-through">
+                <span className="text-subhead text-muted-foreground line-through">
                   {formatPrice(original_price)}
                 </span>
               )}
               {showStrike && (
-                <span className="text-sm font-medium text-primary">
+                <span className="text-body font-medium text-primary">
                   Save {formatPrice((original_price ?? 0) - (price ?? 0))}
                 </span>
               )}
               {unitPrice && (
-                <span className="text-base text-muted-foreground">
+                <span className="text-lead text-muted-foreground">
                   {unitPrice}
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1.5">
+            <p className="text-meta text-muted-foreground mt-1.5">
               Price updated {formatRelativeTime(listing.last_seen_at)} · confirm
               at dispensary before you go
             </p>
@@ -207,16 +207,16 @@ export default async function ProductPage({
             <div className="flex gap-4">
               {thc_percent != null && (
                 <div className="bg-muted rounded-lg px-4 py-3">
-                  <p className="text-xs text-muted-foreground">THC</p>
-                  <p className="text-lg font-medium">
+                  <p className="text-meta text-muted-foreground">THC</p>
+                  <p className="text-subhead font-medium">
                     {thc_percent.toFixed(1)}%
                   </p>
                 </div>
               )}
               {cbd_percent != null && cbd_percent > 0 && (
                 <div className="bg-muted rounded-lg px-4 py-3">
-                  <p className="text-xs text-muted-foreground">CBD</p>
-                  <p className="text-lg font-medium">
+                  <p className="text-meta text-muted-foreground">CBD</p>
+                  <p className="text-subhead font-medium">
                     {cbd_percent.toFixed(1)}%
                   </p>
                 </div>
@@ -228,13 +228,13 @@ export default async function ProductPage({
             href={`/dispensary/${dispensary.slug}`}
             className="block bg-muted rounded-xl p-4 border border-border hover:border-primary/40 transition-colors"
           >
-            <p className="text-sm text-muted-foreground">Available at</p>
+            <p className="text-body text-muted-foreground">Available at</p>
             <p className="font-medium text-foreground flex items-center gap-1.5 mt-0.5">
               <MapPin className="w-4 h-4 text-primary" />
               {dispensary.name}
             </p>
             {dispensary.city && (
-              <p className="text-sm text-muted-foreground ml-5.5">
+              <p className="text-body text-muted-foreground ml-5.5">
                 {dispensary.city}, RI
               </p>
             )}
@@ -259,7 +259,7 @@ export default async function ProductPage({
                 data-dispensary={dispensary.name}
                 data-category={product.category}
                 data-surface="product-page"
-                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 h-12 px-4 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 h-12 px-4 text-body font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span className="truncate">Buy at {dispensary.name}</span>
                 <ExternalLink className="w-4 h-4 shrink-0" />
@@ -278,12 +278,12 @@ export default async function ProductPage({
       {brandListings.length > 0 && (
         <section className="mt-12">
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="font-heading text-lg font-semibold text-foreground">
+            <h2 className="font-heading text-subhead font-semibold text-foreground">
               More from {product.brand_name}
             </h2>
             <Link
               href={brandHref}
-              className="text-sm text-primary hover:underline shrink-0"
+              className="text-body text-primary hover:underline shrink-0"
             >
               View all →
             </Link>
@@ -313,15 +313,15 @@ export default async function ProductPage({
       {buyUrl && (
         <div className="md:hidden sticky bottom-0 z-40 -mx-4 mt-8 flex items-center gap-3 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
           <div className="min-w-0 shrink-0">
-            <p className="text-lg font-semibold leading-tight text-foreground">
+            <p className="text-subhead font-semibold leading-tight text-foreground">
               {formatPrice(price) ?? (
-                <span className="text-sm font-normal text-muted-foreground">
+                <span className="text-body font-normal text-muted-foreground">
                   See dispensary
                 </span>
               )}
             </p>
             {showStrike && (
-              <p className="text-xs text-muted-foreground line-through">
+              <p className="text-meta text-muted-foreground line-through">
                 {formatPrice(original_price)}
               </p>
             )}
@@ -334,7 +334,7 @@ export default async function ProductPage({
             data-dispensary={dispensary.name}
             data-category={product.category}
             data-surface="product-page-sticky"
-            className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-body font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <span className="truncate">Buy at {dispensary.name}</span>
             <ExternalLink className="h-4 w-4 shrink-0" />
