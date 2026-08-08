@@ -152,6 +152,22 @@ describe("type scale", () => {
     expect(offenders).toEqual([])
   })
 
+  /**
+   * Measured in a real browser against the shipped font stack: with
+   * proportional figures the ten digits spanned 28.75px across a ten-character
+   * run, with "1" fully 29% narrower than "4". "1" is the most common leading
+   * digit in a price, so a column of prices was measurably crooked. Tabular
+   * brings the spread to exactly 0.
+   *
+   * This lives at :root rather than on call sites because as an opt-in it had
+   * reached one file out of roughly forty that render a number, and forgetting
+   * it fails silently.
+   */
+  it("declares tabular figures once, globally", () => {
+    const css = readFileSync(path.join(SRC, "app/globals.css"), "utf8")
+    expect(css).toMatch(/font-variant-numeric:\s*tabular-nums/)
+  })
+
   it("keeps the 16px floor on form controls so iOS does not zoom on focus", () => {
     // Safari zooms the viewport when a focused input is under 16px. Every input
     // must therefore rest at text-lead and only drop to text-body from md up,
