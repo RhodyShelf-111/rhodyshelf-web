@@ -135,6 +135,24 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Every digit the same width, everywhere, by default.
+
+       This site stacks the same SKU across nine dispensaries and ranks by
+       price-per-gram, so its core surfaces are columns of numbers that are only
+       comparable if they line up. With proportional figures a 1 is narrower
+       than an 8, and a column of prices comes out visibly ragged — you scan it
+       instead of reading down it.
+
+       Declared once here rather than per call site on purpose. As an opt-in it
+       had reached exactly one file (value-row.tsx) out of roughly forty places
+       that render a number, and the failure mode of forgetting it is silent:
+       nothing errors, the column is just crooked. Inherited, the forgetful path
+       still produces a true column.
+
+       slashed-zero because a lone 0 in a price or a THC percentage should never
+       be mistaken for an O. Both are no-ops on a face that lacks the features,
+       so this is safe ahead of the typeface decision in DESIGN.md. */
+    font-variant-numeric: tabular-nums slashed-zero;
   }
   html {
     @apply font-sans;
