@@ -16,23 +16,48 @@ is never downloaded (the import is dynamic).
 1. **Create a PostHog project** at [posthog.com](https://posthog.com). The free
    tier is 1M events/month with no card, which is far above this site's volume.
 2. **Enable "Cookieless server hash mode"** under *Project Settings → Web
-   analytics*. This is required. Without it, events still arrive but people are
-   not counted, so every visitor-count number will read zero.
-3. **Set two env vars in Vercel** (Production, Preview, and Development):
+   analytics*. Required, and do it **before** the key goes live — PostHog
+   documents it as a prerequisite for client-side cookieless tracking, and
+   identity cannot be re-derived for events already ingested (the daily salt is
+   deleted after processing).
+3. **Set one env var in Vercel — Production only:**
 
    | Variable | Value |
    |---|---|
    | `NEXT_PUBLIC_POSTHOG_KEY` | your project API key (`phc_…`) |
-   | `NEXT_PUBLIC_POSTHOG_HOST` | optional; defaults to `https://us.i.posthog.com`. Set it if your project is on EU cloud (`https://eu.i.posthog.com`) |
+   | `NEXT_PUBLIC_POSTHOG_HOST` | only for EU cloud (`https://eu.i.posthog.com`). US cloud is the default — leave unset |
 
-Redeploy and the first pageview should land within seconds.
+Redeploy and the first pageview should land within seconds. Env vars only take
+effect on a new build.
+
+**Do not set the key in Development or Preview.** Every hot reload fires a
+`$pageview` and every test click fires a `buy_click`, into the same dataset the
+kill criterion below is read from. At this site's volume local dev traffic would
+not be noise — it would be most of the data. Leaving the key unset is the
+designed off state, not a workaround: `initAnalytics()` returns early, `track()`
+no-ops, and `posthog-js` is never downloaded. If real dev analytics are ever
+wanted, use a **second PostHog project** with its own key rather than sharing
+this one.
 
 ## Why cookieless
 
 `cookieless_mode: "always"` writes **nothing** to cookies, localStorage, or
 sessionStorage. People are counted by a one-way hash computed on PostHog's
 servers, which cannot be reversed. This keeps `/privacy`'s "no tracking cookies
-beyond age verification" claim true.
+beyond age verification" claim true, and means no consent banner.
+
+The identifier is `hash(team_id, daily_salt, ip_address, user_agent, hostname)`,
+and PostHog deletes each day's salt once that day's events are processed. Two
+consequences that change how the numbers must be read:
+
+- **Returning visitors count as a new person every day.** The salt rotates at
+  midnight, so unique-person counts are inflated and multi-day retention is
+  close to meaningless. This is why the kill criterion below is written in
+  *page views* and *event counts*, never users — event counts are unaffected by
+  identity. Keep it that way.
+- **Bot detection does not run in this mode.** Crawler traffic inflates
+  pageviews. Filter by referrer and user agent before comparing against any
+  threshold, or a few aggressive bots will carry a dead site over the line.
 
 Session replay is **off deliberately**, and not just as a default:
 
@@ -65,6 +90,31 @@ new event.
   product purchase. Tagging it would pollute `buy_click`, which is meant to be
   the money metric.
 - **Session replay / `$pageleave`** — see above.
+
+### Settings that live in PostHog, not in this repo
+
+Some capture is controlled by **remote config** fetched at init
+(`us-assets.i.posthog.com/array/<key>/config.js`), so the dashboard can switch
+on features this codebase never asked for. Verified in production on
+2026-08-08, two were loading despite `autocapture: false` — they are separate
+features and that flag does not cover them:
+
+| Script | Emits | Decision |
+|---|---|---|
+| `dead-clicks-autocapture.js` | `$dead_click` | **Off** — Project Settings → Autocapture |
+| `web-vitals.js` | `$web_vitals` | **Off** — same page |
+
+Both are off because neither answers a question this install exists to answer,
+and `$web_vitals` in particular is chatty enough to matter against the free
+tier. The broader point: if event volume or event types ever look wrong, check
+the dashboard before reading the code — the code is not the only input.
+
+Bounce rate is also unusable here and no threshold should be set for it.
+PostHog scores a bounce as one pageview + **zero autocapture events** + under
+10s, and its docs say the metric needs autocapture and `$pageleave` to be
+accurate. Both are deliberately off, so it will read inflated regardless of the
+duration setting. Use `buy_click` per product-page view instead — an event
+ratio, immune to both this and the identity churn above.
 
 ## Adding an event
 
