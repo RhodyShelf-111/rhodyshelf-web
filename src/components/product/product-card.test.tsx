@@ -276,6 +276,23 @@ describe("ProductCard dispensary line", () => {
     expect(screen.getByText("3 dispensaries")).toBeInTheDocument()
     expect(screen.queryByText("Reef")).not.toBeInTheDocument()
   })
+
+  // The listing /saved keeps for a multi-shop product is just the cheapest of
+  // the set, so naming it in the accessible name would tell a screen-reader
+  // user the card is Reef's while the visible label says three shops.
+  it("announces the count, not one shop, when several carry it", () => {
+    render(
+      <ProductCard
+        listing={atShop("Reef Wellness", "Woonsocket")}
+        stock={{ inStock: true, dispensaryCount: 3 }}
+      />
+    )
+    const card = screen.getByRole("link", {
+      name: "Blue Dream 3.5g by Lovewell Farms at 3 dispensaries",
+    })
+    expect(card).toBeInTheDocument()
+    expect(card.getAttribute("aria-label")).not.toContain("Reef Wellness")
+  })
 })
 
 describe("ProductCard eager (LCP hint)", () => {

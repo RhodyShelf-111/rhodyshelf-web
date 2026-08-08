@@ -116,8 +116,14 @@ export function ProductCard({
           // once per dispensary on /search and /category: without it, four
           // adjacent links announce identically and a screen-reader user has no
           // way to tell which shop they're opening. Full name, not the card's
-          // short label — the link is read out of context.
-          aria-label={`${product.name} by ${product.brand_name} at ${dispensary.name}`}
+          // short label — the link is read out of context. On /saved, where one
+          // row stands in for several shops, it announces the count instead:
+          // the listing kept there is just the cheapest of the set, so naming
+          // it would tell a screen-reader user the card is one shop's when the
+          // visible label says three.
+          aria-label={`${product.name} by ${product.brand_name} at ${
+            multiShopLabel ?? dispensary.name
+          }`}
           className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         />
       )}
