@@ -226,6 +226,29 @@ describe("ProductCard dispensary line", () => {
     expect(screen.getByText("Solar")).toBeInTheDocument()
   })
 
+  // The card's own link is what a screen reader announces, and the same SKU
+  // ranks once per shop on /search and /category. Without the shop in the
+  // accessible name, four adjacent links read identically and there is no way
+  // to tell which one opens which store.
+  it("names the shop in the card link, so sibling cards don't announce alike", () => {
+    const { unmount } = render(
+      <ProductCard listing={atShop("Solar Cannabis Co. Warwick", "Warwick")} />
+    )
+    const first = screen.getByRole("link", {
+      name: "Blue Dream 3.5g by Lovewell Farms at Solar Cannabis Co. Warwick",
+    })
+    expect(first).toHaveAttribute("href", "/product/l1")
+    unmount()
+
+    // Same product, different shop: the accessible names must differ.
+    render(<ProductCard listing={atShop("Reef Wellness", "Woonsocket")} />)
+    expect(
+      screen.getByRole("link", {
+        name: "Blue Dream 3.5g by Lovewell Farms at Reef Wellness",
+      })
+    ).toBeInTheDocument()
+  })
+
   // The where-line shares the Buy + upvote row at sm+, and only there. On mobile
   // the actions are 44px touch targets and three of them inline on a ~175px card
   // leaves the shop name ~15px, so it takes its own full-width row first.
