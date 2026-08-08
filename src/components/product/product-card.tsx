@@ -9,9 +9,9 @@ import {
   cn,
   formatPrice,
   formatRelativeTime,
-  getCategoryIcon,
 } from "@/lib/utils"
 import { shortDispensaryName } from "@/lib/dispensary-name"
+import { CategoryIcon } from "@/components/ui/category-icon"
 import { DealBadge, DropBadge, StockBadge } from "./deal-badge"
 import { useUpvotes } from "@/hooks/use-upvotes"
 import { rememberListing } from "@/lib/listing-cache"
@@ -169,12 +169,15 @@ export function ProductCard({
         ) : null}
         <div
           className={cn(
-            "absolute inset-0 items-center justify-center text-4xl",
+            "absolute inset-0 items-center justify-center",
             outOfStock && "grayscale opacity-50"
           )}
           style={{ display: imageUrl ? "none" : "flex" }}
         >
-          {getCategoryIcon(product.category)}
+          <CategoryIcon
+            category={product.category}
+            className="size-10 text-product-plate-foreground"
+          />
         </div>
 
         {/* Badges (decorative — let clicks fall through to the card link) */}

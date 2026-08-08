@@ -184,30 +184,3 @@ export function slugify(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
 }
-
-/**
- * Get a category icon emoji fallback when no product image exists.
- */
-export function getCategoryIcon(category: string): string {
-  const icons: Record<string, string> = {
-    // DB values (singular)
-    flower: "🌿",
-    concentrate: "💧",
-    edible: "🍪",
-    "pre-roll": "🚬",
-    vape: "💨",
-    tincture: "💊",
-    topical: "🧴",
-    accessory: "🛒",
-    other: "🌱",
-    // Plural aliases (for display names / filter UI)
-    concentrates: "💧",
-    edibles: "🍪",
-    "pre-rolls": "🚬",
-    vapes: "💨",
-    tinctures: "💊",
-    topicals: "🧴",
-    accessories: "🛒",
-  }
-  return icons[category?.toLowerCase()] ?? "🌿"
-}

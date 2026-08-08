@@ -3,7 +3,7 @@ import { getHomepageSections, getBrandNames } from "@/lib/queries/products"
 import { HeroSearch } from "@/components/search/hero-search"
 import { PageContainer } from "@/components/layout/page-container"
 import { CategoryRails } from "./category-rails"
-import { getCategoryIcon } from "@/lib/utils"
+import { CategoryIcon } from "@/components/ui/category-icon"
 import { JsonLd } from "@/components/seo/json-ld"
 import { organizationJsonLd, websiteJsonLd } from "@/lib/seo/structured-data"
 import type { Metadata } from "next"
@@ -60,7 +60,7 @@ export default async function HomePage() {
                 prefetch={false}
                 className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                <span aria-hidden="true">{getCategoryIcon(section.key)}</span>
+                <CategoryIcon category={section.key} />
                 {section.label}
               </Link>
             ))}

@@ -1,6 +1,7 @@
 import { HOMEPAGE_CATEGORIES } from "@/lib/queries/products"
 import { CategoryNavLink } from "@/components/layout/category-nav-link"
-import { cn, getCategoryIcon } from "@/lib/utils"
+import { cn } from "@/lib/utils"
+import { CategoryIcon } from "@/components/ui/category-icon"
 
 /**
  * Category switcher chips for the /category/[slug] pages.
@@ -36,7 +37,7 @@ export function CategoryNav({ activeSlug }: { activeSlug?: string }) {
                 : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted"
             )}
           >
-            <span aria-hidden="true">{getCategoryIcon(c.key)}</span>
+            <CategoryIcon category={c.key} />
             {c.label}
           </CategoryNavLink>
         )

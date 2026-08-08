@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { getCategoryIcon } from "@/lib/utils"
+import { CategoryIcon } from "@/components/ui/category-icon"
 
 interface ProductHeroImageProps {
   imageUrl: string | null
@@ -12,8 +12,8 @@ interface ProductHeroImageProps {
 /**
  * Hero product image with a broken-image fallback, mirroring ProductCard.
  * A client island because the server product page can't attach onError.
- * Dispensary CDN URLs are third-party and rot, so a dead URL falls back to
- * the category emoji instead of a broken-image glyph on the page's focal point.
+ * Dispensary CDN URLs are third-party and rot, so a dead URL falls back to the
+ * category glyph instead of a broken-image icon on the page's focal point.
  */
 export function ProductHeroImage({ imageUrl, alt, category }: ProductHeroImageProps) {
   return (
@@ -38,11 +38,13 @@ export function ProductHeroImage({ imageUrl, alt, category }: ProductHeroImagePr
         />
       ) : null}
       <div
-        className="absolute inset-0 items-center justify-center text-6xl"
+        className="absolute inset-0 items-center justify-center"
         style={{ display: imageUrl ? "none" : "flex" }}
-        aria-hidden="true"
       >
-        {getCategoryIcon(category)}
+        <CategoryIcon
+          category={category}
+          className="size-16 text-product-plate-foreground"
+        />
       </div>
     </>
   )
