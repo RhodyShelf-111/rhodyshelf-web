@@ -15,34 +15,81 @@ is never downloaded (the import is dynamic).
 
 1. **Create a PostHog project** at [posthog.com](https://posthog.com). The free
    tier is 1M events/month with no card, which is far above this site's volume.
-2. **Enable "Cookieless server hash mode"** under *Project Settings → Web
-   analytics*. This is required. Without it, events still arrive but people are
-   not counted, so every visitor-count number will read zero.
-3. **Set two env vars in Vercel** (Production, Preview, and Development):
+2. **Leave "Cookieless server hash mode" OFF** under *Project Settings → Web
+   analytics*, and enable **Session replay**. This install ran cookieless from
+   2026-08-08 until later the same day; see *Cookies and replay* below for why
+   it was dropped and what it cost.
+3. **Set one env var in Vercel — Production only:**
 
    | Variable | Value |
    |---|---|
    | `NEXT_PUBLIC_POSTHOG_KEY` | your project API key (`phc_…`) |
-   | `NEXT_PUBLIC_POSTHOG_HOST` | optional; defaults to `https://us.i.posthog.com`. Set it if your project is on EU cloud (`https://eu.i.posthog.com`) |
+   | `NEXT_PUBLIC_POSTHOG_HOST` | only for EU cloud (`https://eu.i.posthog.com`). US cloud is the default — leave unset |
 
-Redeploy and the first pageview should land within seconds.
+Redeploy and the first pageview should land within seconds. Env vars only take
+effect on a new build.
 
-## Why cookieless
+**Do not set the key in Development or Preview.** Every hot reload fires a
+`$pageview` and every test click fires a `buy_click`, into the same dataset the
+kill criterion below is read from. At this site's volume local dev traffic would
+not be noise — it would be most of the data. Leaving the key unset is the
+designed off state, not a workaround: `initAnalytics()` returns early, `track()`
+no-ops, and `posthog-js` is never downloaded. If real dev analytics are ever
+wanted, use a **second PostHog project** with its own key rather than sharing
+this one.
 
-`cookieless_mode: "always"` writes **nothing** to cookies, localStorage, or
-sessionStorage. People are counted by a one-way hash computed on PostHog's
-servers, which cannot be reversed. This keeps `/privacy`'s "no tracking cookies
-beyond age verification" claim true.
+## Cookies and replay
 
-Session replay is **off deliberately**, and not just as a default:
+This install ran `cookieless_mode: "always"` for a few hours on 2026-08-08 and
+then dropped it, deliberately, to turn on session replay. **The two are mutually
+exclusive**: replay needs device storage, and the SDK silently refuses to record
+in cookieless mode no matter what the project settings say. Both switches were
+briefly on at once and the result was zero recordings — the SDK just declines.
+There is a regression test asserting `cookieless_mode` is never re-added, because
+re-adding it turns replay off with no error and no failing build.
 
-- It requires device storage, which would break cookieless mode.
-- Recording what specific individuals browse on a cannabis site is
-  sensitive-category behavior, whatever the privacy policy says.
+So PostHog sets cookies now, and `/privacy` was rewritten in the same change to
+say so plainly, including what replay captures. Keep those in step: the page
+describes the data collection, so a change to one is a change to both.
 
-If a funnel ever comes back genuinely ambiguous and replay is the only way to
-resolve it, turn it on for a bounded window and ship the `/privacy` update in
-the same PR.
+What replay records is deliberately narrow — the screen, and nothing else:
+
+| Setting | State | Why |
+|---|---|---|
+| `maskAllInputs` | on | typed text never leaves the browser |
+| `enable_recording_console_log` | off | console output can leak internals |
+| `capture_performance_opt_in` | off | no request/response bodies |
+| retention | 30d | shortest PostHog offers |
+
+**No consent banner.** That is a deliberate call made while the site is in beta,
+not an oversight. Revisit it before any real marketing push, and note that RI
+visitors are the entire audience, so the calculus is simpler than for a site with
+EU traffic.
+
+### What changed about reading the numbers
+
+Dropping cookieless **fixed** two things this doc previously warned about:
+
+- **Returning visitors now persist.** Under cookieless, the identifier was
+  `hash(team_id, daily_salt, ip, user_agent, hostname)` with the salt rotating at
+  midnight, so the same person counted as new every day and multi-day retention
+  was meaningless. With cookies, unique-person counts and retention are real. The
+  kill criterion is still written in page views and event counts — it was
+  authored that way and it is not being loosened after the fact.
+- **IP-based enrichment works again.** GeoIP and PostHog's own ingestion-time bot
+  filtering are back, since the IP is no longer stripped before transformations.
+
+One thing did **not** change: still filter bots explicitly in every query.
+
+```sql
+AND NOT coalesce(properties.$virt_is_bot, false)
+```
+
+Measured 2026-08-08, the day the key went live: **28 of 28 events had
+`$virt_is_bot = true`** — agent browsing and crawlers, zero humans. An unfiltered
+pageview count on this project isn't a weak signal, it's a meaningless one. Note
+`$virt_*` won't appear in the project's property taxonomy and queries using it
+emit a "property not found" warning; it resolves correctly anyway.
 
 ## What is instrumented
 
@@ -64,7 +111,37 @@ new event.
 - **The dispensary page's "Visit Site" link** — that is store browsing, not a
   product purchase. Tagging it would pollute `buy_click`, which is meant to be
   the money metric.
-- **Session replay / `$pageleave`** — see above.
+- **`$pageleave`** — off. Note this is one of the two inputs PostHog needs to
+  compute bounce rate; see the bounce-rate note below before setting a target
+  for it.
+
+Session replay **is** on as of 2026-08-08 — see *Cookies and replay* above for
+what it captures and what it masks.
+
+### Settings that live in PostHog, not in this repo
+
+Some capture is controlled by **remote config** fetched at init
+(`us-assets.i.posthog.com/array/<key>/config.js`), so the dashboard can switch
+on features this codebase never asked for. Verified in production on
+2026-08-08, two were loading despite `autocapture: false` — they are separate
+features and that flag does not cover them:
+
+| Script | Emits | Decision |
+|---|---|---|
+| `dead-clicks-autocapture.js` | `$dead_click` | **Off** — Project Settings → Autocapture |
+| `web-vitals.js` | `$web_vitals` | **Off** — same page |
+
+Both are off because neither answers a question this install exists to answer,
+and `$web_vitals` in particular is chatty enough to matter against the free
+tier. The broader point: if event volume or event types ever look wrong, check
+the dashboard before reading the code — the code is not the only input.
+
+Bounce rate is also unusable here and no threshold should be set for it.
+PostHog scores a bounce as one pageview + **zero autocapture events** + under
+10s, and its docs say the metric needs autocapture and `$pageleave` to be
+accurate. Both are deliberately off, so it will read inflated regardless of the
+duration setting. Use `buy_click` per product-page view instead — an event
+ratio, immune to both this and the identity churn above.
 
 ## Adding an event
 
@@ -77,6 +154,12 @@ For an outbound link, prefer the attribute over a handler:
 `data-track="buy"` works from server components too, which a handler cannot.
 
 ## The kill criterion — read this before drawing conclusions
+
+The numbers are pre-built on the [Kill Criterion Review
+dashboard](https://us.posthog.com/project/263857/dashboard/1972621) — built
+2026-08-08, before there was any data to argue with. Every tile filters bots.
+Start with tile 5 (contamination); if the traffic is still mostly automation,
+none of the others mean anything yet.
 
 Written **before** install, on purpose, so the result cannot be
 reinterpreted afterwards.

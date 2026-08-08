@@ -70,18 +70,35 @@ describe("analytics", () => {
       expect(isAnalyticsEnabled()).toBe(true)
     })
 
-    it("initializes cookieless, with replay and autocapture off", async () => {
+    it("initializes with replay on and autocapture off", async () => {
       initAnalytics()
       await flush()
       expect(init).toHaveBeenCalledTimes(1)
       const [key, config] = init.mock.calls[0] as [string, Record<string, unknown>]
       expect(key).toBe("phc_test_key")
-      expect(config.cookieless_mode).toBe("always")
-      expect(config.disable_session_recording).toBe(true)
       expect(config.autocapture).toBe(false)
       // Pageviews are captured by hand: App Router client navigations are not
       // page loads, so automatic capture would only ever see the first one.
       expect(config.capture_pageview).toBe(false)
+    })
+
+    it("does not set cookieless mode, which would silently block replay", async () => {
+      initAnalytics()
+      await flush()
+      const [, config] = init.mock.calls[0] as [string, Record<string, unknown>]
+      // The SDK refuses to record in cookieless mode no matter what the PostHog
+      // project settings say, so re-adding this would turn replay off with no
+      // error and no failing build. Regression guard, not a style preference.
+      expect(config.cookieless_mode).toBeUndefined()
+    })
+
+    it("records the screen only — no console log, no unmasked inputs", async () => {
+      initAnalytics()
+      await flush()
+      const [, config] = init.mock.calls[0] as [string, Record<string, unknown>]
+      expect(config.disable_session_recording).toBe(false)
+      expect(config.enable_recording_console_log).toBe(false)
+      expect(config.session_recording).toMatchObject({ maskAllInputs: true })
     })
 
     it("only initializes once however many times it is called", async () => {
