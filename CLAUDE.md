@@ -19,6 +19,26 @@ stale, not your code. `tsconfig.json` includes `.next/types/**` and
 `.next/dev/types/**`, so a `.next` predating a route move typechecks the old
 route table. `rm -rf .next` and re-run. CI never hits this; it checks out clean.
 
+## Design system
+
+**Read [DESIGN.md](DESIGN.md) before any visual or UI change.** Typography,
+colour, spacing, layout and motion are all defined there, along with the
+reasoning. Don't deviate without saying so.
+
+Two rules bite immediately, because both are enforced by
+`src/lib/typography-policy.test.ts` rather than by review:
+
+- **The type scale is six named steps** — `text-meta`, `text-body`, `text-lead`,
+  `text-subhead`, `text-title`, `text-display`. Tailwind's defaults are *cleared*,
+  so `text-sm` and `text-lg` generate nothing and fail silently in a browser. New
+  arbitrary `text-[Npx]` values fail the test.
+- **Weight is a hierarchy tool, not a default.** 400 body, 500 UI emphasis, 600
+  peaks, 700 page `h1` and wordmark only. Never stack a heavy weight on
+  `text-muted-foreground`.
+
+[docs/design/ai-slop-checklist.md](docs/design/ai-slop-checklist.md) has the
+greppable pre-merge pass.
+
 ## Data layer
 
 `src/lib/queries/products.ts` and `dispensaries.ts` own every Supabase read.
