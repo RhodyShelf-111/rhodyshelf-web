@@ -138,9 +138,7 @@ describe("ProductCard stats line", () => {
     expect(screen.queryByText(/\/g\b/)).not.toBeInTheDocument()
   })
 
-  // The line keeps its reserved height with THC alone, so a listing that
-  // reports no potency can't shorten its card and break the grid row.
-  it("keeps the reserved single line for THC", () => {
+  it("prints THC on a single truncating line", () => {
     render(
       <ProductCard
         listing={withProduct(
@@ -149,9 +147,37 @@ describe("ProductCard stats line", () => {
         )}
       />
     )
-    const stats = screen.getByText("THC: 21.4%")
-    expect(stats.className).toMatch(/min-h-\[1rem\]/)
-    expect(stats).toHaveClass("truncate")
+    // truncate, not wrap: a long stat can never grow a second line and knock
+    // its card out of its grid row.
+    expect(screen.getByText("THC: 21.4%")).toHaveClass("truncate")
+  })
+
+  // Regression: the line reserved its height unconditionally, which made sense
+  // while it also carried the unit rate. Potency is nulled at the read boundary
+  // for everything but flower/pre-roll/vape/concentrate, so 44% of live
+  // listings rendered a dead 19px band under the price. Alignment doesn't
+  // depend on it — the grid stretches cards and the footer is bottom-pinned.
+  it("renders no line at all when the listing reports no potency", () => {
+    const { container } = render(
+      <ProductCard
+        listing={withProduct(
+          { category: "accessory", weight_display: null },
+          { price: 30, thc_percent: null }
+        )}
+      />
+    )
+    const blank = [...container.querySelectorAll("p")].filter(
+      (p) => p.textContent?.trim() === ""
+    )
+    expect(blank).toHaveLength(0)
+  })
+
+  // The footer stays bottom-pinned, which is what actually keeps the shop line
+  // and Buy button level across a row of unequal cards.
+  it("pins the footer to the bottom so rows stay aligned without the spacer", () => {
+    render(<ProductCard listing={makeListing()} />)
+    const footer = screen.getByText("Sweetspot").closest("div")!.parentElement!
+    expect(footer).toHaveClass("mt-auto")
   })
 })
 

@@ -236,12 +236,26 @@ export function ProductCard({
             )}
           </p>
 
-          {/* THC — always reserve exactly one line, whether or not the listing
-              reports potency, so grid rows stay aligned. truncate (not wrap) so
-              it can never grow a second line. */}
-          <p className="text-[13px] text-muted-foreground min-h-[1rem] truncate">
-            {statLine || " "}
-          </p>
+          {/* THC, when there is any.
+
+              This line used to reserve its height unconditionally, which was
+              right while it also carried the unit rate: something was nearly
+              always in it. It isn't now. Potency is nulled at the read boundary
+              for every category that isn't flower/pre-roll/vape/concentrate
+              (sanitizePotency), so 44% of live listings were rendering a dead
+              19px band between the price and the shop.
+
+              Collapsing it costs no alignment, measured rather than assumed:
+              cards stretch to their grid row and the footer is bottom-pinned,
+              so a row whose cards disagree about potency renders identically
+              (the spare space lands below the price either way), and a row
+              where nothing reports potency — a page of edibles, a page of
+              accessories — simply gets 19px shorter. */}
+          {statLine && (
+            <p className="text-[13px] text-muted-foreground truncate">
+              {statLine}
+            </p>
+          )}
         </div>
 
         {/* Dispensary + actions (pinned to bottom).
